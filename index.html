@@ -114,9 +114,44 @@
       border-color: #111827;
     }
     .btn-google {
-      background: #ffffff;
-      border: 1px solid #d1d5db;
-      font-size: 13px;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+}
+
+.google-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1px solid #d1d5db;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 13px;
+  background: #fff;
+}
+
+.btn-apple {
+  background: #000000;
+  color: #ffffff;
+  border: none;
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 999px;
+}
+
+.apple-icon {
+  font-size: 18px;
+}
+
     }
     .btn-google span {
       font-size: 16px;
@@ -297,10 +332,16 @@
 
       <button class="btn-primary" id="btnAuthMain">Entrar</button>
 
-      <div style="margin-top: 12px; text-align:center;">
-        <button class="btn-google" id="btnGoogle">
-          <span>🟦</span> Entrar com Google
-        </button>
+      <<div style="margin-top: 12px; text-align:center; display:flex; flex-direction:column; gap:8px; align-items:center;">
+  <button class="btn-google" id="btnGoogle">
+    <span class="google-icon">G</span>
+    <span>Entrar com Google</span>
+  </button>
+
+  <button class="btn-apple" id="btnApple">
+    <span class="apple-icon"></span>
+    <span>Entrar com Apple</span>
+  </button>
       </div>
 
       <div class="error-msg" id="authError"></div>
@@ -766,3 +807,4 @@
   </script>
 </body>
 </html>
+
