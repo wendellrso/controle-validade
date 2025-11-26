@@ -15,12 +15,32 @@
     header {
       background: #111827;
       color: #f9fafb;
-      padding: 16px;
-      text-align: center;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
     }
     header h1 {
       margin: 0;
-      font-size: 20px;
+      font-size: 18px;
+    }
+    .user-info {
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .user-email {
+      opacity: 0.8;
+    }
+    .btn-small {
+      border: 1px solid #e5e7eb;
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 11px;
+      background: #f9fafb;
+      cursor: pointer;
     }
     main {
       max-width: 1100px;
@@ -92,6 +112,14 @@
       background: #111827;
       color: #f9fafb;
       border-color: #111827;
+    }
+    .btn-google {
+      background: #ffffff;
+      border: 1px solid #d1d5db;
+      font-size: 13px;
+    }
+    .btn-google span {
+      font-size: 16px;
     }
     .filters {
       display: flex;
@@ -169,6 +197,55 @@
       color: #6b7280;
       margin-top: 4px;
     }
+    .hidden {
+      display: none !important;
+    }
+    .login-layout {
+      max-width: 420px;
+      margin: 0 auto;
+    }
+    .login-title {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .login-subtitle {
+      font-size: 13px;
+      color: #6b7280;
+      margin-bottom: 16px;
+    }
+    .login-toggle {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .login-toggle button {
+      flex: 1;
+      justify-content: center;
+      font-size: 13px;
+      padding: 6px 10px;
+    }
+    .login-footer {
+      font-size: 12px;
+      color: #6b7280;
+      margin-top: 12px;
+      text-align: center;
+    }
+    .login-footer button {
+      font-size: 12px;
+      padding: 0;
+      border: none;
+      background: none;
+      color: #111827;
+      text-decoration: underline;
+      box-shadow: none;
+    }
+    .error-msg {
+      font-size: 12px;
+      color: #b91c1c;
+      margin-top: 6px;
+      min-height: 16px;
+    }
     @media (max-width: 640px) {
       th:nth-child(6),
       td:nth-child(6),
@@ -178,96 +255,146 @@
       td:nth-child(8) {
         display: none;
       }
+      header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
     }
   </style>
 </head>
 <body>
   <header>
     <h1>Controle de Validade – Mercearia</h1>
+    <div class="user-info" id="userInfo">
+      <span class="user-email" id="userEmail"></span>
+      <button class="btn-small hidden" id="btnLogout">Sair</button>
+    </div>
   </header>
 
   <main>
-    <section class="card">
-      <h2>Novo lançamento</h2>
+    <!-- TELA DE LOGIN -->
+    <section class="card login-layout" id="loginCard">
+      <div class="login-title">Entrar no sistema</div>
+      <div class="login-subtitle">
+        Faça login para lançar e consultar produtos por validade.
+      </div>
+
+      <div class="login-toggle">
+        <button class="btn-outline active" id="btnModoLogin">Entrar</button>
+        <button class="btn-outline" id="btnModoCadastro">Criar conta</button>
+      </div>
+
       <div class="form-grid">
-        <div>
-          <label for="loja">Loja</label>
-          <select id="loja">
-            <option value="">Selecione...</option>
-            <option value="PV">Ponta Verde</option>
-            <option value="Farol">Farol</option>
-            <option value="Praia">Praia</option>
-            <option value="Riomar">Riomar</option>
-          </select>
+        <div style="grid-column: 1 / -1;">
+          <label for="emailAuth">E-mail</label>
+          <input type="email" id="emailAuth" placeholder="seu.email@exemplo.com" />
         </div>
-        <div>
-          <label for="codigoBarras">Código de barras</label>
-          <input type="text" id="codigoBarras" />
-        </div>
-        <div>
-          <label for="descricao">Descrição</label>
-          <input type="text" id="descricao" />
-        </div>
-        <div>
-          <label for="quantidade">Quantidade</label>
-          <input type="number" id="quantidade" min="1" />
-        </div>
-        <div>
-          <label for="validade">Data de validade</label>
-          <input type="date" id="validade" />
-        </div>
-        <div>
-          <label for="observacao">Observação</label>
-          <textarea id="observacao" placeholder="Ex.: ponta de gôndola, oferta, avaria..."></textarea>
+        <div style="grid-column: 1 / -1;">
+          <label for="senhaAuth">Senha</label>
+          <input type="password" id="senhaAuth" placeholder="mínimo 6 caracteres" />
         </div>
       </div>
-      <button class="btn-primary" id="btnSalvar">Salvar lançamento</button>
-      <div class="small">
-        * Status é calculado automaticamente:<br />
-        <strong>OK</strong> (&gt; 30 dias) · <strong>Vence em 30 dias</strong> · <strong>Vencido</strong>
+
+      <button class="btn-primary" id="btnAuthMain">Entrar</button>
+
+      <div style="margin-top: 12px; text-align:center;">
+        <button class="btn-google" id="btnGoogle">
+          <span>🟦</span> Entrar com Google
+        </button>
+      </div>
+
+      <div class="error-msg" id="authError"></div>
+
+      <div class="login-footer">
+        Qualquer pessoa pode criar uma conta e usar o sistema.<br/>
+        <button id="btnEsqueceuSenha">Esqueci minha senha</button>
       </div>
     </section>
 
-    <section class="card">
-      <h2>Itens cadastrados</h2>
-      <div class="filters">
-        <button class="btn-outline active" data-filter="todos">Todos</button>
-        <button class="btn-outline" data-filter="ok">OK</button>
-        <button class="btn-outline" data-filter="alerta">Vence em 30 dias</button>
-        <button class="btn-outline" data-filter="vencido">Vencidos</button>
-      </div>
-      <div class="search-box">
-        <label for="busca">Buscar por descrição ou código de barras:</label>
-        <input type="text" id="busca" placeholder="Digite para filtrar..." />
-      </div>
-      <div class="table-wrapper">
-        <table>
-          <thead>
-            <tr>
-              <th>Loja</th>
-              <th>Produto</th>
-              <th>Cód. barras</th>
-              <th>Validade</th>
-              <th>Status</th>
-              <th>Qtd</th>
-              <th>Dias p/ vencer</th>
-              <th>Obs.</th>
-            </tr>
-          </thead>
-          <tbody id="tabelaCorpo">
-            <!-- Linhas via JS -->
-          </tbody>
-        </table>
-      </div>
-      <div class="small">
-        Base única para todas as lojas (Firestore). Depois dá pra criar visões só por loja.
-      </div>
+    <!-- APP DE VERDADE (SÓ APARECE SE ESTIVER LOGADO) -->
+    <section id="appContent" class="hidden">
+      <section class="card">
+        <h2>Novo lançamento</h2>
+        <div class="form-grid">
+          <div>
+            <label for="loja">Loja</label>
+            <select id="loja">
+              <option value="">Selecione...</option>
+              <option value="PV">Ponta Verde</option>
+              <option value="Farol">Farol</option>
+              <option value="Praia">Praia</option>
+              <option value="Riomar">Riomar</option>
+            </select>
+          </div>
+          <div>
+            <label for="codigoBarras">Código de barras</label>
+            <input type="text" id="codigoBarras" />
+          </div>
+          <div>
+            <label for="descricao">Descrição</label>
+            <input type="text" id="descricao" />
+          </div>
+          <div>
+            <label for="quantidade">Quantidade</label>
+            <input type="number" id="quantidade" min="1" />
+          </div>
+          <div>
+            <label for="validade">Data de validade</label>
+            <input type="date" id="validade" />
+          </div>
+          <div>
+            <label for="observacao">Observação</label>
+            <textarea id="observacao" placeholder="Ex.: ponta de gôndola, oferta, avaria..."></textarea>
+          </div>
+        </div>
+        <button class="btn-primary" id="btnSalvar">Salvar lançamento</button>
+        <div class="small">
+          * Status é calculado automaticamente:<br />
+          <strong>OK</strong> (&gt; 30 dias) · <strong>Vence em 30 dias</strong> · <strong>Vencido</strong>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Itens cadastrados</h2>
+        <div class="filters">
+          <button class="btn-outline active" data-filter="todos">Todos</button>
+          <button class="btn-outline" data-filter="ok">OK</button>
+          <button class="btn-outline" data-filter="alerta">Vence em 30 dias</button>
+          <button class="btn-outline" data-filter="vencido">Vencidos</button>
+        </div>
+        <div class="search-box">
+          <label for="busca">Buscar por descrição ou código de barras:</label>
+          <input type="text" id="busca" placeholder="Digite para filtrar..." />
+        </div>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Loja</th>
+                <th>Produto</th>
+                <th>Cód. barras</th>
+                <th>Validade</th>
+                <th>Status</th>
+                <th>Qtd</th>
+                <th>Dias p/ vencer</th>
+                <th>Obs.</th>
+              </tr>
+            </thead>
+            <tbody id="tabelaCorpo">
+              <!-- Linhas via JS -->
+            </tbody>
+          </table>
+        </div>
+        <div class="small">
+          Base única para todas as lojas (Firestore). Depois dá pra criar visões só por loja.
+        </div>
+      </section>
     </section>
   </main>
 
-  <!-- Script principal: Firebase + lógica -->
+  <!-- Script principal: Firebase + Auth + Firestore -->
   <script type="module">
-    // 1) IMPORTS DO FIREBASE (CDN)
+    // IMPORTS DO FIREBASE (CDN)
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
     import {
       getFirestore,
@@ -277,8 +404,18 @@
       query,
       orderBy
     } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+    import {
+      getAuth,
+      onAuthStateChanged,
+      signInWithEmailAndPassword,
+      createUserWithEmailAndPassword,
+      signOut,
+      sendPasswordResetEmail,
+      GoogleAuthProvider,
+      signInWithPopup
+    } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
 
-    // 2) SUA CONFIG DO FIREBASE (JÁ COM OS DADOS QUE VOCÊ ME PASSOU)
+    // CONFIG DO SEU FIREBASE
     const firebaseConfig = {
       apiKey: "AIzaSyDa1z9LwlSHxwSTC974ci9RMEYdEiA_wEg",
       authDomain: "controle-validade-fc108.firebaseapp.com",
@@ -289,10 +426,134 @@
       measurementId: "G-VJ8DMM47EN"
     };
 
-    // 3) INICIALIZAR FIREBASE / FIRESTORE
+    // INICIALIZAÇÃO
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-    const itensRef = collection(db, "itens_validade"); // mesma coleção que você criou
+    const auth = getAuth(app);
+    const itensRef = collection(db, "itens_validade");
+
+    // ELEMENTOS DOM
+    const loginCard = document.getElementById("loginCard");
+    const appContent = document.getElementById("appContent");
+    const btnLogout = document.getElementById("btnLogout");
+    const userEmailSpan = document.getElementById("userEmail");
+    const authError = document.getElementById("authError");
+    const emailAuth = document.getElementById("emailAuth");
+    const senhaAuth = document.getElementById("senhaAuth");
+    const btnAuthMain = document.getElementById("btnAuthMain");
+    const btnEsqueceuSenha = document.getElementById("btnEsqueceuSenha");
+    const btnGoogle = document.getElementById("btnGoogle");
+    const btnModoLogin = document.getElementById("btnModoLogin");
+    const btnModoCadastro = document.getElementById("btnModoCadastro");
+
+    let modoCadastro = false; // false = login, true = criar conta
+
+    function setModoAuth(cadastro) {
+      modoCadastro = cadastro;
+      if (cadastro) {
+        btnModoCadastro.classList.add("active");
+        btnModoLogin.classList.remove("active");
+        btnAuthMain.textContent = "Criar conta";
+      } else {
+        btnModoLogin.classList.add("active");
+        btnModoCadastro.classList.remove("active");
+        btnAuthMain.textContent = "Entrar";
+      }
+      authError.textContent = "";
+    }
+
+    btnModoLogin.addEventListener("click", () => setModoAuth(false));
+    btnModoCadastro.addEventListener("click", () => setModoAuth(true));
+
+    function mapearErroAuth(code) {
+      if (!code) return "Erro ao autenticar. Tente novamente.";
+      if (code.includes("auth/invalid-email")) return "E-mail inválido.";
+      if (code.includes("auth/user-not-found")) return "Usuário não encontrado.";
+      if (code.includes("auth/wrong-password")) return "Senha incorreta.";
+      if (code.includes("auth/email-already-in-use")) return "Este e-mail já está em uso.";
+      if (code.includes("auth/weak-password")) return "Senha muito fraca (mín. 6 caracteres).";
+      return "Erro: " + code.replace("auth/", "");
+    }
+
+    // LOGIN / CADASTRO
+    btnAuthMain.addEventListener("click", async () => {
+      authError.textContent = "";
+      const email = emailAuth.value.trim();
+      const senha = senhaAuth.value.trim();
+
+      if (!email || !senha) {
+        authError.textContent = "Preencha e-mail e senha.";
+        return;
+      }
+
+      try {
+        if (modoCadastro) {
+          await createUserWithEmailAndPassword(auth, email, senha);
+        } else {
+          await signInWithEmailAndPassword(auth, email, senha);
+        }
+      } catch (e) {
+        console.error(e);
+        authError.textContent = mapearErroAuth(e.code || e.message);
+      }
+    });
+
+    // LOGIN COM GOOGLE
+    btnGoogle.addEventListener("click", async () => {
+      authError.textContent = "";
+      try {
+        const provider = new GoogleAuthProvider();
+        await signInWithPopup(auth, provider);
+      } catch (e) {
+        console.error(e);
+        authError.textContent = "Erro ao entrar com Google.";
+      }
+    });
+
+    // ESQUECEU SENHA
+    btnEsqueceuSenha.addEventListener("click", async () => {
+      authError.textContent = "";
+      const email = emailAuth.value.trim();
+      if (!email) {
+        authError.textContent = "Digite o e-mail para recuperar a senha.";
+        return;
+      }
+      try {
+        await sendPasswordResetEmail(auth, email);
+        authError.textContent = "E-mail de recuperação enviado.";
+      } catch (e) {
+        console.error(e);
+        authError.textContent = mapearErroAuth(e.code || e.message);
+      }
+    });
+
+    // LOGOUT
+    btnLogout.addEventListener("click", async () => {
+      await signOut(auth);
+    });
+
+    // CONTROLE DE STATUS DE LOGIN
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        // Logado
+        loginCard.classList.add("hidden");
+        appContent.classList.remove("hidden");
+        btnLogout.classList.remove("hidden");
+        userEmailSpan.textContent = user.email || "";
+        emailAuth.value = "";
+        senhaAuth.value = "";
+        authError.textContent = "";
+        await renderizarTabela();
+      } else {
+        // Deslogado
+        loginCard.classList.remove("hidden");
+        appContent.classList.add("hidden");
+        btnLogout.classList.add("hidden");
+        userEmailSpan.textContent = "";
+      }
+    });
+
+    // ---- PARTE DO APP (FIRESTORE) ----
 
     function calcularStatus(dataValidadeStr) {
       if (!dataValidadeStr) {
@@ -331,13 +592,13 @@
 
     async function renderizarTabela() {
       const tbody = document.getElementById("tabelaCorpo");
+      if (!tbody) return;
       tbody.innerHTML = "";
 
       const filtroAtivo =
-        document.querySelector(".btn-outline.active")?.dataset.filter || "todos";
-      const textoBusca = document
-        .getElementById("busca")
-        .value.trim()
+        document.querySelector(".filters .btn-outline.active")?.dataset.filter || "todos";
+      const textoBusca = (document.getElementById("busca")?.value || "")
+        .trim()
         .toLowerCase();
 
       const itens = await carregarItensDoBanco();
@@ -426,69 +687,82 @@
     }
 
     function limparFormulario() {
-      document.getElementById("loja").value = "";
-      document.getElementById("codigoBarras").value = "";
-      document.getElementById("descricao").value = "";
-      document.getElementById("quantidade").value = "";
-      document.getElementById("validade").value = "";
-      document.getElementById("observacao").value = "";
+      const loja = document.getElementById("loja");
+      const codigoBarras = document.getElementById("codigoBarras");
+      const descricao = document.getElementById("descricao");
+      const quantidade = document.getElementById("quantidade");
+      const validade = document.getElementById("validade");
+      const observacao = document.getElementById("observacao");
+
+      if (!loja) return;
+
+      loja.value = "";
+      codigoBarras.value = "";
+      descricao.value = "";
+      quantidade.value = "";
+      validade.value = "";
+      observacao.value = "";
     }
 
-    document.getElementById("btnSalvar").addEventListener("click", async () => {
-      const loja = document.getElementById("loja").value.trim();
-      const codigoBarras = document
-        .getElementById("codigoBarras")
-        .value.trim();
-      const descricao = document.getElementById("descricao").value.trim();
-      const quantidade = document.getElementById("quantidade").value;
-      const validade = document.getElementById("validade").value;
-      const observacao = document
-        .getElementById("observacao")
-        .value.trim();
+    // EVENTOS DO APP
+    const btnSalvar = document.getElementById("btnSalvar");
+    if (btnSalvar) {
+      btnSalvar.addEventListener("click", async () => {
+        const loja = document.getElementById("loja").value.trim();
+        const codigoBarras = document
+          .getElementById("codigoBarras")
+          .value.trim();
+        const descricao = document.getElementById("descricao").value.trim();
+        const quantidade = document.getElementById("quantidade").value;
+        const validade = document.getElementById("validade").value;
+        const observacao = document
+          .getElementById("observacao")
+          .value.trim();
 
-      if (!loja || !codigoBarras || !descricao || !validade) {
-        alert(
-          "Preencha pelo menos: Loja, Código de barras, Descrição e Validade."
-        );
-        return;
-      }
+        if (!loja || !codigoBarras || !descricao || !validade) {
+          alert(
+            "Preencha pelo menos: Loja, Código de barras, Descrição e Validade."
+          );
+          return;
+        }
 
-      try {
-        await addDoc(itensRef, {
-          loja,
-          codigoBarras,
-          descricao,
-          quantidade: quantidade ? Number(quantidade) : null,
-          validade,
-          observacao,
-          criadoEm: new Date().toISOString()
-        });
-        limparFormulario();
-        await renderizarTabela();
-      } catch (e) {
-        console.error("Erro ao salvar:", e);
-        alert("Erro ao salvar. Verifique o console do navegador.");
-      }
-    });
+        try {
+          await addDoc(itensRef, {
+            loja,
+            codigoBarras,
+            descricao,
+            quantidade: quantidade ? Number(quantidade) : null,
+            validade,
+            observacao,
+            criadoEm: new Date().toISOString()
+          });
+          limparFormulario();
+          await renderizarTabela();
+        } catch (e) {
+          console.error("Erro ao salvar:", e);
+          alert("Erro ao salvar. Verifique o console do navegador.");
+        }
+      });
+    }
 
     document
       .querySelectorAll(".filters .btn-outline")
       .forEach((btn) => {
-        btn.addEventListener("click", () => {
+        btn.addEventListener("click", async () => {
           document
             .querySelectorAll(".filters .btn-outline")
             .forEach((b) => b.classList.remove("active"));
           btn.classList.add("active");
-          renderizarTabela();
+          await renderizarTabela();
         });
       });
 
-    document.getElementById("busca").addEventListener("input", () => {
-      renderizarTabela();
-    });
-
-    // Primeira carga
-    renderizarTabela();
+    const inputBusca = document.getElementById("busca");
+    if (inputBusca) {
+      inputBusca.addEventListener("input", async () => {
+        await renderizarTabela();
+      });
+    }
   </script>
 </body>
 </html>
