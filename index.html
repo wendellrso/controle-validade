@@ -435,376 +435,451 @@
 
   <!-- Script principal: Firebase + Auth + Firestore -->
   <script type="module">
-    // IMPORTS DO FIREBASE (CDN)
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
-    import {
-      getFirestore,
-      collection,
-      addDoc,
-      getDocs,
-      query,
-      orderBy
-    } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
-    import {
-      getAuth,
-      onAuthStateChanged,
-      signInWithEmailAndPassword,
-      createUserWithEmailAndPassword,
-      signOut,
-      sendPasswordResetEmail,
-      GoogleAuthProvider,
-      signInWithPopup
-    } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
+  // IMPORTS DO FIREBASE (CDN)
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+  import {
+    getFirestore,
+    collection,
+    addDoc,
+    getDocs,
+    query,
+    orderBy,
+    doc,
+    getDoc,
+    setDoc
+  } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+  import {
+    getAuth,
+    onAuthStateChanged,
+    signInWithEmailAndPassword,
+    createUserWithEmailAndPassword,
+    signOut,
+    sendPasswordResetEmail,
+    GoogleAuthProvider,
+    signInWithPopup
+  } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
 
-    // CONFIG DO SEU FIREBASE
-    const firebaseConfig = {
-      apiKey: "AIzaSyDa1z9LwlSHxwSTC974ci9RMEYdEiA_wEg",
-      authDomain: "controle-validade-fc108.firebaseapp.com",
-      projectId: "controle-validade-fc108",
-      storageBucket: "controle-validade-fc108.firebasestorage.app",
-      messagingSenderId: "737065688686",
-      appId: "1:737065688686:web:ed3e602baf64c1fb4f907f",
-      measurementId: "G-VJ8DMM47EN"
-    };
+  // CONFIG DO SEU FIREBASE
+  const firebaseConfig = {
+    apiKey: "AIzaSyDa1z9LwlSHxwSTC974ci9RMEYdEiA_wEg",
+    authDomain: "controle-validade-fc108.firebaseapp.com",
+    projectId: "controle-validade-fc108",
+    storageBucket: "controle-validade-fc108.firebasestorage.app",
+    messagingSenderId: "737065688686",
+    appId: "1:737065688686:web:ed3e602baf64c1fb4f907f",
+    measurementId: "G-VJ8DMM47EN"
+  };
 
-    // INICIALIZAÇÃO
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const auth = getAuth(app);
-    const itensRef = collection(db, "itens_validade");
+  // INICIALIZAÇÃO
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
+  const itensRef = collection(db, "itens_validade");
 
-    // ELEMENTOS DOM
-    const loginCard = document.getElementById("loginCard");
-    const appContent = document.getElementById("appContent");
-    const btnLogout = document.getElementById("btnLogout");
-    const userEmailSpan = document.getElementById("userEmail");
-    const authError = document.getElementById("authError");
-    const emailAuth = document.getElementById("emailAuth");
-    const senhaAuth = document.getElementById("senhaAuth");
-    const btnAuthMain = document.getElementById("btnAuthMain");
-    const btnEsqueceuSenha = document.getElementById("btnEsqueceuSenha");
-    const btnGoogle = document.getElementById("btnGoogle");
-    const btnModoLogin = document.getElementById("btnModoLogin");
-    const btnModoCadastro = document.getElementById("btnModoCadastro");
+  // PERFIL DO USUÁRIO (admin/gerente/repositor)
+  let perfilUsuario = null;
 
-    let modoCadastro = false; // false = login, true = criar conta
+  // ELEMENTOS DOM
+  const loginCard = document.getElementById("loginCard");
+  const appContent = document.getElementById("appContent");
+  const btnLogout = document.getElementById("btnLogout");
+  const userEmailSpan = document.getElementById("userEmail");
+  const authError = document.getElementById("authError");
+  const emailAuth = document.getElementById("emailAuth");
+  const senhaAuth = document.getElementById("senhaAuth");
+  const btnAuthMain = document.getElementById("btnAuthMain");
+  const btnEsqueceuSenha = document.getElementById("btnEsqueceuSenha");
+  const btnGoogle = document.getElementById("btnGoogle");
+  const btnModoLogin = document.getElementById("btnModoLogin");
+  const btnModoCadastro = document.getElementById("btnModoCadastro");
+  const btnApple = document.getElementById("btnApple");
 
-    function setModoAuth(cadastro) {
-      modoCadastro = cadastro;
-      if (cadastro) {
-        btnModoCadastro.classList.add("active");
-        btnModoLogin.classList.remove("active");
-        btnAuthMain.textContent = "Criar conta";
+  let modoCadastro = false; // false = login, true = criar conta
+
+  function setModoAuth(cadastro) {
+    modoCadastro = cadastro;
+    if (cadastro) {
+      btnModoCadastro.classList.add("active");
+      btnModoLogin.classList.remove("active");
+      btnAuthMain.textContent = "Criar conta";
+    } else {
+      btnModoLogin.classList.add("active");
+      btnModoCadastro.classList.remove("active");
+      btnAuthMain.textContent = "Entrar";
+    }
+    authError.textContent = "";
+  }
+
+  btnModoLogin.addEventListener("click", () => setModoAuth(false));
+  btnModoCadastro.addEventListener("click", () => setModoAuth(true));
+
+  function mapearErroAuth(code) {
+    if (!code) return "Erro ao autenticar. Tente novamente.";
+    if (code.includes("auth/invalid-email")) return "E-mail inválido.";
+    if (code.includes("auth/user-not-found")) return "Usuário não encontrado.";
+    if (code.includes("auth/wrong-password")) return "Senha incorreta.";
+    if (code.includes("auth/email-already-in-use")) return "Este e-mail já está em uso.";
+    if (code.includes("auth/weak-password")) return "Senha muito fraca (mín. 6 caracteres).";
+    if (code.includes("operation-not-allowed")) return "Esse tipo de login não está habilitado no Firebase.";
+    return "Erro: " + code.replace("auth/", "");
+  }
+
+  // LOGIN / CADASTRO
+  btnAuthMain.addEventListener("click", async () => {
+    authError.textContent = "";
+    const email = emailAuth.value.trim();
+    const senha = senhaAuth.value.trim();
+
+    if (!email || !senha) {
+      authError.textContent = "Preencha e-mail e senha.";
+      return;
+    }
+
+    try {
+      if (modoCadastro) {
+        await createUserWithEmailAndPassword(auth, email, senha);
       } else {
-        btnModoLogin.classList.add("active");
-        btnModoCadastro.classList.remove("active");
-        btnAuthMain.textContent = "Entrar";
+        await signInWithEmailAndPassword(auth, email, senha);
       }
+    } catch (e) {
+      console.error(e);
+      authError.textContent = mapearErroAuth(e.code || e.message);
+    }
+  });
+
+  // LOGIN COM GOOGLE
+  btnGoogle.addEventListener("click", async () => {
+    authError.textContent = "";
+    try {
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(auth, provider);
+    } catch (e) {
+      console.error(e);
+      authError.textContent = "Erro ao entrar com Google.";
+    }
+  });
+
+  // BOTÃO APPLE (APENAS VISUAL POR ENQUANTO)
+  btnApple.addEventListener("click", () => {
+    alert("Login com Apple ainda não está configurado.\nPor enquanto use e-mail/senha ou Google 🙂");
+  });
+
+  // ESQUECEU SENHA
+  btnEsqueceuSenha.addEventListener("click", async () => {
+    authError.textContent = "";
+    const email = emailAuth.value.trim();
+    if (!email) {
+      authError.textContent = "Digite o e-mail para recuperar a senha.";
+      return;
+    }
+    try {
+      await sendPasswordResetEmail(auth, email);
+      authError.textContent = "E-mail de recuperação enviado.";
+    } catch (e) {
+      console.error(e);
+      authError.textContent = mapearErroAuth(e.code || e.message);
+    }
+  });
+
+  // LOGOUT
+  btnLogout.addEventListener("click", async () => {
+    await signOut(auth);
+  });
+
+  // 🔐 Carrega ou cria o perfil do usuário (admin/gerente/repositor)
+  async function carregarPerfilUsuario(user) {
+    const usuariosRef = doc(db, "usuarios", user.uid);
+    const snap = await getDoc(usuariosRef);
+
+    if (snap.exists()) {
+      perfilUsuario = snap.data();
+    } else {
+      // Primeiro login: vira REPOSITOR por padrão
+      perfilUsuario = {
+        tipo: "repositor", // admin | gerente | repositor
+        loja: "",          // ex.: "PV", "Farol"...
+        email: user.email || "",
+        criadoEm: new Date().toISOString()
+      };
+      await setDoc(usuariosRef, perfilUsuario);
+    }
+
+    // Mostra no header (opcional)
+    const existingBadge = document.getElementById("roleBadge");
+    if (existingBadge) existingBadge.remove();
+    const userInfoDiv = document.getElementById("userInfo");
+    if (userInfoDiv && perfilUsuario) {
+      const span = document.createElement("span");
+      span.id = "roleBadge";
+      span.className = "tag-loja";
+      const lojaTxt = perfilUsuario.loja ? ` • ${perfilUsuario.loja}` : "";
+      span.textContent = perfilUsuario.tipo.toUpperCase() + lojaTxt;
+      userInfoDiv.insertBefore(span, btnLogout);
+    }
+
+    await renderizarTabela();
+  }
+
+  // CONTROLE DE STATUS DE LOGIN
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      // Logado
+      loginCard.classList.add("hidden");
+      appContent.classList.remove("hidden");
+      btnLogout.classList.remove("hidden");
+      userEmailSpan.textContent = user.email || "";
+      emailAuth.value = "";
+      senhaAuth.value = "";
       authError.textContent = "";
+      await carregarPerfilUsuario(user);
+    } else {
+      // Deslogado
+      loginCard.classList.remove("hidden");
+      appContent.classList.add("hidden");
+      btnLogout.classList.add("hidden");
+      userEmailSpan.textContent = "";
+      perfilUsuario = null;
+    }
+  });
+
+  // ---- PARTE DO APP (FIRESTORE) ----
+
+  function calcularStatus(dataValidadeStr) {
+    if (!dataValidadeStr) {
+      return { status: "ok", dias: null };
+    }
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+    const dataValidade = new Date(dataValidadeStr + "T00:00:00");
+    const diffMs = dataValidade - hoje;
+    const diffDias = Math.round(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffDias < 0) {
+      return { status: "vencido", dias: diffDias };
+    } else if (diffDias <= 30) {
+      return { status: "alerta", dias: diffDias };
+    } else {
+      return { status: "ok", dias: diffDias };
+    }
+  }
+
+  function formatarDataBr(dataStr) {
+    if (!dataStr) return "";
+    const [ano, mes, dia] = dataStr.split("-");
+    return `${dia}/${mes}/${ano}`;
+  }
+
+  async function carregarItensDoBanco() {
+    const q = query(itensRef, orderBy("validade", "asc"));
+    const snapshot = await getDocs(q);
+    const itens = [];
+    snapshot.forEach((doc) => {
+      itens.push({ id: doc.id, ...doc.data() });
+    });
+    return itens;
+  }
+
+  async function renderizarTabela() {
+    const tbody = document.getElementById("tabelaCorpo");
+    if (!tbody) return;
+    tbody.innerHTML = "";
+
+    // Se ainda não carregou perfil, espera
+    if (!perfilUsuario) {
+      const tr = document.createElement("tr");
+      const td = document.createElement("td");
+      td.colSpan = 8;
+      td.innerHTML = '<div class="empty-state">Carregando perfil do usuário...</div>';
+      tr.appendChild(td);
+      tbody.appendChild(tr);
+      return;
     }
 
-    btnModoLogin.addEventListener("click", () => setModoAuth(false));
-    btnModoCadastro.addEventListener("click", () => setModoAuth(true));
+    const filtroAtivo =
+      document.querySelector(".filters .btn-outline.active")?.dataset.filter || "todos";
+    const textoBusca = (document.getElementById("busca")?.value || "")
+      .trim()
+      .toLowerCase();
 
-    function mapearErroAuth(code) {
-      if (!code) return "Erro ao autenticar. Tente novamente.";
-      if (code.includes("auth/invalid-email")) return "E-mail inválido.";
-      if (code.includes("auth/user-not-found")) return "Usuário não encontrado.";
-      if (code.includes("auth/wrong-password")) return "Senha incorreta.";
-      if (code.includes("auth/email-already-in-use")) return "Este e-mail já está em uso.";
-      if (code.includes("auth/weak-password")) return "Senha muito fraca (mín. 6 caracteres).";
-      return "Erro: " + code.replace("auth/", "");
-    }
+    const itens = await carregarItensDoBanco();
 
-    // LOGIN / CADASTRO
-    btnAuthMain.addEventListener("click", async () => {
-      authError.textContent = "";
-      const email = emailAuth.value.trim();
-      const senha = senhaAuth.value.trim();
+    const uidAtual = auth.currentUser ? auth.currentUser.uid : null;
 
-      if (!email || !senha) {
-        authError.textContent = "Preencha e-mail e senha.";
-        return;
+    const filtrados = itens.filter((item) => {
+      const { status } = calcularStatus(item.validade);
+
+      // Filtro por status (OK / alerta / vencido)
+      if (filtroAtivo === "ok" && status !== "ok") return false;
+      if (filtroAtivo === "alerta" && status !== "alerta") return false;
+      if (filtroAtivo === "vencido" && status !== "vencido") return false;
+
+      // Filtro por busca de texto
+      if (textoBusca) {
+        const alvo = (
+          (item.descricao || "") +
+          " " +
+          (item.codigoBarras || "")
+        ).toLowerCase();
+        if (!alvo.includes(textoBusca)) return false;
       }
 
-      try {
-        if (modoCadastro) {
-          await createUserWithEmailAndPassword(auth, email, senha);
-        } else {
-          await signInWithEmailAndPassword(auth, email, senha);
-        }
-      } catch (e) {
-        console.error(e);
-        authError.textContent = mapearErroAuth(e.code || e.message);
-      }
-    });
-
-    // LOGIN COM GOOGLE
-    btnGoogle.addEventListener("click", async () => {
-      authError.textContent = "";
-      try {
-        const provider = new GoogleAuthProvider();
-        await signInWithPopup(auth, provider);
-      } catch (e) {
-        console.error(e);
-        authError.textContent = "Erro ao entrar com Google.";
-      }
-    });
-
-    // ESQUECEU SENHA
-    btnEsqueceuSenha.addEventListener("click", async () => {
-      authError.textContent = "";
-      const email = emailAuth.value.trim();
-      if (!email) {
-        authError.textContent = "Digite o e-mail para recuperar a senha.";
-        return;
-      }
-      try {
-        await sendPasswordResetEmail(auth, email);
-        authError.textContent = "E-mail de recuperação enviado.";
-      } catch (e) {
-        console.error(e);
-        authError.textContent = mapearErroAuth(e.code || e.message);
-      }
-    });
-
-    // LOGOUT
-    btnLogout.addEventListener("click", async () => {
-      await signOut(auth);
-    });
-
-    // CONTROLE DE STATUS DE LOGIN
-    onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        // Logado
-        loginCard.classList.add("hidden");
-        appContent.classList.remove("hidden");
-        btnLogout.classList.remove("hidden");
-        userEmailSpan.textContent = user.email || "";
-        emailAuth.value = "";
-        senhaAuth.value = "";
-        authError.textContent = "";
-        await renderizarTabela();
-      } else {
-        // Deslogado
-        loginCard.classList.remove("hidden");
-        appContent.classList.add("hidden");
-        btnLogout.classList.add("hidden");
-        userEmailSpan.textContent = "";
-      }
-    });
-
-    // ---- PARTE DO APP (FIRESTORE) ----
-
-    function calcularStatus(dataValidadeStr) {
-      if (!dataValidadeStr) {
-        return { status: "ok", dias: null };
-      }
-      const hoje = new Date();
-      hoje.setHours(0, 0, 0, 0);
-      const dataValidade = new Date(dataValidadeStr + "T00:00:00");
-      const diffMs = dataValidade - hoje;
-      const diffDias = Math.round(diffMs / (1000 * 60 * 60 * 24));
-
-      if (diffDias < 0) {
-        return { status: "vencido", dias: diffDias };
-      } else if (diffDias <= 30) {
-        return { status: "alerta", dias: diffDias };
-      } else {
-        return { status: "ok", dias: diffDias };
-      }
-    }
-
-    function formatarDataBr(dataStr) {
-      if (!dataStr) return "";
-      const [ano, mes, dia] = dataStr.split("-");
-      return `${dia}/${mes}/${ano}`;
-    }
-
-    async function carregarItensDoBanco() {
-      const q = query(itensRef, orderBy("validade", "asc"));
-      const snapshot = await getDocs(q);
-      const itens = [];
-      snapshot.forEach((doc) => {
-        itens.push({ id: doc.id, ...doc.data() });
-      });
-      return itens;
-    }
-
-    async function renderizarTabela() {
-      const tbody = document.getElementById("tabelaCorpo");
-      if (!tbody) return;
-      tbody.innerHTML = "";
-
-      const filtroAtivo =
-        document.querySelector(".filters .btn-outline.active")?.dataset.filter || "todos";
-      const textoBusca = (document.getElementById("busca")?.value || "")
-        .trim()
-        .toLowerCase();
-
-      const itens = await carregarItensDoBanco();
-
-      const filtrados = itens.filter((item) => {
-        const { status } = calcularStatus(item.validade);
-
-        if (filtroAtivo === "ok" && status !== "ok") return false;
-        if (filtroAtivo === "alerta" && status !== "alerta") return false;
-        if (filtroAtivo === "vencido" && status !== "vencido") return false;
-
-        if (textoBusca) {
-          const alvo = (
-            (item.descricao || "") +
-            " " +
-            (item.codigoBarras || "")
-          ).toLowerCase();
-          if (!alvo.includes(textoBusca)) return false;
-        }
-
+      // 🔐 RESTRIÇÃO POR PERFIL
+      if (perfilUsuario.tipo === "admin") {
+        // Admin vê tudo
         return true;
-      });
+      } else if (perfilUsuario.tipo === "gerente") {
+        // Gerente vê tudo da LOJA dele
+        return item.loja === perfilUsuario.loja;
+      } else {
+        // Repositor vê só o que ELE cadastrou
+        return item.criadoPorUid === uidAtual;
+      }
+    });
 
-      if (filtrados.length === 0) {
-        const tr = document.createElement("tr");
-        const td = document.createElement("td");
-        td.colSpan = 8;
-        td.innerHTML = '<div class="empty-state">Nenhum item encontrado.</div>';
-        tr.appendChild(td);
-        tbody.appendChild(tr);
+    if (filtrados.length === 0) {
+      const tr = document.createElement("tr");
+      const td = document.createElement("td");
+      td.colSpan = 8;
+      td.innerHTML = '<div class="empty-state">Nenhum item encontrado.</div>';
+      tr.appendChild(td);
+      tbody.appendChild(tr);
+      return;
+    }
+
+    filtrados.forEach((item) => {
+      const { status, dias } = calcularStatus(item.validade);
+      const tr = document.createElement("tr");
+
+      const tdLoja = document.createElement("td");
+      tdLoja.innerHTML = `<span class="tag-loja">${item.loja || "-"}</span>`;
+      tr.appendChild(tdLoja);
+
+      const tdDesc = document.createElement("td");
+      tdDesc.textContent = item.descricao || "-";
+      tr.appendChild(tdDesc);
+
+      const tdCod = document.createElement("td");
+      tdCod.textContent = item.codigoBarras || "-";
+      tr.appendChild(tdCod);
+
+      const tdVal = document.createElement("td");
+      tdVal.textContent = item.validade
+        ? formatarDataBr(item.validade)
+        : "-";
+      tr.appendChild(tdVal);
+
+      const tdStatus = document.createElement("td");
+      const span = document.createElement("span");
+      span.classList.add("badge");
+      if (status === "ok") {
+        span.classList.add("badge-ok");
+        span.textContent = "OK";
+      } else if (status === "alerta") {
+        span.classList.add("badge-alerta");
+        span.textContent = "Vence em 30 dias";
+      } else {
+        span.classList.add("badge-vencido");
+        span.textContent = "Vencido";
+      }
+      tdStatus.appendChild(span);
+      tr.appendChild(tdStatus);
+
+      const tdQtd = document.createElement("td");
+      tdQtd.textContent = item.quantidade || "-";
+      tr.appendChild(tdQtd);
+
+      const tdDias = document.createElement("td");
+      tdDias.textContent = dias !== null ? dias : "-";
+      tr.appendChild(tdDias);
+
+      const tdObs = document.createElement("td");
+      tdObs.textContent = item.observacao || "-";
+      tr.appendChild(tdObs);
+
+      tbody.appendChild(tr);
+    });
+  }
+
+  function limparFormulario() {
+    const loja = document.getElementById("loja");
+    const codigoBarras = document.getElementById("codigoBarras");
+    const descricao = document.getElementById("descricao");
+    const quantidade = document.getElementById("quantidade");
+    const validade = document.getElementById("validade");
+    const observacao = document.getElementById("observacao");
+
+    if (!loja) return;
+
+    loja.value = "";
+    codigoBarras.value = "";
+    descricao.value = "";
+    quantidade.value = "";
+    validade.value = "";
+    observacao.value = "";
+  }
+
+  // EVENTOS DO APP
+  const btnSalvar = document.getElementById("btnSalvar");
+  if (btnSalvar) {
+    btnSalvar.addEventListener("click", async () => {
+      const loja = document.getElementById("loja").value.trim();
+      const codigoBarras = document
+        .getElementById("codigoBarras")
+        .value.trim();
+      const descricao = document.getElementById("descricao").value.trim();
+      const quantidade = document.getElementById("quantidade").value;
+      const validade = document.getElementById("validade").value;
+      const observacao = document
+        .getElementById("observacao")
+        .value.trim();
+
+      if (!loja || !codigoBarras || !descricao || !validade) {
+        alert(
+          "Preencha pelo menos: Loja, Código de barras, Descrição e Validade."
+        );
         return;
       }
 
-      filtrados.forEach((item) => {
-        const { status, dias } = calcularStatus(item.validade);
-        const tr = document.createElement("tr");
-
-        const tdLoja = document.createElement("td");
-        tdLoja.innerHTML = `<span class="tag-loja">${item.loja || "-"}</span>`;
-        tr.appendChild(tdLoja);
-
-        const tdDesc = document.createElement("td");
-        tdDesc.textContent = item.descricao || "-";
-        tr.appendChild(tdDesc);
-
-        const tdCod = document.createElement("td");
-        tdCod.textContent = item.codigoBarras || "-";
-        tr.appendChild(tdCod);
-
-        const tdVal = document.createElement("td");
-        tdVal.textContent = item.validade
-          ? formatarDataBr(item.validade)
-          : "-";
-        tr.appendChild(tdVal);
-
-        const tdStatus = document.createElement("td");
-        const span = document.createElement("span");
-        span.classList.add("badge");
-        if (status === "ok") {
-          span.classList.add("badge-ok");
-          span.textContent = "OK";
-        } else if (status === "alerta") {
-          span.classList.add("badge-alerta");
-          span.textContent = "Vence em 30 dias";
-        } else {
-          span.classList.add("badge-vencido");
-          span.textContent = "Vencido";
-        }
-        tdStatus.appendChild(span);
-        tr.appendChild(tdStatus);
-
-        const tdQtd = document.createElement("td");
-        tdQtd.textContent = item.quantidade || "-";
-        tr.appendChild(tdQtd);
-
-        const tdDias = document.createElement("td");
-        tdDias.textContent = dias !== null ? dias : "-";
-        tr.appendChild(tdDias);
-
-        const tdObs = document.createElement("td");
-        tdObs.textContent = item.observacao || "-";
-        tr.appendChild(tdObs);
-
-        tbody.appendChild(tr);
-      });
-    }
-
-    function limparFormulario() {
-      const loja = document.getElementById("loja");
-      const codigoBarras = document.getElementById("codigoBarras");
-      const descricao = document.getElementById("descricao");
-      const quantidade = document.getElementById("quantidade");
-      const validade = document.getElementById("validade");
-      const observacao = document.getElementById("observacao");
-
-      if (!loja) return;
-
-      loja.value = "";
-      codigoBarras.value = "";
-      descricao.value = "";
-      quantidade.value = "";
-      validade.value = "";
-      observacao.value = "";
-    }
-
-    // EVENTOS DO APP
-    const btnSalvar = document.getElementById("btnSalvar");
-    if (btnSalvar) {
-      btnSalvar.addEventListener("click", async () => {
-        const loja = document.getElementById("loja").value.trim();
-        const codigoBarras = document
-          .getElementById("codigoBarras")
-          .value.trim();
-        const descricao = document.getElementById("descricao").value.trim();
-        const quantidade = document.getElementById("quantidade").value;
-        const validade = document.getElementById("validade").value;
-        const observacao = document
-          .getElementById("observacao")
-          .value.trim();
-
-        if (!loja || !codigoBarras || !descricao || !validade) {
-          alert(
-            "Preencha pelo menos: Loja, Código de barras, Descrição e Validade."
-          );
-          return;
-        }
-
-        try {
-          await addDoc(itensRef, {
-            loja,
-            codigoBarras,
-            descricao,
-            quantidade: quantidade ? Number(quantidade) : null,
-            validade,
-            observacao,
-            criadoEm: new Date().toISOString()
-          });
-          limparFormulario();
-          await renderizarTabela();
-        } catch (e) {
-          console.error("Erro ao salvar:", e);
-          alert("Erro ao salvar. Verifique o console do navegador.");
-        }
-      });
-    }
-
-    document
-      .querySelectorAll(".filters .btn-outline")
-      .forEach((btn) => {
-        btn.addEventListener("click", async () => {
-          document
-            .querySelectorAll(".filters .btn-outline")
-            .forEach((b) => b.classList.remove("active"));
-          btn.classList.add("active");
-          await renderizarTabela();
+      try {
+        const user = auth.currentUser;
+        await addDoc(itensRef, {
+          loja,
+          codigoBarras,
+          descricao,
+          quantidade: quantidade ? Number(quantidade) : null,
+          validade,
+          observacao,
+          criadoEm: new Date().toISOString(),
+          criadoPorUid: user ? user.uid : null,
+          criadoPorEmail: user ? user.email : null
         });
-      });
+        limparFormulario();
+        await renderizarTabela();
+      } catch (e) {
+        console.error("Erro ao salvar:", e);
+        alert("Erro ao salvar. Verifique o console do navegador.");
+      }
+    });
+  }
 
-    const inputBusca = document.getElementById("busca");
-    if (inputBusca) {
-      inputBusca.addEventListener("input", async () => {
+  document
+    .querySelectorAll(".filters .btn-outline")
+    .forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        document
+          .querySelectorAll(".filters .btn-outline")
+          .forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
         await renderizarTabela();
       });
-    }
-  </script>
-</body>
-</html>
+    });
 
+  const inputBusca = document.getElementById("busca");
+  if (inputBusca) {
+    inputBusca.addEventListener("input", async () => {
+      await renderizarTabela();
+    });
+  }
+</script>
+
+    
