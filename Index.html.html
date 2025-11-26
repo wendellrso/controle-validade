@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Controle de Validade – Mercearia</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f4f4f5;
+      color: #111827;
+    }
+    header {
+      background: #111827;
+      color: #f9fafb;
+      padding: 16px;
+      text-align: center;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 20px;
+    }
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+    .card {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+      margin-bottom: 16px;
+    }
+    .card h2 {
+      margin-top: 0;
+      font-size: 18px;
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    label {
+      font-size: 12px;
+      color: #4b5563;
+      display: block;
+      margin-bottom: 4px;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 8px;
+      border-radius: 8px;
+      border: 1px solid #d1d5db;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+    textarea {
+      min-height: 60px;
+      resize: vertical;
+    }
+    button {
+      border: none;
+      border-radius: 999px;
+      padding: 8px 16px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: transform 0.05s ease, box-shadow 0.1s ease, opacity 0.1s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+    .btn-primary {
+      background: #111827;
+      color: #f9fafb;
+      box-shadow: 0 10px 20px rgba(15, 23, 42, 0.4);
+    }
+    .btn-primary:active {
+      transform: scale(0.97);
+      box-shadow: 0 5px 10px rgba(15, 23, 42, 0.3);
+    }
+    .btn-outline {
+      background: #ffffff;
+      color: #111827;
+      border: 1px solid #d1d5db;
+    }
+    .btn-outline.active {
+      background: #111827;
+      color: #f9fafb;
+      border-color: #111827;
+    }
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .search-box {
+      margin-top: 8px;
+    }
+    .search-box input {
+      max-width: 260px;
+    }
+    .table-wrapper {
+      overflow-x: auto;
+      border-radius: 12px;
+      border: 1px solid #e5e7eb;
+      background: #ffffff;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    thead {
+      background: #f9fafb;
+    }
+    th, td {
+      padding: 8px 10px;
+      text-align: left;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    th {
+      font-weight: 600;
+      font-size: 12px;
+      color: #4b5563;
+    }
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      font-size: 11px;
+      border-radius: 999px;
+      font-weight: 500;
+    }
+    .badge-ok {
+      background: #dcfce7;
+      color: #166534;
+    }
+    .badge-alerta {
+      background: #fef9c3;
+      color: #854d0e;
+    }
+    .badge-vencido {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+    .tag-loja {
+      font-size: 11px;
+      background: #e5e7eb;
+      border-radius: 999px;
+      padding: 2px 8px;
+    }
+    .empty-state {
+      text-align: center;
+      padding: 24px;
+      color: #6b7280;
+      font-size: 14px;
+    }
+    .small {
+      font-size: 12px;
+      color: #6b7280;
+      margin-top: 4px;
+    }
+    @media (max-width: 640px) {
+      th:nth-child(6),
+      td:nth-child(6),
+      th:nth-child(7),
+      td:nth-child(7),
+      th:nth-child(8),
+      td:nth-child(8) {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Controle de Validade – Mercearia</h1>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>Novo lançamento</h2>
+      <div class="form-grid">
+        <div>
+          <label for="loja">Loja</label>
+          <select id="loja">
+            <option value="">Selecione...</option>
+            <option value="PV">Ponta Verde</option>
+            <option value="Farol">Farol</option>
+            <option value="Praia">Praia</option>
+            <option value="Riomar">Riomar</option>
+          </select>
+        </div>
+        <div>
+          <label for="codigoBarras">Código de barras</label>
+          <input type="text" id="codigoBarras" />
+        </div>
+        <div>
+          <label for="descricao">Descrição</label>
+          <input type="text" id="descricao" />
+        </div>
+        <div>
+          <label for="quantidade">Quantidade</label>
+          <input type="number" id="quantidade" min="1" />
+        </div>
+        <div>
+          <label for="validade">Data de validade</label>
+          <input type="date" id="validade" />
+        </div>
+        <div>
+          <label for="observacao">Observação</label>
+          <textarea id="observacao" placeholder="Ex.: ponta de gôndola, oferta, avaria..."></textarea>
+        </div>
+      </div>
+      <button class="btn-primary" id="btnSalvar">Salvar lançamento</button>
+      <div class="small">
+        * Status é calculado automaticamente:<br />
+        <strong>OK</strong> (&gt; 30 dias) · <strong>Vence em 30 dias</strong> · <strong>Vencido</strong>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Itens cadastrados</h2>
+      <div class="filters">
+        <button class="btn-outline active" data-filter="todos">Todos</button>
+        <button class="btn-outline" data-filter="ok">OK</button>
+        <button class="btn-outline" data-filter="alerta">Vence em 30 dias</button>
+        <button class="btn-outline" data-filter="vencido">Vencidos</button>
+      </div>
+      <div class="search-box">
+        <label for="busca">Buscar por descrição ou código de barras:</label>
+        <input type="text" id="busca" placeholder="Digite para filtrar..." />
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Loja</th>
+              <th>Produto</th>
+              <th>Cód. barras</th>
+              <th>Validade</th>
+              <th>Status</th>
+              <th>Qtd</th>
+              <th>Dias p/ vencer</th>
+              <th>Obs.</th>
+            </tr>
+          </thead>
+          <tbody id="tabelaCorpo">
+            <!-- Linhas via JS -->
+          </tbody>
+        </table>
+      </div>
+      <div class="small">
+        Base única para todas as lojas (Firestore). Depois dá pra criar visões só por loja.
+      </div>
+    </section>
+  </main>
+
+  <!-- Script principal: Firebase + lógica -->
+  <script type="module">
+    // 1) IMPORTS DO FIREBASE (CDN)
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+    import {
+      getFirestore,
+      collection,
+      addDoc,
+      getDocs,
+      query,
+      orderBy
+    } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+
+    // 2) SUA CONFIG DO FIREBASE (JÁ COM OS DADOS QUE VOCÊ ME PASSOU)
+    const firebaseConfig = {
+      apiKey: "AIzaSyDa1z9LwlSHxwSTC974ci9RMEYdEiA_wEg",
+      authDomain: "controle-validade-fc108.firebaseapp.com",
+      projectId: "controle-validade-fc108",
+      storageBucket: "controle-validade-fc108.firebasestorage.app",
+      messagingSenderId: "737065688686",
+      appId: "1:737065688686:web:ed3e602baf64c1fb4f907f",
+      measurementId: "G-VJ8DMM47EN"
+    };
+
+    // 3) INICIALIZAR FIREBASE / FIRESTORE
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const itensRef = collection(db, "itens_validade"); // mesma coleção que você criou
+
+    function calcularStatus(dataValidadeStr) {
+      if (!dataValidadeStr) {
+        return { status: "ok", dias: null };
+      }
+      const hoje = new Date();
+      hoje.setHours(0, 0, 0, 0);
+      const dataValidade = new Date(dataValidadeStr + "T00:00:00");
+      const diffMs = dataValidade - hoje;
+      const diffDias = Math.round(diffMs / (1000 * 60 * 60 * 24));
+
+      if (diffDias < 0) {
+        return { status: "vencido", dias: diffDias };
+      } else if (diffDias <= 30) {
+        return { status: "alerta", dias: diffDias };
+      } else {
+        return { status: "ok", dias: diffDias };
+      }
+    }
+
+    function formatarDataBr(dataStr) {
+      if (!dataStr) return "";
+      const [ano, mes, dia] = dataStr.split("-");
+      return `${dia}/${mes}/${ano}`;
+    }
+
+    async function carregarItensDoBanco() {
+      const q = query(itensRef, orderBy("validade", "asc"));
+      const snapshot = await getDocs(q);
+      const itens = [];
+      snapshot.forEach((doc) => {
+        itens.push({ id: doc.id, ...doc.data() });
+      });
+      return itens;
+    }
+
+    async function renderizarTabela() {
+      const tbody = document.getElementById("tabelaCorpo");
+      tbody.innerHTML = "";
+
+      const filtroAtivo =
+        document.querySelector(".btn-outline.active")?.dataset.filter || "todos";
+      const textoBusca = document
+        .getElementById("busca")
+        .value.trim()
+        .toLowerCase();
+
+      const itens = await carregarItensDoBanco();
+
+      const filtrados = itens.filter((item) => {
+        const { status } = calcularStatus(item.validade);
+
+        if (filtroAtivo === "ok" && status !== "ok") return false;
+        if (filtroAtivo === "alerta" && status !== "alerta") return false;
+        if (filtroAtivo === "vencido" && status !== "vencido") return false;
+
+        if (textoBusca) {
+          const alvo = (
+            (item.descricao || "") +
+            " " +
+            (item.codigoBarras || "")
+          ).toLowerCase();
+          if (!alvo.includes(textoBusca)) return false;
+        }
+
+        return true;
+      });
+
+      if (filtrados.length === 0) {
+        const tr = document.createElement("tr");
+        const td = document.createElement("td");
+        td.colSpan = 8;
+        td.innerHTML = '<div class="empty-state">Nenhum item encontrado.</div>';
+        tr.appendChild(td);
+        tbody.appendChild(tr);
+        return;
+      }
+
+      filtrados.forEach((item) => {
+        const { status, dias } = calcularStatus(item.validade);
+        const tr = document.createElement("tr");
+
+        const tdLoja = document.createElement("td");
+        tdLoja.innerHTML = `<span class="tag-loja">${item.loja || "-"}</span>`;
+        tr.appendChild(tdLoja);
+
+        const tdDesc = document.createElement("td");
+        tdDesc.textContent = item.descricao || "-";
+        tr.appendChild(tdDesc);
+
+        const tdCod = document.createElement("td");
+        tdCod.textContent = item.codigoBarras || "-";
+        tr.appendChild(tdCod);
+
+        const tdVal = document.createElement("td");
+        tdVal.textContent = item.validade
+          ? formatarDataBr(item.validade)
+          : "-";
+        tr.appendChild(tdVal);
+
+        const tdStatus = document.createElement("td");
+        const span = document.createElement("span");
+        span.classList.add("badge");
+        if (status === "ok") {
+          span.classList.add("badge-ok");
+          span.textContent = "OK";
+        } else if (status === "alerta") {
+          span.classList.add("badge-alerta");
+          span.textContent = "Vence em 30 dias";
+        } else {
+          span.classList.add("badge-vencido");
+          span.textContent = "Vencido";
+        }
+        tdStatus.appendChild(span);
+        tr.appendChild(tdStatus);
+
+        const tdQtd = document.createElement("td");
+        tdQtd.textContent = item.quantidade || "-";
+        tr.appendChild(tdQtd);
+
+        const tdDias = document.createElement("td");
+        tdDias.textContent = dias !== null ? dias : "-";
+        tr.appendChild(tdDias);
+
+        const tdObs = document.createElement("td");
+        tdObs.textContent = item.observacao || "-";
+        tr.appendChild(tdObs);
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    function limparFormulario() {
+      document.getElementById("loja").value = "";
+      document.getElementById("codigoBarras").value = "";
+      document.getElementById("descricao").value = "";
+      document.getElementById("quantidade").value = "";
+      document.getElementById("validade").value = "";
+      document.getElementById("observacao").value = "";
+    }
+
+    document.getElementById("btnSalvar").addEventListener("click", async () => {
+      const loja = document.getElementById("loja").value.trim();
+      const codigoBarras = document
+        .getElementById("codigoBarras")
+        .value.trim();
+      const descricao = document.getElementById("descricao").value.trim();
+      const quantidade = document.getElementById("quantidade").value;
+      const validade = document.getElementById("validade").value;
+      const observacao = document
+        .getElementById("observacao")
+        .value.trim();
+
+      if (!loja || !codigoBarras || !descricao || !validade) {
+        alert(
+          "Preencha pelo menos: Loja, Código de barras, Descrição e Validade."
+        );
+        return;
+      }
+
+      try {
+        await addDoc(itensRef, {
+          loja,
+          codigoBarras,
+          descricao,
+          quantidade: quantidade ? Number(quantidade) : null,
+          validade,
+          observacao,
+          criadoEm: new Date().toISOString()
+        });
+        limparFormulario();
+        await renderizarTabela();
+      } catch (e) {
+        console.error("Erro ao salvar:", e);
+        alert("Erro ao salvar. Verifique o console do navegador.");
+      }
+    });
+
+    document
+      .querySelectorAll(".filters .btn-outline")
+      .forEach((btn) => {
+        btn.addEventListener("click", () => {
+          document
+            .querySelectorAll(".filters .btn-outline")
+            .forEach((b) => b.classList.remove("active"));
+          btn.classList.add("active");
+          renderizarTabela();
+        });
+      });
+
+    document.getElementById("busca").addEventListener("input", () => {
+      renderizarTabela();
+    });
+
+    // Primeira carga
+    renderizarTabela();
+  </script>
+</body>
+</html>
