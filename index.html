@@ -113,6 +113,11 @@
           class="tab-btn px-3 py-1.5 rounded-xl bg-slate-800 text-slate-200 flex items-center gap-1">
           <i class="ri-database-2-line"></i> Itens cadastrados
         </button>
+        <!-- Aba de administração (só admin enxerga) -->
+        <button id="adminTabBtn" data-tab="adminTab"
+          class="tab-btn px-3 py-1.5 rounded-xl bg-slate-800 text-slate-200 flex items-center gap-1 hidden">
+          <i class="ri-shield-user-line"></i> Administração de usuários
+        </button>
       </div>
 
       <!-- CADASTRO -->
@@ -303,6 +308,92 @@
           </p>
         </div>
       </div>
+
+      <!-- ADMINISTRAÇÃO DE USUÁRIOS (apenas admin) -->
+      <div id="adminTab" class="tab-panel hidden space-y-4">
+        <div class="bg-slate-900/80 border border-slate-700 rounded-2xl p-4 space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 class="text-sm font-semibold flex items-center gap-2">
+                <i class="ri-shield-user-line text-emerald-400"></i> Administração de usuários
+              </h2>
+              <p class="text-[11px] text-slate-400">
+                Gerencie perfis (admin, gerente, repositor) e lojas vinculadas.
+              </p>
+            </div>
+            <button id="reloadUsersBtn"
+              class="px-3 py-1.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-[11px] flex items-center gap-1">
+              <i class="ri-refresh-line"></i> Recarregar
+            </button>
+          </div>
+
+          <!-- Formulário novo usuário -->
+          <div class="bg-slate-950/40 border border-slate-800 rounded-2xl p-3">
+            <h3 class="text-xs font-semibold mb-2 flex items-center gap-1">
+              <i class="ri-user-add-line text-emerald-400"></i> Cadastrar novo usuário
+            </h3>
+            <form id="newUserForm" class="grid grid-cols-1 md:grid-cols-4 gap-3 text-[11px]">
+              <div>
+                <label class="block mb-1 text-slate-300">Nome</label>
+                <input id="newUserName" type="text" required
+                  class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700" />
+              </div>
+              <div>
+                <label class="block mb-1 text-slate-300">E-mail</label>
+                <input id="newUserEmail" type="email" required
+                  class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700" />
+              </div>
+              <div>
+                <label class="block mb-1 text-slate-300">Perfil</label>
+                <select id="newUserRole" required
+                  class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700">
+                  <option value="repositor">Repositor</option>
+                  <option value="gerente">Gerente</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+              <div>
+                <label class="block mb-1 text-slate-300">Loja</label>
+                <select id="newUserLoja"
+                  class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700">
+                  <option value="">Nenhuma</option>
+                  <option value="Ponta Verde">Ponta Verde</option>
+                  <option value="Farol">Farol</option>
+                  <option value="Praia">Praia</option>
+                  <option value="Riomar">Riomar</option>
+                  <option value="Compras">Compras</option>
+                </select>
+              </div>
+              <div class="md:col-span-4 flex justify-end">
+                <button type="submit"
+                  class="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-900 font-semibold text-xs flex items-center gap-1">
+                  <i class="ri-save-3-line"></i> Salvar usuário
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Tabela usuários -->
+          <div class="overflow-x-auto border border-slate-800 rounded-xl">
+            <table class="min-w-full text-[11px]">
+              <thead class="bg-slate-800/80">
+                <tr>
+                  <th class="px-2 py-2 text-left">Nome</th>
+                  <th class="px-2 py-2 text-left">E-mail</th>
+                  <th class="px-2 py-2 text-left">Perfil</th>
+                  <th class="px-2 py-2 text-left">Loja</th>
+                  <th class="px-2 py-2 text-right">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="usersTbody" class="divide-y divide-slate-800"></tbody>
+            </table>
+          </div>
+
+          <p id="noUsersMsg" class="text-[11px] text-slate-400 mt-2 hidden">
+            Nenhum usuário cadastrado na coleção <span class="font-mono">users</span>.
+          </p>
+        </div>
+      </div>
     </section>
 
     <!-- Modal leitor código de barras -->
@@ -392,6 +483,7 @@
     const userNameEl = document.getElementById("userName");
     const userRoleEl = document.getElementById("userRole");
     const logoutBtn = document.getElementById("logoutBtn");
+    const adminTabBtn = document.getElementById("adminTabBtn");
 
     // 🔑 BUSCAR PERFIL (com override para compras.3076@gmail.com)
     async function fetchUserRole(user) {
@@ -445,7 +537,18 @@
         userRoleEl.textContent = currentRole
           ? `Perfil: ${currentRole}${currentLoja ? " • " + currentLoja : ""}`
           : "Perfil: não definido";
+
+        // mostrar/ocultar aba admin
+        if (currentRole === "admin") {
+          adminTabBtn.classList.remove("hidden");
+        } else {
+          adminTabBtn.classList.add("hidden");
+        }
+
         loadItens();
+        if (currentRole === "admin") {
+          loadUsers();
+        }
       } else {
         loginSection.classList.remove("hidden");
         appSection.classList.add("hidden");
@@ -510,6 +613,10 @@
         tabPanels.forEach((panel) => {
           panel.classList.toggle("hidden", panel.id !== tabId);
         });
+
+        if (tabId === "adminTab" && currentRole === "admin") {
+          loadUsers();
+        }
       });
     });
 
@@ -916,6 +1023,107 @@
           .catch((err) => console.error(err));
       }
     }
+
+    // ------------------ ADMIN USUÁRIOS ------------------ //
+    const usersTbody = document.getElementById("usersTbody");
+    const noUsersMsg = document.getElementById("noUsersMsg");
+    const reloadUsersBtn = document.getElementById("reloadUsersBtn");
+    const newUserForm = document.getElementById("newUserForm");
+    const newUserName = document.getElementById("newUserName");
+    const newUserEmail = document.getElementById("newUserEmail");
+    const newUserRole = document.getElementById("newUserRole");
+    const newUserLoja = document.getElementById("newUserLoja");
+
+    reloadUsersBtn.addEventListener("click", () => {
+      if (currentRole === "admin") loadUsers();
+    });
+
+    async function loadUsers() {
+      if (!currentUser || currentRole !== "admin") return;
+
+      const snap = await getDocs(collection(db, "users"));
+      usersTbody.innerHTML = "";
+      let total = 0;
+
+      snap.forEach((docSnap) => {
+        total++;
+        const d = docSnap.data();
+        const tr = document.createElement("tr");
+        tr.className = "hover:bg-slate-800/60";
+        tr.innerHTML = `
+          <td class="px-2 py-1.5">${d.nome || ""}</td>
+          <td class="px-2 py-1.5">${d.email || ""}</td>
+          <td class="px-2 py-1.5">
+            <select class="role-select px-2 py-1 rounded-lg bg-slate-800 border border-slate-700">
+              <option value="repositor" ${ (d.role || "repositor") === "repositor" ? "selected" : "" }>Repositor</option>
+              <option value="gerente" ${ (d.role || "repositor") === "gerente" ? "selected" : "" }>Gerente</option>
+              <option value="admin" ${ (d.role || "repositor") === "admin" ? "selected" : "" }>Admin</option>
+            </select>
+          </td>
+          <td class="px-2 py-1.5">
+            <select class="loja-select px-2 py-1 rounded-lg bg-slate-800 border border-slate-700">
+              <option value="">Nenhuma</option>
+              <option value="Ponta Verde" ${d.loja === "Ponta Verde" ? "selected" : ""}>Ponta Verde</option>
+              <option value="Farol" ${d.loja === "Farol" ? "selected" : ""}>Farol</option>
+              <option value="Praia" ${d.loja === "Praia" ? "selected" : ""}>Praia</option>
+              <option value="Riomar" ${d.loja === "Riomar" ? "selected" : ""}>Riomar</option>
+              <option value="Compras" ${d.loja === "Compras" ? "selected" : ""}>Compras</option>
+            </select>
+          </td>
+          <td class="px-2 py-1.5 text-right">
+            <button class="text-xs text-emerald-300 hover:text-emerald-200 mr-2 salvar-user-btn">Salvar</button>
+            <button class="text-xs text-red-400 hover:text-red-300 excluir-user-btn">Excluir</button>
+          </td>
+        `;
+
+        const roleSelect = tr.querySelector(".role-select");
+        const lojaSelectUser = tr.querySelector(".loja-select");
+        const salvarBtn = tr.querySelector(".salvar-user-btn");
+        const excluirBtn = tr.querySelector(".excluir-user-btn");
+
+        salvarBtn.addEventListener("click", async () => {
+          await updateDoc(doc(db, "users", docSnap.id), {
+            role: roleSelect.value,
+            loja: lojaSelectUser.value
+          });
+          alert("Usuário atualizado.");
+          if (d.email === currentUser.email) {
+            await fetchUserRole(currentUser);
+            updateUIAuth();
+          }
+        });
+
+        excluirBtn.addEventListener("click", async () => {
+          if (!confirm("Deseja realmente excluir este usuário da coleção?")) return;
+          await deleteDoc(doc(db, "users", docSnap.id));
+          loadUsers();
+        });
+
+        usersTbody.appendChild(tr);
+      });
+
+      noUsersMsg.classList.toggle("hidden", total > 0);
+    }
+
+    newUserForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!currentUser || currentRole !== "admin") return;
+
+      try {
+        await addDoc(collection(db, "users"), {
+          nome: newUserName.value.trim(),
+          email: newUserEmail.value.trim(),
+          role: newUserRole.value,
+          loja: newUserLoja.value || null
+        });
+        newUserForm.reset();
+        alert("Usuário cadastrado na coleção users.");
+        loadUsers();
+      } catch (err) {
+        console.error(err);
+        alert("Erro ao cadastrar usuário.");
+      }
+    });
   </script>
 </body>
 </html>
