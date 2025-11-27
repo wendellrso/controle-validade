@@ -2,1666 +2,896 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <title>Controle de Validade – Mercearia</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Controle de Validade</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Tailwind (layout rapidinho) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Ícones -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.1.0/fonts/remixicon.css" />
+
+  <!-- SheetJS para Excel -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <!-- jsPDF + autoTable para PDF bonito -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
+  <!-- Leitor de código de barras -->
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
   <style>
-    body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      margin: 0;
-      padding: 0;
-      background: #f4f4f5;
-      color: #111827;
-    }
-    header {
-      background: #111827;
-      color: #f9fafb;
-      padding: 12px 16px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-    }
-    header h1 {
-      margin: 0;
-      font-size: 18px;
-    }
-    .user-info {
-      font-size: 12px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .user-email {
-      opacity: 0.8;
-    }
-    .btn-small {
-      border: 1px solid #e5e7eb;
+    body { background-color: #0f172a; }
+    .blur-bg { backdrop-filter: blur(10px); }
+    .tag {
+      font-size: 0.75rem;
+      padding: 0.15rem 0.5rem;
       border-radius: 999px;
-      padding: 4px 10px;
-      font-size: 11px;
-      background: #f9fafb;
-      cursor: pointer;
-    }
-    main {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 16px;
-    }
-    .card {
-      background: #ffffff;
-      border-radius: 12px;
-      padding: 16px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
-      margin-bottom: 16px;
-    }
-    .card h2 {
-      margin-top: 0;
-      font-size: 18px;
-    }
-    .form-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 12px;
-      margin-bottom: 12px;
-    }
-    label {
-      font-size: 12px;
-      color: #4b5563;
-      display: block;
-      margin-bottom: 4px;
-    }
-    input, select, textarea {
-      width: 100%;
-      padding: 8px;
-      border-radius: 8px;
-      border: 1px solid #d1d5db;
-      font-size: 14px;
-      box-sizing: border-box;
-    }
-    textarea {
-      min-height: 60px;
-      resize: vertical;
-    }
-    button {
-      border: none;
-      border-radius: 999px;
-      padding: 8px 16px;
-      font-size: 14px;
-      cursor: pointer;
-      transition: transform 0.05s ease, box-shadow 0.1s ease, opacity 0.1s;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      white-space: nowrap;
-    }
-    .btn-primary {
-      background: #111827;
-      color: #f9fafb;
-      box-shadow: 0 10px 20px rgba(15, 23, 42, 0.4);
-    }
-    .btn-primary:active {
-      transform: scale(0.97);
-      box-shadow: 0 5px 10px rgba(15, 23, 42, 0.3);
-    }
-    .btn-outline {
-      background: #ffffff;
-      color: #111827;
-      border: 1px solid #d1d5db;
-    }
-    .btn-outline.active {
-      background: #111827;
-      color: #f9fafb;
-      border-color: #111827;
-    }
-
-    .btn-google {
-      background: #ffffff;
-      border: 1px solid #d1d5db;
-      font-size: 13px;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 14px;
-    }
-    .google-icon {
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      border: 1px solid #d1d5db;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 700;
-      font-size: 13px;
-      background: #fff;
-    }
-    .btn-apple {
-      background: #000000;
-      color: #ffffff;
-      border: none;
-      font-size: 13px;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 14px;
-      border-radius: 999px;
-    }
-    .apple-icon {
-      font-size: 18px;
-    }
-
-    .filters {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-bottom: 8px;
-      align-items: center;
-    }
-    .search-box {
-      margin-top: 8px;
-    }
-    .search-box input {
-      max-width: 260px;
-    }
-    .table-wrapper {
-      overflow-x: auto;
-      border-radius: 12px;
-      border: 1px solid #e5e7eb;
-      background: #ffffff;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 13px;
-    }
-    thead {
-      background: #f9fafb;
-    }
-    th, td {
-      padding: 8px 10px;
-      text-align: left;
-      border-bottom: 1px solid #e5e7eb;
-    }
-    th {
       font-weight: 600;
-      font-size: 12px;
-      color: #4b5563;
-    }
-    tbody tr:last-child td {
-      border-bottom: none;
-    }
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      padding: 2px 8px;
-      font-size: 11px;
-      border-radius: 999px;
-      font-weight: 500;
-    }
-    .badge-ok {
-      background: #dcfce7;
-      color: #166534;
-    }
-    .badge-alerta {
-      background: #fef9c3;
-      color: #854d0e;
-    }
-    .badge-vencido {
-      background: #fee2e2;
-      color: #991b1b;
-    }
-    .tag-loja {
-      font-size: 11px;
-      background: #e5e7eb;
-      border-radius: 999px;
-      padding: 2px 8px;
-    }
-    .empty-state {
-      text-align: center;
-      padding: 24px;
-      color: #6b7280;
-      font-size: 14px;
-    }
-    .small {
-      font-size: 12px;
-      color: #6b7280;
-      margin-top: 4px;
-    }
-    .hidden {
-      display: none !important;
-    }
-
-    .login-layout {
-      max-width: 420px;
-      margin: 0 auto;
-    }
-    .login-title {
-      font-size: 20px;
-      font-weight: 600;
-      margin-bottom: 4px;
-    }
-    .login-subtitle {
-      font-size: 13px;
-      color: #6b7280;
-      margin-bottom: 16px;
-    }
-    .login-toggle {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 12px;
-    }
-    .login-toggle button {
-      flex: 1;
-      justify-content: center;
-      font-size: 13px;
-      padding: 6px 10px;
-    }
-    .login-footer {
-      font-size: 12px;
-      color: #6b7280;
-      margin-top: 12px;
-      text-align: center;
-    }
-    .login-footer button {
-      font-size: 12px;
-      padding: 0;
-      border: none;
-      background: none;
-      color: #111827;
-      text-decoration: underline;
-      box-shadow: none;
-    }
-    .error-msg {
-      font-size: 12px;
-      color: #b91c1c;
-      margin-top: 6px;
-      min-height: 16px;
-    }
-
-    .admin-table table {
-      font-size: 13px;
-    }
-    .admin-table select {
-      font-size: 12px;
-      padding: 4px 6px;
-    }
-    .admin-table button {
-      font-size: 12px;
-      padding: 4px 10px;
-    }
-
-    /* Overlay para o scanner de código de barras */
-    #scannerOverlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.55);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 999;
-    }
-
-    @media (max-width: 640px) {
-      /* esconder algumas colunas no mobile pra não virar bagunça */
-      th:nth-child(4),
-      td:nth-child(4),
-      th:nth-child(5),
-      td:nth-child(5),
-      th:nth-child(6),
-      td:nth-child(6),
-      th:nth-child(10),
-      td:nth-child(10),
-      th:nth-child(12),
-      td:nth-child(12),
-      th:nth-child(13),
-      td:nth-child(13) {
-        display: none;
-      }
-      header {
-        flex-direction: column;
-        align-items: flex-start;
-      }
     }
   </style>
-
-  <!-- jsPDF para PDF -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <!-- jsPDF AutoTable -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
-  <!-- SheetJS para Excel .xlsx -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <!-- html5-qrcode para leitura de código de barras com a câmera -->
-  <script src="https://unpkg.com/html5-qrcode@2.3.10/html5-qrcode.min.js"></script>
 </head>
-<body>
-  <header>
-    <h1>Controle de Validade – Mercearia</h1>
-    <div class="user-info" id="userInfo">
-      <span class="user-email" id="userEmail"></span>
-      <button class="btn-small hidden" id="btnLogout">Sair</button>
+<body class="text-slate-100 min-h-screen">
+
+  <!-- Navbar -->
+  <header class="bg-slate-900/80 border-b border-slate-700 sticky top-0 z-20 blur-bg">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-xl bg-emerald-500 flex items-center justify-center font-bold text-slate-900">
+          CV
+        </div>
+        <div>
+          <h1 class="text-lg font-semibold">Controle de Validade</h1>
+          <p class="text-xs text-slate-400">Multi-loja • Acesso por perfil</p>
+        </div>
+      </div>
+      <div id="userInfo" class="text-right text-xs hidden">
+        <div id="userName" class="font-semibold"></div>
+        <div id="userRole" class="text-slate-400"></div>
+        <button id="logoutBtn" class="mt-1 text-[11px] text-red-400 hover:text-red-300">
+          Sair
+        </button>
+      </div>
     </div>
   </header>
 
-  <!-- Overlay do scanner -->
-  <div id="scannerOverlay" class="hidden">
-    <div class="card" style="max-width: 400px; width: 90%; max-height: 80vh; overflow: hidden;">
-      <h2>Escanear código de barras</h2>
-      <p class="small">Aponte a câmera para o código de barras do produto.</p>
-      <div id="reader" style="width: 100%; max-width: 360px; margin: 0 auto;"></div>
-      <div style="margin-top: 12px; display: flex; justify-content: flex-end; gap: 8px;">
-        <button class="btn-outline" id="btnFecharScanner">Cancelar</button>
-      </div>
-    </div>
-  </div>
+  <main class="max-w-6xl mx-auto px-4 py-6">
 
-  <main>
-    <!-- TELA DE LOGIN -->
-    <section class="card login-layout" id="loginCard">
-      <div class="login-title">Entrar no sistema</div>
-      <div class="login-subtitle">
-        Faça login para lançar e consultar produtos por validade.
-      </div>
+    <!-- Tela de login -->
+    <section id="loginSection" class="max-w-md mx-auto">
+      <div class="bg-slate-900/80 border border-slate-700 rounded-2xl p-6 shadow-xl">
+        <h2 class="text-xl font-semibold mb-1">Entrar</h2>
+        <p class="text-sm text-slate-400 mb-4">
+          Acesse o Controle de Validade com seu e-mail corporativo.
+        </p>
 
-      <div class="login-toggle">
-        <button class="btn-outline active" id="btnModoLogin">Entrar</button>
-        <button class="btn-outline" id="btnModoCadastro">Criar conta</button>
-      </div>
+        <form id="loginForm" class="space-y-3">
+          <div>
+            <label class="text-xs text-slate-300">E-mail</label>
+            <input id="emailInput" type="email" required
+              class="mt-1 w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+          </div>
+          <div>
+            <label class="text-xs text-slate-300">Senha</label>
+            <input id="passwordInput" type="password" required
+              class="mt-1 w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+          </div>
 
-      <div class="form-grid">
-        <div style="grid-column: 1 / -1;">
-          <label for="emailAuth">E-mail</label>
-          <input type="email" id="emailAuth" placeholder="seu.email@exemplo.com" />
+          <button type="submit"
+            class="w-full mt-2 bg-emerald-500 hover:bg-emerald-400 text-slate-900 font-semibold py-2 rounded-xl text-sm flex items-center justify-center gap-2">
+            <i class="ri-mail-line text-base"></i> Entrar com e-mail
+          </button>
+        </form>
+
+        <div class="mt-4 border-t border-slate-700 pt-4">
+          <button id="googleLoginBtn"
+            class="w-full border border-slate-600 hover:bg-slate-800 text-sm py-2 rounded-xl flex items-center justify-center gap-2">
+            <i class="ri-google-fill text-red-400"></i> Entrar com Google
+          </button>
         </div>
-        <div style="grid-column: 1 / -1;">
-          <label for="senhaAuth">Senha</label>
-          <input type="password" id="senhaAuth" placeholder="mínimo 6 caracteres" />
-        </div>
-      </div>
 
-      <button class="btn-primary" id="btnAuthMain">Entrar</button>
+        <p class="mt-4 text-[11px] text-slate-500">
+          A conta precisa ter um perfil cadastrado (admin, gerente ou repositor) no Firestore em
+          <span class="font-mono text-slate-300">users/{uid}</span>.
+        </p>
 
-      <div style="margin-top: 12px; text-align:center; display:flex; flex-direction:column; gap:8px; align-items:center;">
-        <button class="btn-google" id="btnGoogle">
-          <span class="google-icon">G</span>
-          <span>Entrar com Google</span>
-        </button>
-
-        <button class="btn-apple" id="btnApple">
-          <span class="apple-icon"></span>
-          <span>Entrar com Apple</span>
-        </button>
-      </div>
-
-      <div class="error-msg" id="authError"></div>
-
-      <div class="login-footer">
-        Qualquer pessoa pode criar uma conta e usar o sistema.<br/>
-        <button id="btnEsqueceuSenha">Esqueci minha senha</button>
+        <p id="loginError" class="mt-2 text-xs text-red-400 hidden"></p>
       </div>
     </section>
 
-    <!-- APP (SÓ APARECE LOGADO) -->
-    <section id="appContent" class="hidden">
-      <!-- NOVO LANÇAMENTO / EDIÇÃO -->
-      <section class="card">
-        <h2 id="tituloFormulario">Novo lançamento</h2>
-        <div class="form-grid">
-          <!-- Loja -->
-          <div>
-            <label for="loja">Loja</label>
-            <select id="loja">
-              <option value="">Selecione...</option>
-              <option value="PV">Ponta Verde</option>
-              <option value="Farol">Farol</option>
-              <option value="Praia">Praia</option>
-              <option value="Riomar">Riomar</option>
-            </select>
-            <div class="small" id="ajudaCampoLoja"></div>
-          </div>
+    <!-- App principal -->
+    <section id="appSection" class="hidden space-y-6">
+      <!-- Abas -->
+      <div
+        class="bg-slate-900/80 border border-slate-700 rounded-2xl p-3 flex flex-wrap gap-2 text-xs font-medium">
+        <button data-tab="cadastroTab"
+          class="tab-btn px-3 py-1.5 rounded-xl bg-emerald-500 text-slate-900 flex items-center gap-1">
+          <i class="ri-add-circle-line"></i> Cadastro
+        </button>
+        <button data-tab="itensTab"
+          class="tab-btn px-3 py-1.5 rounded-xl bg-slate-800 text-slate-200 flex items-center gap-1">
+          <i class="ri-database-2-line"></i> Itens cadastrados
+        </button>
+      </div>
 
-          <!-- Data de lançamento (hoje, travada) -->
-          <div>
-            <label for="dataLancamento">Data de lançamento</label>
-            <input type="date" id="dataLancamento" disabled />
-            <div class="small">Sempre a data de hoje, registrada automaticamente.</div>
-          </div>
+      <!-- CADASTRO -->
+      <div id="cadastroTab" class="tab-panel space-y-4">
+        <div class="bg-slate-900/80 border border-slate-700 rounded-2xl p-4">
+          <h2 class="text-sm font-semibold mb-4 flex items-center gap-2">
+            <i class="ri-add-box-line text-emerald-400"></i> Cadastro de produto
+          </h2>
 
-          <!-- Departamento -->
-          <div>
-            <label for="departamento">Departamento</label>
-            <select id="departamento">
-              <option value="">Selecione...</option>
-              <option value="Açougue">Açougue</option>
-              <option value="Adega">Adega</option>
-              <option value="Bebidas">Bebidas</option>
-              <option value="Mercearia Alimentos">Mercearia Alimentos</option>
-              <option value="Mercearia Não Alimentos">Mercearia Não Alimentos</option>
-              <option value="Perecíveis Processados">Perecíveis Processados</option>
-            </select>
-          </div>
+          <form id="cadastroForm" class="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs">
+            <!-- Loja -->
+            <div>
+              <label class="block text-[11px] text-slate-300 mb-1">Loja</label>
+              <select id="lojaSelect" required
+                class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-xs">
+                <option value="">Selecione</option>
+                <option value="Ponta Verde">Ponta Verde</option>
+                <option value="Farol">Farol</option>
+                <option value="Praia">Praia</option>
+                <option value="Riomar">Riomar</option>
+              </select>
+            </div>
 
-          <!-- Código de barras + botão câmera -->
-          <div>
-            <label for="codigoBarras">Cód. barras (números, máx. 13)</label>
-            <div style="display: flex; gap: 8px; align-items: center;">
-              <input
-                type="text"
-                id="codigoBarras"
-                maxlength="13"
-                inputmode="numeric"
-                pattern="\\d*"
-                placeholder="7891234567890"
-              />
-              <button type="button" class="btn-outline" id="btnScanCodigo" title="Escanear código de barras">
-                📷
+            <!-- Data lançamento (travada hoje) -->
+            <div>
+              <label class="block text-[11px] text-slate-300 mb-1">Data lançamento</label>
+              <input id="dataLancamentoInput" type="text" readonly
+                class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs text-slate-400" />
+            </div>
+
+            <!-- Departamento -->
+            <div>
+              <label class="block text-[11px] text-slate-300 mb-1">Departamento</label>
+              <select id="departamentoSelect" required
+                class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-xs">
+                <option value="">Selecione</option>
+                <option>Açougue</option>
+                <option>Adega</option>
+                <option>Bebidas</option>
+                <option>Mercearia Alimentos</option>
+                <option>Mercearia Não Alimentos</option>
+                <option>Perecíveis Processados</option>
+              </select>
+            </div>
+
+            <!-- Código de barras + botão scanner -->
+            <div>
+              <label class="block text-[11px] text-slate-300 mb-1">Cód. barras (números, máx. 13)</label>
+              <div class="flex gap-2">
+                <input id="codigoBarrasInput" required maxlength="13" inputmode="numeric" pattern="[0-9]{1,13}"
+                  class="flex-1 px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-xs" />
+                <button type="button" id="scanButton"
+                  class="px-3 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-xs flex items-center gap-1">
+                  <i class="ri-qr-scan-2-line text-emerald-400"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Descrição -->
+            <div class="md:col-span-2">
+              <label class="block text-[11px] text-slate-300 mb-1">Descrição</label>
+              <input id="descricaoInput" required
+                class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-xs" />
+            </div>
+
+            <!-- Lote -->
+            <div>
+              <label class="block text-[11px] text-slate-300 mb-1">Lote</label>
+              <input id="loteInput"
+                class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs" />
+            </div>
+
+            <!-- Quantidade -->
+            <div>
+              <label class="block text-[11px] text-slate-300 mb-1">Quantidade</label>
+              <input id="quantidadeInput" type="number" min="1" required
+                class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-xs" />
+            </div>
+
+            <!-- Validade -->
+            <div>
+              <label class="block text-[11px] text-slate-300 mb-1">Validade</label>
+              <input id="validadeInput" type="date" required
+                class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-xs" />
+            </div>
+
+            <!-- Observação -->
+            <div class="md:col-span-4">
+              <label class="block text-[11px] text-slate-300 mb-1">Observação</label>
+              <textarea id="observacaoInput" rows="2"
+                class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs"></textarea>
+            </div>
+
+            <div class="md:col-span-4 flex justify-end mt-2">
+              <button type="submit"
+                class="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-900 font-semibold text-xs flex items-center gap-2">
+                <i class="ri-save-3-line"></i> Salvar item
               </button>
             </div>
-            <div class="small">Você pode digitar ou usar a câmera para escanear.</div>
+          </form>
+        </div>
+      </div>
+
+      <!-- ITENS CADASTRADOS -->
+      <div id="itensTab" class="tab-panel hidden space-y-4">
+        <div class="bg-slate-900/80 border border-slate-700 rounded-2xl p-4 space-y-4">
+          <div class="flex flex-wrap gap-3 items-center justify-between">
+            <div>
+              <h2 class="text-sm font-semibold flex items-center gap-2">
+                <i class="ri-database-2-line text-emerald-400"></i> Itens cadastrados
+              </h2>
+              <p class="text-[11px] text-slate-400">
+                Filtros por status de vencimento e controle de oferta.
+              </p>
+            </div>
+
+            <div class="flex flex-wrap gap-2 text-[11px]">
+              <select id="statusFilter"
+                class="px-3 py-1.5 rounded-xl bg-slate-800 border border-slate-700">
+                <option value="todos">Todos</option>
+                <option value="7">Vence em até 7 dias</option>
+                <option value="15">Vence em até 15 dias</option>
+                <option value="30">Vence em até 30 dias</option>
+                <option value="vencidos">Vencidos</option>
+              </select>
+
+              <select id="departamentoFilter"
+                class="px-3 py-1.5 rounded-xl bg-slate-800 border border-slate-700">
+                <option value="todos">Todos departamentos</option>
+                <option>Açougue</option>
+                <option>Adega</option>
+                <option>Bebidas</option>
+                <option>Mercearia Alimentos</option>
+                <option>Mercearia Não Alimentos</option>
+                <option>Perecíveis Processados</option>
+              </select>
+
+              <button id="excelBtn"
+                class="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-900 font-semibold flex items-center gap-1">
+                <i class="ri-file-excel-2-line"></i> Excel
+              </button>
+
+              <button id="pdfBtn"
+                class="px-3 py-1.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-100 font-semibold flex items-center gap-1">
+                <i class="ri-file-pdf-2-line text-red-400"></i> PDF
+              </button>
+            </div>
           </div>
 
-          <!-- Descrição -->
-          <div>
-            <label for="descricao">Descrição</label>
-            <input type="text" id="descricao" />
+          <div class="flex items-center justify-between mb-2 text-[11px]">
+            <div class="flex items-center gap-2">
+              <button id="ofertaToggleAllBtn"
+                class="px-3 py-1.5 rounded-xl bg-slate-700 hover:bg-slate-600 flex items-center gap-1">
+                <i class="ri-megaphone-line text-amber-300"></i> Marcar todos como oferta
+              </button>
+            </div>
+            <div id="totalItensInfo" class="text-slate-400"></div>
           </div>
 
-          <!-- Lote -->
-          <div>
-            <label for="lote">Lote</label>
-            <input type="text" id="lote" />
+          <div class="overflow-x-auto border border-slate-800 rounded-xl">
+            <table class="min-w-full text-[11px]" id="itensTable">
+              <thead class="bg-slate-800/80">
+                <tr>
+                  <th class="px-2 py-2 text-left">Loja</th>
+                  <th class="px-2 py-2 text-left">Data lançamento</th>
+                  <th class="px-2 py-2 text-left">Departamento</th>
+                  <th class="px-2 py-2 text-left">Cód. barras</th>
+                  <th class="px-2 py-2 text-left">Descrição</th>
+                  <th class="px-2 py-2 text-right">Qtd</th>
+                  <th class="px-2 py-2 text-left">Validade</th>
+                  <th class="px-2 py-2 text-left">Status</th>
+                  <th class="px-2 py-2 text-left">Oferta</th>
+                  <th class="px-2 py-2 text-left">Flag</th>
+                  <th class="px-2 py-2 text-left">Lote</th>
+                  <th class="px-2 py-2 text-left">Usuário</th>
+                  <th class="px-2 py-2 text-left">Lançado em</th>
+                  <th class="px-2 py-2 text-left">Obs.</th>
+                  <th class="px-2 py-2 text-right">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="itensTbody" class="divide-y divide-slate-800">
+              </tbody>
+            </table>
           </div>
 
-          <!-- Quantidade -->
-          <div>
-            <label for="quantidade">Quantidade</label>
-            <input type="number" id="quantidade" min="1" />
-          </div>
-
-          <!-- Validade -->
-          <div>
-            <label for="validade">Data de validade</label>
-            <input type="date" id="validade" />
-          </div>
-
-          <!-- Observação -->
-          <div style="grid-column: 1 / -1;">
-            <label for="observacao">Observação</label>
-            <textarea id="observacao" placeholder="Ex.: ponta de gôndola, oferta, avaria..."></textarea>
-          </div>
+          <p id="semItensMsg" class="text-[11px] text-slate-400 mt-2 hidden">
+            Nenhum item encontrado com os filtros atuais.
+          </p>
         </div>
-        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-          <button class="btn-primary" id="btnSalvar">Salvar lançamento</button>
-          <button class="btn-outline hidden" id="btnCancelarEdicao">Cancelar edição</button>
-        </div>
-        <div class="small">
-          * Status é calculado automaticamente:<br />
-          <strong>OK</strong> (&gt; 30 dias) ·
-          <strong>Vence em 30 dias</strong> (16–30 dias) ·
-          <strong>Vence em 15 dias</strong> (8–15 dias) ·
-          <strong>Vence em 7 dias</strong> (0–7 dias) ·
-          <strong>Vencido</strong> (&lt; 0 dias)
-        </div>
-      </section>
-
-      <!-- LISTAGEM DE ITENS -->
-      <section class="card">
-        <h2>Itens cadastrados</h2>
-
-        <!-- Filtros de status -->
-        <div class="filters">
-          <button class="btn-outline active" data-filter="todos">Todos</button>
-          <button class="btn-outline" data-filter="vence7">Vence em 7 dias</button>
-          <button class="btn-outline" data-filter="vence15">Vence em 15 dias</button>
-          <button class="btn-outline" data-filter="vence30">Vence em 30 dias</button>
-          <button class="btn-outline" data-filter="vencido">Vencidos</button>
-        </div>
-
-        <!-- Filtro de departamento + exportações -->
-        <div class="filters">
-          <div>
-            <label for="filtroDepartamento">Departamento</label>
-            <select id="filtroDepartamento">
-              <option value="todos">Todos os departamentos</option>
-              <option value="Açougue">Açougue</option>
-              <option value="Adega">Adega</option>
-              <option value="Bebidas">Bebidas</option>
-              <option value="Mercearia Alimentos">Mercearia Alimentos</option>
-              <option value="Mercearia Não Alimentos">Mercearia Não Alimentos</option>
-              <option value="Perecíveis Processados">Perecíveis Processados</option>
-            </select>
-          </div>
-
-          <div style="flex:1"></div>
-
-          <button class="btn-outline" id="btnExportExcel">Exportar Excel (.xlsx)</button>
-          <button class="btn-outline" id="btnExportPDF">Exportar PDF</button>
-        </div>
-
-        <div class="search-box">
-          <label for="busca">Buscar por descrição ou código de barras:</label>
-          <input type="text" id="busca" placeholder="Digite para filtrar..." />
-        </div>
-
-        <div class="table-wrapper">
-          <table>
-            <thead>
-              <tr>
-                <th>Loja</th>
-                <th>Departamento</th>
-                <th>Produto</th>
-                <th>Cód. barras</th>
-                <th>Lote</th>
-                <th>Data lançamento</th>
-                <th>Validade</th>
-                <th>Status</th>
-                <th>Qtd</th>
-                <th>Dias p/ vencer</th>
-                <th>Usuário</th>
-                <th>Cadastro</th>
-                <th>Obs.</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody id="tabelaCorpo">
-              <!-- Linhas via JS -->
-            </tbody>
-          </table>
-        </div>
-        <div class="small">
-          Base única para todas as lojas (Firestore). Depois dá pra criar visões só por loja.
-        </div>
-      </section>
-
-      <!-- ADMIN – GERENCIAMENTO DE USUÁRIOS (SÓ ADMIN VÊ) -->
-      <section class="card hidden" id="adminCard">
-        <h2>Administração de usuários</h2>
-        <p class="small">
-          Somente administradores veem esta seção. Aqui você ajusta o tipo e a loja de cada usuário.
-        </p>
-        <div class="table-wrapper admin-table">
-          <table>
-            <thead>
-              <tr>
-                <th>E-mail</th>
-                <th>Tipo</th>
-                <th>Loja</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody id="adminTabelaCorpo">
-              <!-- Linhas geradas via JS -->
-            </tbody>
-          </table>
-        </div>
-      </section>
+      </div>
     </section>
+
+    <!-- Modal leitor código de barras -->
+    <div id="barcodeModal"
+      class="fixed inset-0 bg-black/60 flex items-center justify-center z-30 hidden">
+      <div class="bg-slate-900 border border-slate-700 rounded-2xl p-4 w-full max-w-sm">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="text-sm font-semibold flex items-center gap-1">
+            <i class="ri-qr-scan-2-line text-emerald-400"></i> Leitor de código de barras
+          </h3>
+          <button id="closeBarcodeModal" class="text-slate-400 text-lg">
+            <i class="ri-close-line"></i>
+          </button>
+        </div>
+        <p class="text-[11px] text-slate-400 mb-2">
+          Aponte a câmera para o código de barras. Ao ler, o código será preenchido automaticamente.
+        </p>
+        <div id="barcodeReader" class="w-full"></div>
+      </div>
+    </div>
+
   </main>
 
-  <!-- SCRIPT PRINCIPAL -->
+  <!-- Firebase + App -->
   <script type="module">
-    // IMPORTS DO FIREBASE (CDN)
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+    import {
+      getAuth,
+      signInWithEmailAndPassword,
+      signInWithPopup,
+      GoogleAuthProvider,
+      onAuthStateChanged,
+      signOut
+    } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
     import {
       getFirestore,
       collection,
       addDoc,
       getDocs,
-      query,
-      orderBy,
-      doc,
       getDoc,
-      setDoc,
+      doc,
+      serverTimestamp,
       updateDoc,
-      deleteDoc
-    } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
-    import {
-      getAuth,
-      onAuthStateChanged,
-      signInWithEmailAndPassword,
-      createUserWithEmailAndPassword,
-      signOut,
-      sendPasswordResetEmail,
-      GoogleAuthProvider,
-      signInWithPopup
-    } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
+      deleteDoc,
+      query,
+      where,
+      orderBy
+    } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
-    // CONFIG DO SEU FIREBASE
+    // 🔥 CONFIG FIREBASE (TROCAR PELOS SEUS DADOS)
     const firebaseConfig = {
-      apiKey: "AIzaSyDa1z9LwlSHxwSTC974ci9RMEYdEiA_wEg",
-      authDomain: "controle-validade-fc108.firebaseapp.com",
-      projectId: "controle-validade-fc108",
-      storageBucket: "controle-validade-fc108.firebasestorage.app",
-      messagingSenderId: "737065688686",
-      appId: "1:737065688686:web:ed3e602baf64c1fb4f907f",
-      measurementId: "G-VJ8DMM47EN"
+      apiKey: "SUA_API_KEY",
+      authDomain: "SEU_AUTH_DOMAIN",
+      projectId: "SEU_PROJECT_ID",
+      storageBucket: "SEU_STORAGE_BUCKET",
+      messagingSenderId: "SEU_SENDER_ID",
+      appId: "SUA_APP_ID",
+      measurementId: "SUA_MEASUREMENT_ID"
     };
 
-    // INICIALIZAÇÃO
     const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
     const auth = getAuth(app);
-    const itensRef = collection(db, "itens_validade");
-    const usuariosRef = collection(db, "usuarios");
+    const db = getFirestore(app);
+    const googleProvider = new GoogleAuthProvider();
 
-    // PERFIL DO USUÁRIO (admin/gerente/repositor)
-    let perfilUsuario = null;
+    // 🔐 Estado global
+    let currentUser = null;
+    let currentRole = null; // admin | gerente | repositor
+    let currentLoja = null;
+    let html5QrCode = null;
 
-    // CONTROLE DE EDIÇÃO
-    let itemEmEdicaoId = null;
+    // ⏱️ data hoje travada no cadastro
+    const dataLancamentoInput = document.getElementById("dataLancamentoInput");
+    const hoje = new Date();
+    const pad = (n) => (n < 10 ? "0" + n : n);
+    const dataHojeStr =
+      pad(hoje.getDate()) + "/" + pad(hoje.getMonth() + 1) + "/" + hoje.getFullYear();
+    dataLancamentoInput.value = dataHojeStr;
 
-    // ELEMENTOS DOM
-    const loginCard = document.getElementById("loginCard");
-    const appContent = document.getElementById("appContent");
-    const btnLogout = document.getElementById("btnLogout");
-    const userEmailSpan = document.getElementById("userEmail");
-    const authError = document.getElementById("authError");
-    const emailAuth = document.getElementById("emailAuth");
-    const senhaAuth = document.getElementById("senhaAuth");
-    const btnAuthMain = document.getElementById("btnAuthMain");
-    const btnEsqueceuSenha = document.getElementById("btnEsqueceuSenha");
-    const btnGoogle = document.getElementById("btnGoogle");
-    const btnModoLogin = document.getElementById("btnModoLogin");
-    const btnModoCadastro = document.getElementById("btnModoCadastro");
-    const btnApple = document.getElementById("btnApple");
+    // ------------------ LOGIN ------------------ //
+    const loginSection = document.getElementById("loginSection");
+    const appSection = document.getElementById("appSection");
+    const loginForm = document.getElementById("loginForm");
+    const loginError = document.getElementById("loginError");
+    const googleLoginBtn = document.getElementById("googleLoginBtn");
+    const userInfo = document.getElementById("userInfo");
+    const userNameEl = document.getElementById("userName");
+    const userRoleEl = document.getElementById("userRole");
+    const logoutBtn = document.getElementById("logoutBtn");
 
-    const adminCard = document.getElementById("adminCard");
-    const adminTabelaCorpo = document.getElementById("adminTabelaCorpo");
-
-    const filtroDepartamentoSelect = document.getElementById("filtroDepartamento");
-    const btnExportExcel = document.getElementById("btnExportExcel");
-    const btnExportPDF = document.getElementById("btnExportPDF");
-
-    const btnCancelarEdicao = document.getElementById("btnCancelarEdicao");
-    const tituloFormulario = document.getElementById("tituloFormulario");
-
-    const scannerOverlay = document.getElementById("scannerOverlay");
-    const btnScanCodigo = document.getElementById("btnScanCodigo");
-    const btnFecharScanner = document.getElementById("btnFecharScanner");
-
-    let modoCadastro = false; // false = login, true = criar conta
-
-    function setModoAuth(cadastro) {
-      modoCadastro = cadastro;
-      if (cadastro) {
-        btnModoCadastro.classList.add("active");
-        btnModoLogin.classList.remove("active");
-        btnAuthMain.textContent = "Criar conta";
+    async function fetchUserRole(user) {
+      const ref = doc(db, "users", user.uid);
+      const snap = await getDoc(ref);
+      if (snap.exists()) {
+        const data = snap.data();
+        currentRole = data.role || "repositor";
+        currentLoja = data.loja || null;
       } else {
-        btnModoLogin.classList.add("active");
-        btnModoCadastro.classList.remove("active");
-        btnAuthMain.textContent = "Entrar";
-      }
-      authError.textContent = "";
-    }
-
-    btnModoLogin.addEventListener("click", () => setModoAuth(false));
-    btnModoCadastro.addEventListener("click", () => setModoAuth(true));
-
-    function mapearErroAuth(code) {
-      if (!code) return "Erro ao autenticar. Tente novamente.";
-      if (code.includes("auth/invalid-email")) return "E-mail inválido.";
-      if (code.includes("auth/user-not-found")) return "Usuário não encontrado.";
-      if (code.includes("auth/wrong-password")) return "Senha incorreta.";
-      if (code.includes("auth/email-already-in-use")) return "Este e-mail já está em uso.";
-      if (code.includes("auth/weak-password")) return "Senha muito fraca (mín. 6 caracteres).";
-      if (code.includes("operation-not-allowed")) return "Esse tipo de login não está habilitado no Firebase.";
-      return "Erro: " + code.replace("auth/", "");
-    }
-
-    // Funções de data
-    function getDataHojeISO() {
-      const hoje = new Date();
-      hoje.setHours(0, 0, 0, 0);
-      const ano = hoje.getFullYear();
-      const mes = String(hoje.getMonth() + 1).padStart(2, "0");
-      const dia = String(hoje.getDate()).padStart(2, "0");
-      return `${ano}-${mes}-${dia}`;
-    }
-
-    function formatarDataBr(dataStr) {
-      if (!dataStr) return "";
-      const [ano, mes, dia] = dataStr.split("-");
-      return `${dia}/${mes}/${ano}`;
-    }
-
-    function formatarDataHoraBr(isoString) {
-      if (!isoString) return "";
-      const d = new Date(isoString);
-      if (isNaN(d.getTime())) return "";
-      const dia = String(d.getDate()).padStart(2, "0");
-      const mes = String(d.getMonth() + 1).padStart(2, "0");
-      const ano = d.getFullYear();
-      const horas = String(d.getHours()).padStart(2, "0");
-      const mins = String(d.getMinutes()).padStart(2, "0");
-      return `${dia}/${mes}/${ano} ${horas}:${mins}`;
-    }
-
-    function atualizarDataLancamento() {
-      const input = document.getElementById("dataLancamento");
-      if (input) {
-        input.value = getDataHojeISO();
+        currentRole = "repositor";
+        currentLoja = null;
       }
     }
 
-    // LOGIN / CADASTRO
-    btnAuthMain.addEventListener("click", async () => {
-      authError.textContent = "";
-      const email = emailAuth.value.trim();
-      const senha = senhaAuth.value.trim();
-
-      if (!email || !senha) {
-        authError.textContent = "Preencha e-mail e senha.";
-        return;
+    function updateUIAuth() {
+      if (currentUser) {
+        loginSection.classList.add("hidden");
+        appSection.classList.remove("hidden");
+        userInfo.classList.remove("hidden");
+        userNameEl.textContent = currentUser.displayName || currentUser.email;
+        userRoleEl.textContent = currentRole
+          ? `Perfil: ${currentRole}${currentLoja ? " • " + currentLoja : ""}`
+          : "Perfil: não definido";
+        loadItens();
+      } else {
+        loginSection.classList.remove("hidden");
+        appSection.classList.add("hidden");
+        userInfo.classList.add("hidden");
       }
+    }
 
+    loginForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      loginError.classList.add("hidden");
+      const email = document.getElementById("emailInput").value.trim();
+      const password = document.getElementById("passwordInput").value.trim();
       try {
-        if (modoCadastro) {
-          await createUserWithEmailAndPassword(auth, email, senha);
-        } else {
-          await signInWithEmailAndPassword(auth, email, senha);
-        }
-      } catch (e) {
-        console.error(e);
-        authError.textContent = mapearErroAuth(e.code || e.message);
+        const cred = await signInWithEmailAndPassword(auth, email, password);
+        await fetchUserRole(cred.user);
+      } catch (err) {
+        console.error(err);
+        loginError.textContent = "Erro ao entrar. Verifique e-mail/senha.";
+        loginError.classList.remove("hidden");
       }
     });
 
-    // LOGIN COM GOOGLE
-    btnGoogle.addEventListener("click", async () => {
-      authError.textContent = "";
+    googleLoginBtn.addEventListener("click", async () => {
+      loginError.classList.add("hidden");
       try {
-        const provider = new GoogleAuthProvider();
-        await signInWithPopup(auth, provider);
-      } catch (e) {
-        console.error(e);
-        authError.textContent = "Erro ao entrar com Google.";
+        const result = await signInWithPopup(auth, googleProvider);
+        await fetchUserRole(result.user);
+      } catch (err) {
+        console.error(err);
+        loginError.textContent = "Erro ao entrar com Google.";
+        loginError.classList.remove("hidden");
       }
     });
 
-    // BOTÃO APPLE (VISUAL)
-    btnApple.addEventListener("click", () => {
-      alert("Login com Apple ainda não está configurado.\nPor enquanto use e-mail/senha ou Google 🙂");
-    });
-
-    // ESQUECEU SENHA
-    btnEsqueceuSenha.addEventListener("click", async () => {
-      authError.textContent = "";
-      const email = emailAuth.value.trim();
-      if (!email) {
-        authError.textContent = "Digite o e-mail para recuperar a senha.";
-        return;
-      }
-      try {
-        await sendPasswordResetEmail(auth, email);
-        authError.textContent = "E-mail de recuperação enviado.";
-      } catch (e) {
-        console.error(e);
-        authError.textContent = mapearErroAuth(e.code || e.message);
-      }
-    });
-
-    // LOGOUT
-    btnLogout.addEventListener("click", async () => {
+    logoutBtn.addEventListener("click", async () => {
       await signOut(auth);
     });
 
-    // 🔐 TRAVA E AJUSTA O CAMPO LOJA CONFORME O PERFIL
-    function aplicarRestricoesPorPerfil() {
-      const selectLoja = document.getElementById("loja");
-      const ajudaCampoLoja = document.getElementById("ajudaCampoLoja");
-      if (!selectLoja || !perfilUsuario) return;
+    onAuthStateChanged(auth, async (user) => {
+      currentUser = user;
+      if (user) {
+        await fetchUserRole(user);
+      }
+      updateUIAuth();
+    });
 
-      selectLoja.disabled = false;
-      if (ajudaCampoLoja) ajudaCampoLoja.textContent = "";
+    // ------------------ ABAS ------------------ //
+    const tabButtons = document.querySelectorAll(".tab-btn");
+    const tabPanels = document.querySelectorAll(".tab-panel");
+    tabButtons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const tabId = btn.dataset.tab;
+        tabButtons.forEach((b) =>
+          b.classList.toggle("bg-emerald-500", b === btn)
+        );
+        tabButtons.forEach((b) =>
+          b.classList.toggle("text-slate-900", b === btn)
+        );
+        tabButtons.forEach((b) =>
+          b.classList.toggle("bg-slate-800", b !== btn)
+        );
+        tabPanels.forEach((panel) => {
+          panel.classList.toggle("hidden", panel.id !== tabId);
+        });
+      });
+    });
 
-      if (perfilUsuario.tipo === "admin") {
+    // ------------------ CADASTRO ------------------ //
+    const cadastroForm = document.getElementById("cadastroForm");
+    const lojaSelect = document.getElementById("lojaSelect");
+    const departamentoSelect = document.getElementById("departamentoSelect");
+    const codigoBarrasInput = document.getElementById("codigoBarrasInput");
+    const descricaoInput = document.getElementById("descricaoInput");
+    const loteInput = document.getElementById("loteInput");
+    const quantidadeInput = document.getElementById("quantidadeInput");
+    const validadeInput = document.getElementById("validadeInput");
+    const observacaoInput = document.getElementById("observacaoInput");
+
+    cadastroForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!currentUser) return;
+
+      const codigo = codigoBarrasInput.value.trim();
+      if (!/^[0-9]{1,13}$/.test(codigo)) {
+        alert("Código de barras deve ter apenas números e no máximo 13 dígitos.");
         return;
       }
 
-      if (
-        (perfilUsuario.tipo === "gerente" ||
-          perfilUsuario.tipo === "repositor") &&
-        perfilUsuario.loja
-      ) {
-        selectLoja.value = perfilUsuario.loja;
-        selectLoja.disabled = true;
-        if (ajudaCampoLoja) {
-          ajudaCampoLoja.textContent =
-            "Sua conta está vinculada à loja " +
-            perfilUsuario.loja +
-            ". Você só lança produtos nesta loja.";
-        }
-      } else if (
-        perfilUsuario.tipo === "gerente" ||
-        perfilUsuario.tipo === "repositor"
-      ) {
-        if (ajudaCampoLoja) {
-          ajudaCampoLoja.textContent =
-            "Sua conta não tem loja vinculada. Peça a um ADMIN para definir sua loja na tela de Administração.";
-        }
-      }
-    }
+      try {
+        await addDoc(collection(db, "validadeItens"), {
+          loja: lojaSelect.value,
+          dataLancamentoTexto: dataLancamentoInput.value,
+          departamento: departamentoSelect.value,
+          codigoBarras: codigo,
+          descricao: descricaoInput.value.trim(),
+          lote: loteInput.value.trim(),
+          quantidade: Number(quantidadeInput.value),
+          validade: validadeInput.value,
+          observacao: observacaoInput.value.trim(),
+          createdAt: serverTimestamp(),
+          createdByUid: currentUser.uid,
+          createdByName: currentUser.displayName || currentUser.email,
+          ofertaStatus: "Não lançado" // 🔔 NOVO CAMPO
+        });
 
-    // 🔐 Carrega ou cria o perfil do usuário (admin/gerente/repositor)
-    async function carregarPerfilUsuario(user) {
-      const usuariosDocRef = doc(db, "usuarios", user.uid);
-      const snap = await getDoc(usuariosDocRef);
-
-      if (snap.exists()) {
-        perfilUsuario = snap.data();
-      } else {
-        perfilUsuario = {
-          tipo: "repositor",
-          loja: "",
-          email: user.email || "",
-          criadoEm: new Date().toISOString()
-        };
-        await setDoc(usuariosDocRef, perfilUsuario);
-      }
-
-      const existingBadge = document.getElementById("roleBadge");
-      if (existingBadge) existingBadge.remove();
-      const userInfoDiv = document.getElementById("userInfo");
-      if (userInfoDiv && perfilUsuario) {
-        const span = document.createElement("span");
-        span.id = "roleBadge";
-        span.className = "tag-loja";
-        const lojaTxt = perfilUsuario.loja ? ` • ${perfilUsuario.loja}` : "";
-        span.textContent = perfilUsuario.tipo.toUpperCase() + lojaTxt;
-        userInfoDiv.insertBefore(span, btnLogout);
-      }
-
-      aplicarRestricoesPorPerfil();
-      atualizarDataLancamento();
-      await renderizarTabela();
-      await renderizarUsuariosAdmin();
-    }
-
-    // CONTROLE DE LOGIN
-    onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        loginCard.classList.add("hidden");
-        appContent.classList.remove("hidden");
-        btnLogout.classList.remove("hidden");
-        userEmailSpan.textContent = user.email || "";
-        emailAuth.value = "";
-        senhaAuth.value = "";
-        authError.textContent = "";
-        atualizarDataLancamento();
-        await carregarPerfilUsuario(user);
-      } else {
-        loginCard.classList.remove("hidden");
-        appContent.classList.add("hidden");
-        btnLogout.classList.add("hidden");
-        userEmailSpan.textContent = "";
-        perfilUsuario = null;
-        if (adminCard) adminCard.classList.add("hidden");
-        cancelarEdicao();
+        cadastroForm.reset();
+        dataLancamentoInput.value = dataHojeStr;
+        alert("Item cadastrado com sucesso!");
+        loadItens();
+      } catch (err) {
+        console.error(err);
+        alert("Erro ao salvar item.");
       }
     });
 
-    // ---- PARTE DO APP (ITENS) ----
+    // ------------------ LISTAGEM / FILTROS ------------------ //
+    const statusFilter = document.getElementById("statusFilter");
+    const departamentoFilter = document.getElementById("departamentoFilter");
+    const itensTbody = document.getElementById("itensTbody");
+    const semItensMsg = document.getElementById("semItensMsg");
+    const totalItensInfo = document.getElementById("totalItensInfo");
 
-    // calcula status 7 / 15 / 30 / vencido
-    function calcularStatus(dataValidadeStr) {
-      if (!dataValidadeStr) {
-        return { status: "ok", dias: null };
-      }
+    statusFilter.addEventListener("change", loadItens);
+    departamentoFilter.addEventListener("change", loadItens);
+
+    function calcStatus(validadeStr) {
       const hoje = new Date();
-      hoje.setHours(0, 0, 0, 0);
-      const dataValidade = new Date(dataValidadeStr + "T00:00:00");
-      const diffMs = dataValidade - hoje;
-      const diffDias = Math.round(diffMs / (1000 * 60 * 60 * 24));
+      const validade = new Date(validadeStr + "T00:00:00");
+      const diffMs = validade.getTime() - hoje.getTime();
+      const diffDias = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-      if (diffDias < 0) {
-        return { status: "vencido", dias: diffDias };
-      } else if (diffDias <= 7) {
-        return { status: "vence7", dias: diffDias };
-      } else if (diffDias <= 15) {
-        return { status: "vence15", dias: diffDias };
-      } else if (diffDias <= 30) {
-        return { status: "vence30", dias: diffDias };
-      } else {
-        return { status: "ok", dias: diffDias };
+      if (diffDias < 0) return { label: "Vencido", tipo: "vencidos" };
+      if (diffDias <= 7) return { label: `Vence em ${diffDias} dia(s)`, tipo: "7" };
+      if (diffDias <= 15) return { label: `Vence em ${diffDias} dia(s)`, tipo: "15" };
+      if (diffDias <= 30) return { label: `Vence em ${diffDias} dia(s)`, tipo: "30" };
+      return { label: `> 30 dias`, tipo: "ok" };
+    }
+
+    function statusClass(tipo) {
+      switch (tipo) {
+        case "vencidos":
+          return "bg-red-500/20 text-red-200 border border-red-400/60";
+        case "7":
+          return "bg-rose-500/20 text-rose-100 border border-rose-400/60";
+        case "15":
+          return "bg-amber-500/20 text-amber-100 border border-amber-400/60";
+        case "30":
+          return "bg-yellow-500/20 text-yellow-100 border border-yellow-400/60";
+        default:
+          return "bg-emerald-500/20 text-emerald-100 border border-emerald-400/60";
       }
     }
 
-    async function carregarItensDoBanco() {
-      const q = query(itensRef, orderBy("validade", "asc"));
-      const snapshot = await getDocs(q);
-      const itens = [];
-      snapshot.forEach((docSnap) => {
-        itens.push({ id: docSnap.id, ...docSnap.data() });
-      });
-      return itens;
+    function ofertaClass(status) {
+      return status === "Lançado"
+        ? "bg-emerald-500/20 text-emerald-100 border border-emerald-400/60"
+        : "bg-slate-600/30 text-slate-200 border border-slate-500/80";
     }
 
-    // Filtra por status, busca, departamento e permissão
-    async function obterItensFiltrados() {
-      const filtroStatus =
-        document.querySelector(".filters .btn-outline[data-filter].active")?.dataset.filter ||
-        "todos";
-      const textoBusca = (document.getElementById("busca")?.value || "")
-        .trim()
-        .toLowerCase();
-      const filtroDepartamento = filtroDepartamentoSelect
-        ? filtroDepartamentoSelect.value
-        : "todos";
+    async function loadItens() {
+      if (!currentUser) return;
 
-      const itens = await carregarItensDoBanco();
-      const uidAtual = auth.currentUser ? auth.currentUser.uid : null;
+      let qRef = query(collection(db, "validadeItens"), orderBy("validade", "asc"));
+      if (currentRole === "gerente" && currentLoja) {
+        qRef = query(
+          collection(db, "validadeItens"),
+          where("loja", "==", currentLoja),
+          orderBy("validade", "asc")
+        );
+      }
+      if (currentRole === "repositor" && currentLoja) {
+        qRef = query(
+          collection(db, "validadeItens"),
+          where("loja", "==", currentLoja),
+          where("createdByUid", "==", currentUser.uid),
+          orderBy("validade", "asc")
+        );
+      }
 
-      return itens.filter((item) => {
-        const { status, dias } = calcularStatus(item.validade);
+      const snap = await getDocs(qRef);
+      itensTbody.innerHTML = "";
+      let total = 0;
 
-        // Filtro por status/dias
-        if (filtroStatus === "vence7" && status !== "vence7") {
-          return false;
-        } else if (filtroStatus === "vence15" && status !== "vence15") {
-          return false;
-        } else if (filtroStatus === "vence30" && status !== "vence30") {
-          return false;
-        } else if (filtroStatus === "vencido" && status !== "vencido") {
-          return false;
-        }
+      const statusFiltro = statusFilter.value;
+      const depFiltro = departamentoFilter.value;
 
-        // Departamento
-        if (filtroDepartamento && filtroDepartamento !== "todos") {
-          if ((item.departamento || "") !== filtroDepartamento) return false;
-        }
+      snap.forEach((docSnap) => {
+        const d = docSnap.data();
+        const st = calcStatus(d.validade);
+        if (statusFiltro !== "todos" && st.tipo !== statusFiltro) return;
+        if (depFiltro !== "todos" && d.departamento !== depFiltro) return;
 
-        // Busca
-        if (textoBusca) {
-          const alvo = (
-            (item.descricao || "") +
-            " " +
-            (item.codigoBarras || "")
-          ).toLowerCase();
-          if (!alvo.includes(textoBusca)) return false;
-        }
+        total++;
 
-        // Permissões
-        if (!perfilUsuario) return false;
+        const ofertaStatus = d.ofertaStatus || "Não lançado";
 
-        if (perfilUsuario.tipo === "admin") {
-          return true;
-        } else if (perfilUsuario.tipo === "gerente") {
-          return item.loja === perfilUsuario.loja;
-        } else {
-          return item.criadoPorUid === uidAtual;
-        }
-      });
-    }
-
-    function podeEditarItem(item) {
-      if (!perfilUsuario || !auth.currentUser) return false;
-      if (perfilUsuario.tipo === "admin") return true;
-
-      if (perfilUsuario.tipo !== "repositor") return false;
-      if (item.criadoPorUid !== auth.currentUser.uid) return false;
-
-      // pode editar até 1 dia após a data de lançamento
-      const dataLanc = item.dataLancamento || (item.criadoEm ? item.criadoEm.slice(0, 10) : null);
-      if (!dataLanc) return false;
-      const lanc = new Date(dataLanc + "T00:00:00");
-      const agora = new Date();
-      const diffMs = agora - lanc;
-      const diffDias = diffMs / (1000 * 60 * 60 * 24);
-      return diffDias <= 1;
-    }
-
-    async function renderizarTabela() {
-      const tbody = document.getElementById("tabelaCorpo");
-      if (!tbody) return;
-      tbody.innerHTML = "";
-
-      if (!perfilUsuario) {
         const tr = document.createElement("tr");
-        const td = document.createElement("td");
-        td.colSpan = 14;
-        td.innerHTML = '<div class="empty-state">Carregando perfil do usuário...</div>';
-        tr.appendChild(td);
-        tbody.appendChild(tr);
-        return;
-      }
+        tr.className = "hover:bg-slate-800/60";
 
-      const filtrados = await obterItensFiltrados();
-
-      if (filtrados.length === 0) {
-        const tr = document.createElement("tr");
-        const td = document.createElement("td");
-        td.colSpan = 14;
-        td.innerHTML = '<div class="empty-state">Nenhum item encontrado.</div>';
-        tr.appendChild(td);
-        tbody.appendChild(tr);
-        return;
-      }
-
-      filtrados.forEach((item) => {
-        const { status, dias } = calcularStatus(item.validade);
-        const tr = document.createElement("tr");
-
-        const tdLoja = document.createElement("td");
-        tdLoja.innerHTML = `<span class="tag-loja">${item.loja || "-"}</span>`;
-        tr.appendChild(tdLoja);
-
-        const tdDepto = document.createElement("td");
-        tdDepto.textContent = item.departamento || "-";
-        tr.appendChild(tdDepto);
-
-        const tdDesc = document.createElement("td");
-        tdDesc.textContent = item.descricao || "-";
-        tr.appendChild(tdDesc);
-
-        const tdCod = document.createElement("td");
-        tdCod.textContent = item.codigoBarras || "-";
-        tr.appendChild(tdCod);
-
-        const tdLote = document.createElement("td");
-        tdLote.textContent = item.lote || "-";
-        tr.appendChild(tdLote);
-
-        const tdDataLanc = document.createElement("td");
-        tdDataLanc.textContent = item.dataLancamento
-          ? formatarDataBr(item.dataLancamento)
-          : "-";
-        tr.appendChild(tdDataLanc);
-
-        const tdVal = document.createElement("td");
-        tdVal.textContent = item.validade
-          ? formatarDataBr(item.validade)
-          : "-";
-        tr.appendChild(tdVal);
-
-        const tdStatus = document.createElement("td");
-        const span = document.createElement("span");
-        span.classList.add("badge");
-        if (status === "ok") {
-          span.classList.add("badge-ok");
-          span.textContent = "OK";
-        } else if (status === "vence7") {
-          span.classList.add("badge-alerta");
-          span.textContent = "Vence em 7 dias";
-        } else if (status === "vence15") {
-          span.classList.add("badge-alerta");
-          span.textContent = "Vence em 15 dias";
-        } else if (status === "vence30") {
-          span.classList.add("badge-alerta");
-          span.textContent = "Vence em 30 dias";
-        } else {
-          span.classList.add("badge-vencido");
-          span.textContent = "Vencido";
+        // diff para controle de edição (24h)
+        let podeEditar = currentRole === "admin";
+        if (!podeEditar && currentRole === "repositor" && d.createdAt) {
+          const created = d.createdAt.toDate ? d.createdAt.toDate() : new Date(d.createdAt);
+          const diffHoras = (Date.now() - created.getTime()) / (1000 * 60 * 60);
+          if (diffHoras <= 24) podeEditar = true;
         }
-        tdStatus.appendChild(span);
-        tr.appendChild(tdStatus);
-
-        const tdQtd = document.createElement("td");
-        tdQtd.textContent = item.quantidade || "-";
-        tr.appendChild(tdQtd);
-
-        const tdDias = document.createElement("td");
-        tdDias.textContent = dias !== null ? dias : "-";
-        tr.appendChild(tdDias);
-
-        const tdUsuario = document.createElement("td");
-        tdUsuario.textContent = item.criadoPorEmail || "-";
-        tr.appendChild(tdUsuario);
-
-        const tdCadastro = document.createElement("td");
-        tdCadastro.textContent = item.criadoEm
-          ? formatarDataHoraBr(item.criadoEm)
-          : "-";
-        tr.appendChild(tdCadastro);
-
-        const tdObs = document.createElement("td");
-        tdObs.textContent = item.observacao || "-";
-        tr.appendChild(tdObs);
-
-        const tdAcoes = document.createElement("td");
-        tdAcoes.style.whiteSpace = "nowrap";
-
-        if (podeEditarItem(item)) {
-          const btnEdit = document.createElement("button");
-          btnEdit.textContent = "Editar";
-          btnEdit.className = "btn-outline";
-          btnEdit.style.fontSize = "11px";
-          btnEdit.addEventListener("click", () => iniciarEdicao(item));
-          tdAcoes.appendChild(btnEdit);
+        if (!podeEditar && currentRole === "gerente") {
+          podeEditar = true;
         }
 
-        if (perfilUsuario && perfilUsuario.tipo === "admin") {
-          const btnDel = document.createElement("button");
-          btnDel.textContent = "Excluir";
-          btnDel.className = "btn-outline";
-          btnDel.style.fontSize = "11px";
-          btnDel.style.marginLeft = "4px";
-          btnDel.addEventListener("click", () => excluirItem(item));
-          tdAcoes.appendChild(btnDel);
-        }
+        const podeExcluir = currentRole === "admin";
 
-        tr.appendChild(tdAcoes);
+        const criadoEmTexto = d.createdAt?.toDate
+          ? formatDateTime(d.createdAt.toDate())
+          : "";
 
-        tbody.appendChild(tr);
-      });
-    }
-
-    function limparFormulario() {
-      const loja = document.getElementById("loja");
-      const codigoBarras = document.getElementById("codigoBarras");
-      const descricao = document.getElementById("descricao");
-      const quantidade = document.getElementById("quantidade");
-      const validade = document.getElementById("validade");
-      const observacao = document.getElementById("observacao");
-      const departamento = document.getElementById("departamento");
-      const lote = document.getElementById("lote");
-
-      if (!loja) return;
-
-      loja.value = "";
-      codigoBarras.value = "";
-      descricao.value = "";
-      quantidade.value = "";
-      validade.value = "";
-      observacao.value = "";
-      if (departamento) departamento.value = "";
-      if (lote) lote.value = "";
-      atualizarDataLancamento();
-      aplicarRestricoesPorPerfil();
-    }
-
-    function iniciarEdicao(item) {
-      itemEmEdicaoId = item.id;
-      tituloFormulario.textContent = "Editar lançamento";
-      const btnSalvar = document.getElementById("btnSalvar");
-      btnSalvar.textContent = "Salvar alterações";
-      btnCancelarEdicao.classList.remove("hidden");
-
-      document.getElementById("loja").value = item.loja || "";
-      document.getElementById("dataLancamento").value =
-        item.dataLancamento || getDataHojeISO();
-      document.getElementById("departamento").value = item.departamento || "";
-      document.getElementById("codigoBarras").value = item.codigoBarras || "";
-      document.getElementById("descricao").value = item.descricao || "";
-      document.getElementById("lote").value = item.lote || "";
-      document.getElementById("quantidade").value =
-        item.quantidade != null ? item.quantidade : "";
-      document.getElementById("validade").value = item.validade || "";
-      document.getElementById("observacao").value = item.observacao || "";
-
-      aplicarRestricoesPorPerfil();
-    }
-
-    function cancelarEdicao() {
-      itemEmEdicaoId = null;
-      tituloFormulario.textContent = "Novo lançamento";
-      const btnSalvar = document.getElementById("btnSalvar");
-      if (btnSalvar) btnSalvar.textContent = "Salvar lançamento";
-      if (btnCancelarEdicao) btnCancelarEdicao.classList.add("hidden");
-      limparFormulario();
-    }
-
-    if (btnCancelarEdicao) {
-      btnCancelarEdicao.addEventListener("click", () => {
-        cancelarEdicao();
-      });
-    }
-
-    // Código de barras: apenas números e até 13 caracteres
-    const inputCodigo = document.getElementById("codigoBarras");
-    if (inputCodigo) {
-      inputCodigo.addEventListener("input", () => {
-        inputCodigo.value = inputCodigo.value.replace(/\D/g, "").slice(0, 13);
-      });
-    }
-
-    // Scanner de código de barras com html5-qrcode
-    let html5QrCodeInstance = null;
-
-    function fecharScanner() {
-      if (html5QrCodeInstance) {
-        html5QrCodeInstance
-          .stop()
-          .then(() => {
-            html5QrCodeInstance.clear();
-            html5QrCodeInstance = null;
-          })
-          .catch((err) => console.error("Erro ao parar scanner:", err));
-      }
-      scannerOverlay.classList.add("hidden");
-    }
-
-    if (btnFecharScanner) {
-      btnFecharScanner.addEventListener("click", () => {
-        fecharScanner();
-      });
-    }
-
-    if (btnScanCodigo && scannerOverlay) {
-      btnScanCodigo.addEventListener("click", async () => {
-        if (!window.Html5Qrcode) {
-          alert("Leitor de código de barras não carregou corretamente.");
-          return;
-        }
-        scannerOverlay.classList.remove("hidden");
-        try {
-          const cameras = await Html5Qrcode.getCameras();
-          if (!cameras || !cameras.length) {
-            alert("Nenhuma câmera encontrada.");
-            fecharScanner();
-            return;
-          }
-          const cameraId = cameras[0].id;
-          html5QrCodeInstance = new Html5Qrcode("reader");
-          await html5QrCodeInstance.start(
-            { deviceId: { exact: cameraId } },
-            { fps: 10, qrbox: 250 },
-            (decodedText, decodedResult) => {
-              const numeric = decodedText.replace(/\D/g, "").slice(0, 13);
-              if (numeric) {
-                if (inputCodigo) {
-                  inputCodigo.value = numeric;
-                }
-                fecharScanner();
-              }
-            },
-            (errorMessage) => {
-              // ignora erros de leitura contínuos
+        tr.innerHTML = `
+          <td class="px-2 py-1.5">${d.loja || ""}</td>
+          <td class="px-2 py-1.5 whitespace-nowrap">${d.dataLancamentoTexto || ""}</td>
+          <td class="px-2 py-1.5">${d.departamento || ""}</td>
+          <td class="px-2 py-1.5 whitespace-nowrap">${d.codigoBarras || ""}</td>
+          <td class="px-2 py-1.5">${d.descricao || ""}</td>
+          <td class="px-2 py-1.5 text-right">${d.quantidade || ""}</td>
+          <td class="px-2 py-1.5 whitespace-nowrap">${formatDate(d.validade)}</td>
+          <td class="px-2 py-1.5">
+            <span class="tag ${statusClass(st.tipo)}">${st.label}</span>
+          </td>
+          <td class="px-2 py-1.5">
+            <span class="tag oferta-tag ${ofertaClass(ofertaStatus)}">${ofertaStatus}</span>
+          </td>
+          <td class="px-2 py-1.5 text-center">
+            <input type="checkbox" class="oferta-toggle" ${ofertaStatus === "Lançado" ? "checked" : ""} />
+          </td>
+          <td class="px-2 py-1.5">${d.lote || ""}</td>
+          <td class="px-2 py-1.5 whitespace-nowrap">${d.createdByName || ""}</td>
+          <td class="px-2 py-1.5 whitespace-nowrap">${criadoEmTexto}</td>
+          <td class="px-2 py-1.5 max-w-[180px] truncate" title="${d.observacao || ""}">
+            ${d.observacao || ""}
+          </td>
+          <td class="px-2 py-1.5 text-right">
+            ${
+              podeEditar
+                ? `<button class="text-xs text-amber-300 hover:text-amber-200 mr-2 editar-btn">Editar</button>`
+                : ""
             }
-          );
-        } catch (err) {
-          console.error(err);
-          alert("Erro ao acessar a câmera.");
-          fecharScanner();
-        }
-      });
-    }
+            ${
+              podeExcluir
+                ? `<button class="text-xs text-red-400 hover:text-red-300 excluir-btn">Excluir</button>`
+                : ""
+            }
+          </td>
+        `;
 
-    // SALVAR / ATUALIZAR ITEM
-    const btnSalvar = document.getElementById("btnSalvar");
-    if (btnSalvar) {
-      btnSalvar.addEventListener("click", async () => {
-        let lojaSelecionada = document.getElementById("loja").value.trim();
-        const dataLancamento = document.getElementById("dataLancamento").value;
-        const departamento = document.getElementById("departamento").value.trim();
-        const codigoBarras = document
-          .getElementById("codigoBarras")
-          .value.trim();
-        const descricao = document.getElementById("descricao").value.trim();
-        const lote = document.getElementById("lote").value.trim();
-        const quantidade = document.getElementById("quantidade").value;
-        const validade = document.getElementById("validade").value;
-        const observacao = document
-          .getElementById("observacao")
-          .value.trim();
-
-        // Força a loja pelo perfil para gerente e repositor
-        if (
-          perfilUsuario &&
-          (perfilUsuario.tipo === "gerente" ||
-            perfilUsuario.tipo === "repositor")
-        ) {
-          lojaSelecionada = perfilUsuario.loja || "";
-        }
-
-        if (
-          perfilUsuario &&
-          (perfilUsuario.tipo === "gerente" ||
-            perfilUsuario.tipo === "repositor") &&
-          !lojaSelecionada
-        ) {
-          alert(
-            "Sua conta não está vinculada a nenhuma loja. Peça para um ADMIN definir sua loja na tela de Administração."
-          );
-          return;
-        }
-
-        if (!lojaSelecionada || !departamento || !codigoBarras || !descricao || !validade) {
-          alert(
-            "Preencha pelo menos: Loja, Departamento, Código de barras, Descrição e Validade."
-          );
-          return;
-        }
-
-        if (!/^\d{1,13}$/.test(codigoBarras)) {
-          alert("O código de barras deve conter apenas números, com no máximo 13 dígitos.");
-          return;
-        }
-
-        try {
-          const user = auth.currentUser;
-
-          const campos = {
-            loja: lojaSelecionada,
-            dataLancamento: dataLancamento || getDataHojeISO(),
-            departamento,
-            codigoBarras,
-            descricao,
-            lote: lote || null,
-            quantidade: quantidade ? Number(quantidade) : null,
-            validade,
-            observacao
-          };
-
-          if (itemEmEdicaoId) {
-            // atualização
-            const docRef = doc(db, "itens_validade", itemEmEdicaoId);
-            await updateDoc(docRef, campos);
-          } else {
-            // novo
-            await addDoc(itensRef, {
-              ...campos,
-              criadoEm: new Date().toISOString(),
-              criadoPorUid: user ? user.uid : null,
-              criadoPorEmail: user ? user.email : null
-            });
-          }
-
-          cancelarEdicao();
-          await renderizarTabela();
-        } catch (e) {
-          console.error("Erro ao salvar:", e);
-          alert("Erro ao salvar. Verifique o console do navegador.");
-        }
-      });
-    }
-
-    async function excluirItem(item) {
-      if (!perfilUsuario || perfilUsuario.tipo !== "admin") return;
-      const ok = confirm(
-        `Tem certeza que deseja excluir o item:\n${item.descricao || ""} (${item.codigoBarras || ""})`
-      );
-      if (!ok) return;
-      try {
-        await deleteDoc(doc(db, "itens_validade", item.id));
-        if (itemEmEdicaoId === item.id) cancelarEdicao();
-        await renderizarTabela();
-      } catch (e) {
-        console.error(e);
-        alert("Erro ao excluir item.");
-      }
-    }
-
-    // FILTROS E BUSCA
-    document
-      .querySelectorAll(".filters .btn-outline[data-filter]")
-      .forEach((btn) => {
-        btn.addEventListener("click", async () => {
-          document
-            .querySelectorAll(".filters .btn-outline[data-filter]")
-            .forEach((b) => b.classList.remove("active"));
-          btn.classList.add("active");
-          await renderizarTabela();
+        // eventos Oferta
+        const ofertaCheckbox = tr.querySelector(".oferta-toggle");
+        const ofertaTag = tr.querySelector(".oferta-tag");
+        ofertaCheckbox.addEventListener("change", async () => {
+          const novoStatus = ofertaCheckbox.checked ? "Lançado" : "Não lançado";
+          ofertaTag.textContent = novoStatus;
+          ofertaTag.className = "tag oferta-tag " + ofertaClass(novoStatus);
+          await updateDoc(doc(db, "validadeItens", docSnap.id), {
+            ofertaStatus: novoStatus
+          });
         });
+
+        // excluir
+        const excluirBtn = tr.querySelector(".excluir-btn");
+        if (excluirBtn) {
+          excluirBtn.addEventListener("click", async () => {
+            if (!confirm("Tem certeza que deseja excluir este item?")) return;
+            await deleteDoc(doc(db, "validadeItens", docSnap.id));
+            loadItens();
+          });
+        }
+
+        // editar (apenas abre form preenchido simples)
+        const editarBtn = tr.querySelector(".editar-btn");
+        if (editarBtn) {
+          editarBtn.addEventListener("click", () => {
+            // preenche o formulário de cadastro para edição rápida
+            lojaSelect.value = d.loja || "";
+            departamentoSelect.value = d.departamento || "";
+            codigoBarrasInput.value = d.codigoBarras || "";
+            descricaoInput.value = d.descricao || "";
+            loteInput.value = d.lote || "";
+            quantidadeInput.value = d.quantidade || "";
+            validadeInput.value = d.validade || "";
+            observacaoInput.value = d.observacao || "";
+            window.scrollTo({ top: 0, behavior: "smooth" });
+            alert("Edite os campos e salve como um novo lançamento. (Edição direta está simplificada.)");
+          });
+        }
+
+        itensTbody.appendChild(tr);
       });
 
-    const inputBuscaFiltro = document.getElementById("busca");
-    if (inputBuscaFiltro) {
-      inputBuscaFiltro.addEventListener("input", async () => {
-        await renderizarTabela();
-      });
+      semItensMsg.classList.toggle("hidden", total > 0);
+      totalItensInfo.textContent = `Total de itens: ${total}`;
     }
 
-    if (filtroDepartamentoSelect) {
-      filtroDepartamentoSelect.addEventListener("change", async () => {
-        await renderizarTabela();
-      });
+    function formatDate(dateStr) {
+      if (!dateStr) return "";
+      const d = new Date(dateStr + "T00:00:00");
+      const pad = (n) => (n < 10 ? "0" + n : n);
+      return pad(d.getDate()) + "/" + pad(d.getMonth() + 1) + "/" + d.getFullYear();
     }
 
-    // ---- EXPORTAÇÕES ----
+    function formatDateTime(date) {
+      const pad = (n) => (n < 10 ? "0" + n : n);
+      return (
+        pad(date.getDate()) +
+        "/" +
+        pad(date.getMonth() + 1) +
+        "/" +
+        date.getFullYear() +
+        " " +
+        pad(date.getHours()) +
+        ":" +
+        pad(date.getMinutes())
+      );
+    }
 
-    // Excel (.xlsx) usando SheetJS
-    function exportarExcel(itens) {
-      const headers = [
-        "Loja",
-        "Departamento",
-        "Descricao",
-        "CodigoBarras",
-        "Lote",
-        "DataLancamento",
-        "Validade",
-        "Status",
-        "Quantidade",
-        "DiasParaVencer",
-        "Usuario",
-        "CriadoEm",
-        "Observacao"
+    // ------------------ EXCEL / PDF ------------------ //
+    const excelBtn = document.getElementById("excelBtn");
+    const pdfBtn = document.getElementById("pdfBtn");
+
+    excelBtn.addEventListener("click", () => {
+      const table = document.getElementById("itensTable");
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.table_to_sheet(table);
+      XLSX.utils.book_append_sheet(wb, ws, "Itens");
+      XLSX.writeFile(wb, "controle-validade.xlsx");
+    });
+
+    pdfBtn.addEventListener("click", () => {
+      const { jsPDF } = window.jspdf;
+      const docPdf = new jsPDF("l", "pt", "a4");
+
+      docPdf.setFontSize(14);
+      docPdf.text("Controle de Validade - Itens Cadastrados", 40, 40);
+
+      const head = [
+        [
+          "Loja",
+          "Data lançamento",
+          "Depto.",
+          "Cód. barras",
+          "Descrição",
+          "Qtd",
+          "Validade",
+          "Status",
+          "Oferta",
+          "Lote",
+          "Usuário",
+          "Lançado em",
+          "Obs."
+        ]
       ];
 
-      const data = [headers];
-
-      itens.forEach((item) => {
-        const { status, dias } = calcularStatus(item.validade);
-        let statusTxt = "";
-        if (status === "ok") statusTxt = "OK";
-        else if (status === "vence7") statusTxt = "Vence em 7 dias";
-        else if (status === "vence15") statusTxt = "Vence em 15 dias";
-        else if (status === "vence30") statusTxt = "Vence em 30 dias";
-        else statusTxt = "Vencido";
-
-        data.push([
-          item.loja || "",
-          item.departamento || "",
-          item.descricao || "",
-          item.codigoBarras || "",
-          item.lote || "",
-          item.dataLancamento ? formatarDataBr(item.dataLancamento) : "",
-          item.validade ? formatarDataBr(item.validade) : "",
-          statusTxt,
-          item.quantidade != null ? item.quantidade : "",
-          dias != null ? dias : "",
-          item.criadoPorEmail || "",
-          item.criadoEm ? formatarDataHoraBr(item.criadoEm) : "",
-          item.observacao || ""
+      const body = [];
+      document.querySelectorAll("#itensTbody tr").forEach((tr) => {
+        const tds = tr.querySelectorAll("td");
+        if (!tds.length) return;
+        body.push([
+          tds[0].innerText,
+          tds[1].innerText,
+          tds[2].innerText,
+          tds[3].innerText,
+          tds[4].innerText,
+          tds[5].innerText,
+          tds[6].innerText,
+          tds[7].innerText,
+          tds[8].innerText,
+          tds[10].innerText,
+          tds[11].innerText,
+          tds[12].innerText,
+          tds[13].innerText
         ]);
       });
 
-      const ws = XLSX.utils.aoa_to_sheet(data);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Validades");
-
-      XLSX.writeFile(wb, "controle-validade.xlsx");
-    }
-
-    if (btnExportExcel) {
-      btnExportExcel.addEventListener("click", async () => {
-        if (!perfilUsuario) {
-          alert("Faça login para exportar os dados.");
-          return;
-        }
-        const itens = await obterItensFiltrados();
-        if (!itens.length) {
-          alert("Não há itens para exportar com os filtros atuais.");
-          return;
-        }
-        try {
-          exportarExcel(itens);
-        } catch (e) {
-          console.error(e);
-          alert("Erro ao gerar Excel. Verifique o console do navegador.");
-        }
+      docPdf.autoTable({
+        head,
+        body,
+        startY: 60,
+        styles: { fontSize: 7, cellPadding: 3 },
+        headStyles: { fillColor: [15, 23, 42], textColor: [248, 250, 252] },
+        alternateRowStyles: { fillColor: [30, 41, 59] },
+        bodyStyles: { textColor: [15, 23, 42] }
       });
-    }
 
-    // PDF com tabela (jsPDF + AutoTable)
-    if (btnExportPDF) {
-      btnExportPDF.addEventListener("click", async () => {
-        if (!perfilUsuario) {
-          alert("Faça login para exportar os dados.");
-          return;
-        }
-        const itens = await obterItensFiltrados();
-        if (!itens.length) {
-          alert("Não há itens para exportar com os filtros atuais.");
-          return;
-        }
+      docPdf.save("controle-validade.pdf");
+    });
 
-        const { jsPDF } = window.jspdf || {};
-        if (!jsPDF || !window.jspdf || !window.jspdf.jsPDF) {
-          alert("Biblioteca jsPDF não foi carregada.");
-          return;
-        }
+    // ------------------ OFERTA: SELECIONAR TODOS ------------------ //
+    const ofertaToggleAllBtn = document.getElementById("ofertaToggleAllBtn");
+    ofertaToggleAllBtn.addEventListener("click", async () => {
+      const checkboxes = document.querySelectorAll(".oferta-toggle");
+      if (!checkboxes.length) return;
 
-        const docPDF = new jsPDF("l", "mm", "a4");
+      const marcarComoLancado = Array.from(checkboxes).some((c) => !c.checked);
+      // se existir algum desmarcado → marcar todos; se todos marcados → voltar para Não lançado
+      const novoStatus = marcarComoLancado ? "Lançado" : "Não lançado";
 
-        docPDF.setFontSize(14);
-        docPDF.text("Relatório - Controle de Validade", 14, 14);
-        docPDF.setFontSize(10);
-
-        const head = [
-          [
-            "Loja",
-            "Depto",
-            "Produto",
-            "Cód. barras",
-            "Lote",
-            "Data lanc.",
-            "Validade",
-            "Status",
-            "Qtd",
-            "Dias",
-            "Usuário",
-            "Cadastro",
-            "Obs."
-          ]
-        ];
-
-        const body = itens.map((item) => {
-          const { status, dias } = calcularStatus(item.validade);
-          let statusTxt = "";
-          if (status === "ok") statusTxt = "OK";
-          else if (status === "vence7") statusTxt = "Vence em 7 dias";
-          else if (status === "vence15") statusTxt = "Vence em 15 dias";
-          else if (status === "vence30") statusTxt = "Vence em 30 dias";
-          else statusTxt = "Vencido";
-
-          return [
-            item.loja || "",
-            item.departamento || "",
-            item.descricao || "",
-            item.codigoBarras || "",
-            item.lote || "",
-            item.dataLancamento ? formatarDataBr(item.dataLancamento) : "",
-            item.validade ? formatarDataBr(item.validade) : "",
-            statusTxt,
-            item.quantidade != null ? item.quantidade : "",
-            dias != null ? dias : "",
-            item.criadoPorEmail || "",
-            item.criadoEm ? formatarDataHoraBr(item.criadoEm) : "",
-            item.observacao || ""
-          ];
-        });
-
-        docPDF.autoTable({
-          head,
-          body,
-          startY: 20,
-          styles: { fontSize: 8, cellPadding: 2 },
-          headStyles: { fillColor: [17, 24, 39], textColor: 255 }
-        });
-
-        docPDF.save("controle-validade.pdf");
+      const snap = await getDocs(collection(db, "validadeItens"));
+      const updates = [];
+      snap.forEach((docSnap) => {
+        updates.push(
+          updateDoc(doc(db, "validadeItens", docSnap.id), { ofertaStatus: novoStatus })
+        );
       });
-    }
+      await Promise.all(updates);
+      loadItens();
+    });
 
-    // ---- ADMIN – USUÁRIOS ----
-    async function carregarUsuarios() {
-      const snapshot = await getDocs(usuariosRef);
-      const lista = [];
-      snapshot.forEach((d) => {
-        lista.push({ id: d.id, ...d.data() });
-      });
-      return lista;
-    }
+    // ------------------ LEITOR CÓDIGO DE BARRAS ------------------ //
+    const barcodeModal = document.getElementById("barcodeModal");
+    const barcodeReaderDiv = document.getElementById("barcodeReader");
+    const scanButton = document.getElementById("scanButton");
+    const closeBarcodeModal = document.getElementById("closeBarcodeModal");
 
-    async function renderizarUsuariosAdmin() {
-      if (!adminTabelaCorpo || !adminCard) return;
+    scanButton.addEventListener("click", () => {
+      if (typeof Html5Qrcode === "undefined") {
+        alert("Leitor de código de barras não carregou corretamente. Verifique sua internet.");
+        return;
+      }
+      openBarcodeModal();
+    });
 
-      if (!perfilUsuario || perfilUsuario.tipo !== "admin") {
-        adminCard.classList.add("hidden");
-        adminTabelaCorpo.innerHTML = "";
+    closeBarcodeModal.addEventListener("click", closeBarcode);
+
+    function openBarcodeModal() {
+      barcodeModal.classList.remove("hidden");
+
+      if (html5QrCode) {
         return;
       }
 
-      adminCard.classList.remove("hidden");
-      adminTabelaCorpo.innerHTML = "";
-
-      const usuarios = await carregarUsuarios();
-
-      if (usuarios.length === 0) {
-        const tr = document.createElement("tr");
-        const td = document.createElement("td");
-        td.colSpan = 4;
-        td.innerHTML = '<div class="empty-state">Nenhum usuário encontrado.</div>';
-        tr.appendChild(td);
-        adminTabelaCorpo.appendChild(tr);
-        return;
-      }
-
-      usuarios.forEach((u) => {
-        const tr = document.createElement("tr");
-
-        const tdEmail = document.createElement("td");
-        tdEmail.textContent = u.email || "-";
-        tr.appendChild(tdEmail);
-
-        const tdTipo = document.createElement("td");
-        const selTipo = document.createElement("select");
-        selTipo.innerHTML = `
-          <option value="admin">Admin</option>
-          <option value="gerente">Gerente</option>
-          <option value="repositor">Repositor</option>
-        `;
-        selTipo.value = u.tipo || "repositor";
-        tdTipo.appendChild(selTipo);
-        tr.appendChild(tdTipo);
-
-        const tdLoja = document.createElement("td");
-        const selLoja = document.createElement("select");
-        selLoja.innerHTML = `
-          <option value="">(todas/nenhuma)</option>
-          <option value="PV">Ponta Verde</option>
-          <option value="Farol">Farol</option>
-          <option value="Praia">Praia</option>
-          <option value="Riomar">Riomar</option>
-        `;
-        selLoja.value = u.loja || "";
-        tdLoja.appendChild(selLoja);
-        tr.appendChild(tdLoja);
-
-        const tdAcoes = document.createElement("td");
-        const btnSalvar = document.createElement("button");
-        btnSalvar.textContent = "Salvar";
-        btnSalvar.className = "btn-outline";
-        btnSalvar.addEventListener("click", async () => {
-          const novoTipo = selTipo.value;
-          const novaLoja = selLoja.value;
-          try {
-            await updateDoc(doc(db, "usuarios", u.id), {
-              tipo: novoTipo,
-              loja: novaLoja
-            });
-            alert("Perfil atualizado com sucesso.");
-            if (auth.currentUser && auth.currentUser.uid === u.id) {
-              perfilUsuario.tipo = novoTipo;
-              perfilUsuario.loja = novaLoja;
-              aplicarRestricoesPorPerfil();
-              await renderizarTabela();
-              await renderizarUsuariosAdmin();
-            }
-          } catch (e) {
-            console.error(e);
-            alert("Erro ao atualizar usuário.");
+      html5QrCode = new Html5Qrcode("barcodeReader");
+      Html5Qrcode.getCameras()
+        .then((devices) => {
+          if (!devices || !devices.length) {
+            alert("Nenhuma câmera encontrada.");
+            return;
           }
+          const cameraId = devices[0].id;
+          html5QrCode.start(
+            cameraId,
+            { fps: 10, qrbox: 250 },
+            (decodedText) => {
+              // Preenche campo e fecha
+              codigoBarrasInput.value = decodedText.replace(/\D/g, "").slice(0, 13);
+              closeBarcode();
+            },
+            (errorMessage) => {
+              console.log(errorMessage);
+            }
+          );
+        })
+        .catch((err) => {
+          console.error(err);
+          alert("Erro ao acessar a câmera.");
         });
-        tdAcoes.appendChild(btnSalvar);
-        tr.appendChild(tdAcoes);
-
-        adminTabelaCorpo.appendChild(tr);
-      });
     }
 
-    // Ao carregar a página sem estar logado, já deixa a data de lançamento em hoje (para quando logar)
-    atualizarDataLancamento();
+    function closeBarcode() {
+      barcodeModal.classList.add("hidden");
+      if (html5QrCode) {
+        html5QrCode
+          .stop()
+          .then(() => {
+            html5QrCode.clear();
+            html5QrCode = null;
+          })
+          .catch((err) => console.error(err));
+      }
+    }
   </script>
 </body>
 </html>
