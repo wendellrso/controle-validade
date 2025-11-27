@@ -155,6 +155,7 @@
       flex-wrap: wrap;
       gap: 8px;
       margin-bottom: 8px;
+      align-items: center;
     }
     .search-box {
       margin-top: 8px;
@@ -290,12 +291,15 @@
     }
 
     @media (max-width: 640px) {
-      th:nth-child(6),
-      td:nth-child(6),
-      th:nth-child(7),
-      td:nth-child(7),
-      th:nth-child(8),
-      td:nth-child(8) {
+      /* esconde algumas colunas na visão mobile */
+      th:nth-child(4),
+      td:nth-child(4),
+      th:nth-child(5),
+      td:nth-child(5),
+      th:nth-child(9),
+      td:nth-child(9),
+      th:nth-child(10),
+      td:nth-child(10) {
         display: none;
       }
       header {
@@ -402,14 +406,14 @@
 
           <!-- Código de barras -->
           <div>
-            <label for="codigoBarras">Código de barras (somente números, máx. 13)</label>
+            <label for="codigoBarras">Cód. barras (números, máx. 13)</label>
             <input
               type="text"
               id="codigoBarras"
               maxlength="13"
               inputmode="numeric"
               pattern="\\d*"
-              placeholder="Ex.: 7891234567890"
+              placeholder="7891234567890"
             />
           </div>
 
@@ -453,23 +457,50 @@
       <!-- LISTAGEM DE ITENS -->
       <section class="card">
         <h2>Itens cadastrados</h2>
+
+        <!-- Filtros de status -->
         <div class="filters">
           <button class="btn-outline active" data-filter="todos">Todos</button>
           <button class="btn-outline" data-filter="ok">OK</button>
           <button class="btn-outline" data-filter="alerta">Vence em 30 dias</button>
           <button class="btn-outline" data-filter="vencido">Vencidos</button>
         </div>
+
+        <!-- Filtro de departamento + exportações -->
+        <div class="filters">
+          <div>
+            <label for="filtroDepartamento">Departamento</label>
+            <select id="filtroDepartamento">
+              <option value="todos">Todos os departamentos</option>
+              <option value="Açougue">Açougue</option>
+              <option value="Adega">Adega</option>
+              <option value="Bebidas">Bebidas</option>
+              <option value="Mercearia Alimentos">Mercearia Alimentos</option>
+              <option value="Mercearia Não Alimentos">Mercearia Não Alimentos</option>
+              <option value="Perecíveis Processados">Perecíveis Processados</option>
+            </select>
+          </div>
+
+          <div style="flex:1"></div>
+
+          <button class="btn-outline" id="btnExportCSV">Exportar Excel (CSV)</button>
+          <button class="btn-outline" id="btnExportPDF">Exportar PDF</button>
+        </div>
+
         <div class="search-box">
           <label for="busca">Buscar por descrição ou código de barras:</label>
           <input type="text" id="busca" placeholder="Digite para filtrar..." />
         </div>
+
         <div class="table-wrapper">
           <table>
             <thead>
               <tr>
                 <th>Loja</th>
+                <th>Departamento</th>
                 <th>Produto</th>
                 <th>Cód. barras</th>
+                <th>Lote</th>
                 <th>Validade</th>
                 <th>Status</th>
                 <th>Qtd</th>
@@ -511,6 +542,9 @@
       </section>
     </section>
   </main>
+
+  <!-- jsPDF para exportar PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
   <!-- SCRIPT PRINCIPAL -->
   <script type="module">
@@ -577,6 +611,10 @@
 
     const adminCard = document.getElementById("adminCard");
     const adminTabelaCorpo = document.getElementById("adminTabelaCorpo");
+
+    const filtroDepartamentoSelect = document.getElementById("filtroDepartamento");
+    const btnExportCSV = document.getElementById("btnExportCSV");
+    const btnExportPDF = document.getElementById("btnExportPDF");
 
     let modoCadastro = false; // false = login, true = criar conta
 
@@ -817,36 +855,30 @@
       return itens;
     }
 
-    async function renderizarTabela() {
-      const tbody = document.getElementById("tabelaCorpo");
-      if (!tbody) return;
-      tbody.innerHTML = "";
-
-      if (!perfilUsuario) {
-        const tr = document.createElement("tr");
-        const td = document.createElement("td");
-        td.colSpan = 8;
-        td.innerHTML = '<div class="empty-state">Carregando perfil do usuário...</div>';
-        tr.appendChild(td);
-        tbody.appendChild(tr);
-        return;
-      }
-
-      const filtroAtivo =
+    // Aplica filtros (status, busca, departamento, permissão)
+    async function obterItensFiltrados() {
+      const filtroStatus =
         document.querySelector(".filters .btn-outline.active")?.dataset.filter || "todos";
       const textoBusca = (document.getElementById("busca")?.value || "")
         .trim()
         .toLowerCase();
+      const filtroDepartamento = filtroDepartamentoSelect
+        ? filtroDepartamentoSelect.value
+        : "todos";
 
       const itens = await carregarItensDoBanco();
       const uidAtual = auth.currentUser ? auth.currentUser.uid : null;
 
-      const filtrados = itens.filter((item) => {
+      return itens.filter((item) => {
         const { status } = calcularStatus(item.validade);
 
-        if (filtroAtivo === "ok" && status !== "ok") return false;
-        if (filtroAtivo === "alerta" && status !== "alerta") return false;
-        if (filtroAtivo === "vencido" && status !== "vencido") return false;
+        if (filtroStatus === "ok" && status !== "ok") return false;
+        if (filtroStatus === "alerta" && status !== "alerta") return false;
+        if (filtroStatus === "vencido" && status !== "vencido") return false;
+
+        if (filtroDepartamento && filtroDepartamento !== "todos") {
+          if ((item.departamento || "") !== filtroDepartamento) return false;
+        }
 
         if (textoBusca) {
           const alvo = (
@@ -857,6 +889,8 @@
           if (!alvo.includes(textoBusca)) return false;
         }
 
+        if (!perfilUsuario) return false;
+
         if (perfilUsuario.tipo === "admin") {
           return true;
         } else if (perfilUsuario.tipo === "gerente") {
@@ -865,11 +899,29 @@
           return item.criadoPorUid === uidAtual;
         }
       });
+    }
+
+    async function renderizarTabela() {
+      const tbody = document.getElementById("tabelaCorpo");
+      if (!tbody) return;
+      tbody.innerHTML = "";
+
+      if (!perfilUsuario) {
+        const tr = document.createElement("tr");
+        const td = document.createElement("td");
+        td.colSpan = 10;
+        td.innerHTML = '<div class="empty-state">Carregando perfil do usuário...</div>';
+        tr.appendChild(td);
+        tbody.appendChild(tr);
+        return;
+      }
+
+      const filtrados = await obterItensFiltrados();
 
       if (filtrados.length === 0) {
         const tr = document.createElement("tr");
         const td = document.createElement("td");
-        td.colSpan = 8;
+        td.colSpan = 10;
         td.innerHTML = '<div class="empty-state">Nenhum item encontrado.</div>';
         tr.appendChild(td);
         tbody.appendChild(tr);
@@ -884,6 +936,10 @@
         tdLoja.innerHTML = `<span class="tag-loja">${item.loja || "-"}</span>`;
         tr.appendChild(tdLoja);
 
+        const tdDepto = document.createElement("td");
+        tdDepto.textContent = item.departamento || "-";
+        tr.appendChild(tdDepto);
+
         const tdDesc = document.createElement("td");
         tdDesc.textContent = item.descricao || "-";
         tr.appendChild(tdDesc);
@@ -891,6 +947,10 @@
         const tdCod = document.createElement("td");
         tdCod.textContent = item.codigoBarras || "-";
         tr.appendChild(tdCod);
+
+        const tdLote = document.createElement("td");
+        tdLote.textContent = item.lote || "-";
+        tr.appendChild(tdLote);
 
         const tdVal = document.createElement("td");
         tdVal.textContent = item.validade
@@ -1040,11 +1100,11 @@
 
     // FILTROS E BUSCA
     document
-      .querySelectorAll(".filters .btn-outline")
+      .querySelectorAll(".filters .btn-outline[data-filter]")
       .forEach((btn) => {
         btn.addEventListener("click", async () => {
           document
-            .querySelectorAll(".filters .btn-outline")
+            .querySelectorAll(".filters .btn-outline[data-filter]")
             .forEach((b) => b.classList.remove("active"));
           btn.classList.add("active");
           await renderizarTabela();
@@ -1055,6 +1115,138 @@
     if (inputBusca) {
       inputBusca.addEventListener("input", async () => {
         await renderizarTabela();
+      });
+    }
+
+    if (filtroDepartamentoSelect) {
+      filtroDepartamentoSelect.addEventListener("change", async () => {
+        await renderizarTabela();
+      });
+    }
+
+    // ---- EXPORTAÇÕES ----
+    function gerarCSV(itens) {
+      const headers = [
+        "Loja",
+        "Departamento",
+        "Descricao",
+        "CodigoBarras",
+        "Lote",
+        "Validade",
+        "Status",
+        "Quantidade",
+        "DiasParaVencer",
+        "Observacao"
+      ];
+
+      const linhas = [headers.join(";")];
+
+      itens.forEach((item) => {
+        const { status, dias } = calcularStatus(item.validade);
+        let statusTxt =
+          status === "ok" ? "OK" : status === "alerta" ? "Vence em 30 dias" : "Vencido";
+
+        const row = [
+          item.loja || "",
+          item.departamento || "",
+          item.descricao || "",
+          item.codigoBarras || "",
+          item.lote || "",
+          item.validade ? formatarDataBr(item.validade) : "",
+          statusTxt,
+          item.quantidade != null ? item.quantidade : "",
+          dias != null ? dias : "",
+          item.observacao || ""
+        ];
+
+        linhas.push(
+          row
+            .map((v) => {
+              const s = String(v).replace(/"/g, '""');
+              return `"${s}"`;
+            })
+            .join(";")
+        );
+      });
+
+      return linhas.join("\r\n");
+    }
+
+    if (btnExportCSV) {
+      btnExportCSV.addEventListener("click", async () => {
+        if (!perfilUsuario) {
+          alert("Faça login para exportar os dados.");
+          return;
+        }
+        const itens = await obterItensFiltrados();
+        if (!itens.length) {
+          alert("Não há itens para exportar com os filtros atuais.");
+          return;
+        }
+
+        const csv = gerarCSV(itens);
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "controle-validade.csv";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      });
+    }
+
+    if (btnExportPDF) {
+      btnExportPDF.addEventListener("click", async () => {
+        if (!perfilUsuario) {
+          alert("Faça login para exportar os dados.");
+          return;
+        }
+        const itens = await obterItensFiltrados();
+        if (!itens.length) {
+          alert("Não há itens para exportar com os filtros atuais.");
+          return;
+        }
+
+        const { jsPDF } = window.jspdf || {};
+        if (!jsPDF) {
+          alert("Biblioteca jsPDF não foi carregada.");
+          return;
+        }
+
+        const docPDF = new jsPDF();
+        docPDF.setFontSize(14);
+        docPDF.text("Relatório - Controle de Validade", 14, 20);
+        docPDF.setFontSize(10);
+
+        let y = 28;
+        itens.forEach((item, idx) => {
+          const { status, dias } = calcularStatus(item.validade);
+          let statusTxt =
+            status === "ok" ? "OK" : status === "alerta" ? "Vence em 30 dias" : "Vencido";
+
+          const linha =
+            `Loja: ${item.loja || ""} | Dept: ${item.departamento || ""} | ` +
+            `Prod: ${item.descricao || ""} | Cod: ${item.codigoBarras || ""} | ` +
+            `Lote: ${item.lote || ""} | Val: ${
+              item.validade ? formatarDataBr(item.validade) : ""
+            } | Qtd: ${item.quantidade != null ? item.quantidade : ""} | ` +
+            `Status: ${statusTxt} | Dias: ${dias != null ? dias : ""} | ` +
+            `Obs: ${item.observacao || ""}`;
+
+          const textoQuebrado = docPDF.splitTextToSize(linha, 180);
+
+          if (y + textoQuebrado.length * 5 > 280) {
+            docPDF.addPage();
+            y = 20;
+          }
+
+          docPDF.text(textoQuebrado, 14, y);
+          y += textoQuebrado.length * 5 + 3;
+        });
+
+        docPDF.save("controle-validade.pdf");
       });
     }
 
