@@ -440,7 +440,8 @@
       deleteDoc,
       query,
       where,
-      orderBy
+      orderBy,
+      setDoc
     } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
     // 🔥 CONFIG FIREBASE
@@ -485,18 +486,31 @@
     const logoutBtn = document.getElementById("logoutBtn");
     const adminTabBtn = document.getElementById("adminTabBtn");
 
-    // 🔑 BUSCAR PERFIL (com override para compras.3076@gmail.com)
+    // 🔑 BUSCAR / CRIAR PERFIL (com override para compras.3076@gmail.com)
     async function fetchUserRole(user) {
       try {
         // ✅ Override direto: esse e-mail SEMPRE é admin
         if (user.email === "compras.3076@gmail.com") {
           currentRole = "admin";
           currentLoja = "Compras";
+
+          // garante que exista doc na coleção users para você também
+          const uidRef = doc(db, "users", user.uid);
+          const uidSnap = await getDoc(uidRef);
+          if (!uidSnap.exists()) {
+            await setDoc(uidRef, {
+              nome: user.displayName || "Wendell Oliveira",
+              email: user.email,
+              role: "admin",
+              loja: "Compras"
+            });
+          }
           return;
         }
 
-        // 1) tenta pelo UID
         let data = null;
+
+        // 1) tenta achar doc com id = uid
         const uidRef = doc(db, "users", user.uid);
         const uidSnap = await getDoc(uidRef);
         if (uidSnap.exists()) {
@@ -518,11 +532,18 @@
             data.role || data.perfil || data.tipo || "repositor";
           currentLoja = data.loja || null;
         } else {
+          // 3) se não encontrou nada, cria doc automático com id = uid
+          await setDoc(doc(db, "users", user.uid), {
+            nome: user.displayName || "",
+            email: user.email,
+            role: "repositor",
+            loja: null
+          });
           currentRole = "repositor";
           currentLoja = null;
         }
       } catch (err) {
-        console.error("Erro ao buscar perfil:", err);
+        console.error("Erro ao buscar/criar perfil:", err);
         currentRole = "repositor";
         currentLoja = null;
       }
@@ -715,19 +736,41 @@
     async function loadItens() {
       if (!currentUser) return;
 
-      let qRef = query(collection(db, "validadeItens"), orderBy("validade", "asc"));
-      if (currentRole === "gerente" && currentLoja) {
+      // 🔎 Regra de visibilidade:
+      // admin -> tudo
+      // gerente -> tudo da loja dele
+      // repositor -> sempre só o que ele cadastrou (com ou sem loja)
+      let qRef;
+
+      if (currentRole === "admin") {
+        qRef = query(
+          collection(db, "validadeItens"),
+          orderBy("validade", "asc")
+        );
+      } else if (currentRole === "gerente" && currentLoja) {
         qRef = query(
           collection(db, "validadeItens"),
           where("loja", "==", currentLoja),
           orderBy("validade", "asc")
         );
-      }
-      if (currentRole === "repositor" && currentLoja) {
+      } else if (currentRole === "repositor" && currentLoja) {
         qRef = query(
           collection(db, "validadeItens"),
-          where("loja", "==", currentLoja),
           where("createdByUid", "==", currentUser.uid),
+          where("loja", "==", currentLoja),
+          orderBy("validade", "asc")
+        );
+      } else if (currentRole === "repositor") {
+        // repositor sem loja definida -> vê apenas o que ele mesmo lançou
+        qRef = query(
+          collection(db, "validadeItens"),
+          where("createdByUid", "==", currentUser.uid),
+          orderBy("validade", "asc")
+        );
+      } else {
+        // fallback geral (por segurança)
+        qRef = query(
+          collection(db, "validadeItens"),
           orderBy("validade", "asc")
         );
       }
@@ -757,7 +800,7 @@
         if (!podeEditar && currentRole === "repositor" && d.createdAt) {
           const created = d.createdAt.toDate ? d.createdAt.toDate() : new Date(d.createdAt);
           const diffHoras = (Date.now() - created.getTime()) / (1000 * 60 * 60);
-          if (diffHoras <= 24) podeEditar = true;
+          if (diffHoras <= 24 && d.createdByUid === currentUser.uid) podeEditar = true;
         }
         if (!podeEditar && currentRole === "gerente") {
           podeEditar = true;
