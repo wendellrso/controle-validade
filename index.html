@@ -5,7 +5,6 @@
   <title>Controle de Validade • Palato</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- Ícone opcional -->
   <link rel="icon" href="palato-logo.png" />
 
   <!-- SheetJS para Excel -->
@@ -13,8 +12,6 @@
   <!-- jsPDF para PDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
-  <!-- html5-qrcode (para leitor de código de barras, usando câmera traseira) -->
-  <script src="https://unpkg.com/html5-qrcode@2.3.10/html5-qrcode.min.js"></script>
 
   <style>
     :root {
@@ -204,6 +201,22 @@
       color: var(--text-soft);
     }
 
+    .header-menu-toggle {
+      display: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      border: 1px solid #374151;
+      background: #020617;
+      color: #e5e7eb;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 4px;
+      cursor: pointer;
+    }
+
     .user-box {
       text-align: right;
       font-size: 13px;
@@ -239,6 +252,7 @@
       background: #000;
       padding: 24px 16px;
       border-right: 1px solid #111827;
+      z-index: 40;
     }
 
     .side-menu-title {
@@ -294,6 +308,18 @@
     }
 
     .app-view-active {
+      display: block;
+    }
+
+    /* MENU OVERLAY MOBILE */
+    .menu-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      display: none;
+      z-index: 35;
+    }
+    .menu-overlay.show {
       display: block;
     }
 
@@ -466,7 +492,8 @@
     .items-table-wrapper {
       border-radius: 14px;
       border: 1px solid #1f2933;
-      overflow: hidden;
+      overflow-x: auto;
+      overflow-y: hidden;
       background: #020617;
     }
 
@@ -509,7 +536,7 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      min-width: 108px;
+      min-width: 120px;
       padding: 4px 10px;
       border-radius: 999px;
       font-size: 11px;
@@ -601,7 +628,7 @@
       display: none;
       align-items: center;
       justify-content: center;
-      z-index: 30;
+      z-index: 50;
     }
 
     .modal-backdrop.show {
@@ -647,18 +674,24 @@
     }
 
     @media (max-width: 960px) {
-      .grid-two-columns {
-        grid-template-columns: 1fr;
-      }
-
       .side-menu {
-        display: none;
+        position: fixed;
+        left: -280px;
+        top: 56px;
+        bottom: 0;
+        width: 260px;
+        padding: 20px 16px;
+        transition: left 0.2s ease;
       }
-
+      .side-menu.open {
+        left: 0;
+      }
+      .header-menu-toggle {
+        display: flex;
+      }
       .app-main {
         flex-direction: column;
       }
-
       .app-content {
         padding: 16px;
       }
@@ -670,7 +703,6 @@
   <div id="loginView">
     <div class="login-card">
       <div class="login-logo">
-        <!-- certifique-se que palato-logo.png está na mesma pasta -->
         <img src="palato-logo.png" alt="Palato" />
       </div>
       <div class="login-title">Controle de Validade</div>
@@ -699,16 +731,17 @@
   <div id="appView">
     <header class="app-header">
       <div class="app-header-left">
+        <button id="btnToggleMenu" class="header-menu-toggle">☰</button>
         <img src="palato-logo.png" alt="Palato" class="logo-palato" />
         <div class="app-title">
           <h1>CONTROLE DE VALIDADE</h1>
           <span>Multi-loja • Lote • Ofertas</span>
         </div>
       </div>
-      <div class="user-box" id="userBox">
-        <!-- preenchido via JS -->
-      </div>
+      <div class="user-box" id="userBox"></div>
     </header>
+
+    <div id="menuOverlay" class="menu-overlay"></div>
 
     <main class="app-main">
       <nav class="side-menu">
@@ -900,7 +933,6 @@
                     <th>Validade</th>
                     <th>Status</th>
                     <th>Oferta</th>
-                    <th>Flag</th>
                     <th>Lote</th>
                     <th>Usuário</th>
                     <th>Lançado em</th>
@@ -1064,6 +1096,10 @@
     const viewItens = document.getElementById("view-itens");
     const viewUsuarios = document.getElementById("view-usuarios");
 
+    const sideMenu = document.querySelector(".side-menu");
+    const menuOverlay = document.getElementById("menuOverlay");
+    const btnToggleMenu = document.getElementById("btnToggleMenu");
+
     // Novo lançamento
     const novaLoja = document.getElementById("novaLoja");
     const dataLancamento = document.getElementById("dataLancamento");
@@ -1100,6 +1136,8 @@
     const btnCloseScanner = document.getElementById("btnCloseScanner");
     let html5QrCode = null;
     let scannerAtivo = false;
+    let Html5QrcodeClass = null;
+    let Html5QrcodeFormats = null;
 
     // ===== ESTADO =====
     let usuarioAtual = null;
@@ -1136,6 +1174,7 @@
       return Math.round(diffMs / (1000 * 60 * 60 * 24));
     }
 
+    // Status em faixas 7/15/30/vencido
     function calcularStatus(validadeStr) {
       if (!validadeStr) {
         return { label: "Sem data", tipo: "neutro" };
@@ -1144,19 +1183,11 @@
       const dt = new Date(Number(ano), Number(mes) - 1, Number(dia));
       const dias = diasEntreHoje(dt);
 
-      if (dias < 0) {
-        return { label: "Vencido", tipo: "danger" };
-      }
-      if (dias <= 7) {
-        return { label: `Vence em ${dias} dia(s)`, tipo: "danger" };
-      }
-      if (dias <= 15) {
-        return { label: `Vence em ${dias} dia(s)`, tipo: "warning" };
-      }
-      if (dias <= 30) {
-        return { label: `Vence em ${dias} dia(s)`, tipo: "ok" };
-      }
-      return { label: `Vence em ${dias} dia(s)`, tipo: "ok" };
+      if (dias < 0) return { label: "Vencido", tipo: "danger" };
+      if (dias <= 7) return { label: "Vence em 7 dias", tipo: "danger" };
+      if (dias <= 15) return { label: "Vence em 15 dias", tipo: "warning" };
+      if (dias <= 30) return { label: "Vence em 30 dias", tipo: "ok" };
+      return { label: "Dentro da validade", tipo: "ok" };
     }
 
     function aplicarBadgeStatus(element, statusInfo) {
@@ -1177,6 +1208,19 @@
       if (viewId === "novo") menuNovo.classList.add("menu-item-active");
       if (viewId === "itens") menuItens.classList.add("menu-item-active");
       if (viewId === "usuarios") menuUsuarios.classList.add("menu-item-active");
+    }
+
+    function limparFormularioLancamento() {
+      novaLoja.value = "";
+      departamento.value = "";
+      codigoBarras.value = "";
+      descricao.value = "";
+      lote.value = "";
+      quantidade.value = "";
+      validade.value = "";
+      observacao.value = "";
+      const agora = new Date();
+      dataLancamento.value = formatarDataHora(agora);
     }
 
     function atualizarUserBox() {
@@ -1240,7 +1284,6 @@
         perfilAtual = data.tipo || "repositor";
         perfilLojaAtual = data.loja || "";
       } else {
-        // cria como repositor padrão
         await setDoc(ref, {
           email: user.email,
           nome: user.displayName || "",
@@ -1252,7 +1295,6 @@
         perfilLojaAtual = "";
       }
 
-      // admin vê menu de usuários, outros não
       if (perfilAtual === "admin") {
         menuUsuarios.style.display = "flex";
       } else {
@@ -1273,10 +1315,7 @@
 
       await carregarOuCriarPerfilUsuario(user);
       atualizarUserBox();
-
-      // define data lançamento sempre que logar
-      const agora = new Date();
-      dataLancamento.value = formatarDataHora(agora);
+      limparFormularioLancamento();
 
       loginView.style.display = "none";
       appView.style.display = "flex";
@@ -1287,15 +1326,36 @@
       }
     });
 
-    // ===== MENU =====
-    menuNovo.addEventListener("click", () => setView("novo"));
+    // ===== MENU LATERAL / MOBILE =====
+    function abrirMenu() {
+      sideMenu.classList.add("open");
+      menuOverlay.classList.add("show");
+    }
+    function fecharMenu() {
+      sideMenu.classList.remove("open");
+      menuOverlay.classList.remove("show");
+    }
+
+    btnToggleMenu.addEventListener("click", () => {
+      if (sideMenu.classList.contains("open")) fecharMenu();
+      else abrirMenu();
+    });
+    menuOverlay.addEventListener("click", fecharMenu);
+
+    menuNovo.addEventListener("click", () => {
+      setView("novo");
+      limparFormularioLancamento();
+      fecharMenu();
+    });
     menuItens.addEventListener("click", async () => {
       setView("itens");
+      fecharMenu();
       await carregarLancamentos();
     });
     menuUsuarios.addEventListener("click", async () => {
       if (perfilAtual !== "admin") return;
       setView("usuarios");
+      fecharMenu();
       await carregarUsuarios();
     });
 
@@ -1337,10 +1397,9 @@
           descricao: desc,
           lote: loteVal,
           quantidade: qtd,
-          validade: val, // yyyy-mm-dd
+          validade: val,
           observacao: obs,
           oferta: "nao_lancado",
-          flagOferta: false,
           usuarioNome: usuarioAtual.displayName || "",
           usuarioEmail: usuarioAtual.email || "",
           usuarioUid: usuarioAtual.uid,
@@ -1349,12 +1408,7 @@
         });
 
         showAlert("Lançamento salvo com sucesso.");
-        descricao.value = "";
-        lote.value = "";
-        quantidade.value = "";
-        validade.value = "";
-        observacao.value = "";
-
+        limparFormularioLancamento();
         await carregarLancamentos();
       } catch (err) {
         console.error(err);
@@ -1376,14 +1430,12 @@
         const item = docSnap.data();
         const id = docSnap.id;
 
-        // VISIBILIDADE
         let visivel = false;
         if (perfilAtual === "admin") {
           visivel = true;
         } else if (perfilAtual === "gerente") {
           if (!perfilLojaAtual || item.loja === perfilLojaAtual) visivel = true;
         } else {
-          // repositor
           const uid = item.usuarioUid;
           const email = item.usuarioEmail;
           if (uid === usuarioAtual.uid || email === usuarioAtual.email) visivel = true;
@@ -1407,7 +1459,6 @@
       hoje.setHours(0, 0, 0, 0);
 
       filtrados = filtrados.filter((item) => {
-        // status
         if (item.validade) {
           const dt = new Date(item.validade);
           dt.setHours(0, 0, 0, 0);
@@ -1421,7 +1472,6 @@
           return false;
         }
 
-        // departamento
         if (filtroDepVal !== "todos" && item.departamento !== filtroDepVal) return false;
 
         return true;
@@ -1434,7 +1484,9 @@
     function adicionarLinhaNaTabela(item) {
       const tr = document.createElement("tr");
 
-      const dataLanc = item.dataLancamentoTexto || (item.criadoEm && item.criadoEm.toDate ? formatarDataHora(item.criadoEm.toDate()) : "");
+      const dataLanc =
+        item.dataLancamentoTexto ||
+        (item.criadoEm && item.criadoEm.toDate ? formatarDataHora(item.criadoEm.toDate()) : "");
       const valStr = item.validade || "";
 
       const statusInfo = calcularStatus(valStr);
@@ -1474,7 +1526,6 @@
       } else {
         spanOferta.textContent = "Não Lançado";
       }
-
       spanOferta.addEventListener("click", async () => {
         const novoValor = item.oferta === "lancado" ? "nao_lancado" : "lancado";
         try {
@@ -1488,25 +1539,7 @@
           showAlert("Erro ao atualizar oferta.");
         }
       });
-
       tdOferta.appendChild(spanOferta);
-
-      const tdFlag = document.createElement("td");
-      const chk = document.createElement("input");
-      chk.type = "checkbox";
-      chk.checked = !!item.flagOferta;
-      chk.addEventListener("change", async () => {
-        try {
-          await updateDoc(doc(db, "lancamentos", item.id), {
-            flagOferta: chk.checked
-          });
-          item.flagOferta = chk.checked;
-        } catch (err) {
-          console.error(err);
-          showAlert("Erro ao atualizar flag.");
-        }
-      });
-      tdFlag.appendChild(chk);
 
       const tdLote = document.createElement("td");
       tdLote.textContent = item.lote || "";
@@ -1530,7 +1563,6 @@
       btnExcluir.textContent = "Excluir";
       btnExcluir.classList.add("btn-delete");
 
-      // permissão edição/exclusão
       const ehAdmin = perfilAtual === "admin";
       const ehDono =
         item.usuarioUid === usuarioAtual.uid || item.usuarioEmail === usuarioAtual.email;
@@ -1547,7 +1579,6 @@
 
       if (podeEditar) {
         btnEditar.addEventListener("click", () => {
-          // carrega para o formulário
           setView("novo");
           novaLoja.value = item.loja || "";
           departamento.value = item.departamento || "";
@@ -1598,7 +1629,6 @@
         tdVal,
         tdStatus,
         tdOferta,
-        tdFlag,
         tdLote,
         tdUsuario,
         tdLancadoEm,
@@ -1619,10 +1649,23 @@
         return;
       }
 
-      const dados = [["Loja", "Data lançamento", "Departamento", "Cód. barras", "Descrição", "Qtd", "Validade", "Status", "Oferta", "Lote", "Usuário", "Lançado em", "Obs."]];
-
-      const hoje = new Date();
-      hoje.setHours(0, 0, 0, 0);
+      const dados = [
+        [
+          "Loja",
+          "Data lançamento",
+          "Departamento",
+          "Cód. barras",
+          "Descrição",
+          "Qtd",
+          "Validade",
+          "Status",
+          "Oferta",
+          "Lote",
+          "Usuário",
+          "Lançado em",
+          "Obs."
+        ]
+      ];
 
       lancamentosCache.forEach((item) => {
         const valStr = item.validade || "";
@@ -1846,7 +1889,6 @@
       }
 
       try {
-        // Será criado com ID aleatório, apenas para controle / força
         await addDoc(collection(db, "usuarios"), {
           nome,
           email,
@@ -1866,68 +1908,70 @@
       }
     });
 
-    // ===== SCANNER (CAMERA TRASEIRA) =====
-    function abrirScanner() {
-      if (!window.Html5Qrcode) {
+    // ===== SCANNER (import dinâmico + câmera traseira) =====
+    async function ensureScannerLib() {
+      if (Html5QrcodeClass && Html5QrcodeFormats) return;
+      try {
+        const mod = await import(
+          "https://unpkg.com/html5-qrcode@2.3.10/esm/html5-qrcode.min.js"
+        );
+        Html5QrcodeClass = mod.Html5Qrcode;
+        Html5QrcodeFormats = mod.Html5QrcodeSupportedFormats;
+      } catch (err) {
+        console.error(err);
         showAlert("Leitor de código de barras não carregou corretamente.");
-        return;
       }
+    }
+
+    async function abrirScanner() {
+      await ensureScannerLib();
+      if (!Html5QrcodeClass || !Html5QrcodeFormats) return;
 
       scannerModal.classList.add("show");
 
-      if (html5QrCode) {
-        return;
-      }
+      if (html5QrCode) return;
 
-      html5QrCode = new Html5Qrcode("qr-reader");
+      html5QrCode = new Html5QrcodeClass("qr-reader");
       scannerAtivo = true;
 
-      Html5Qrcode.getCameras()
-        .then((devices) => {
-          if (!devices || devices.length === 0) {
-            showAlert("Nenhuma câmera encontrada.");
-            fecharScanner();
-            return;
-          }
-
-          // tenta achar camera traseira
-          let cameraId = devices[0].id;
-          const traseira = devices.find((d) =>
-            d.label.toLowerCase().includes("back") ||
-            d.label.toLowerCase().includes("traseira")
-          );
-          if (traseira) cameraId = traseira.id;
-          else if (devices.length > 1) cameraId = devices[devices.length - 1].id;
-
-          const config = {
-            fps: 10,
-            qrbox: 250,
-            formatsToSupport: [Html5QrcodeSupportedFormats.EAN_13]
-          };
-
-          html5QrCode
-            .start(
-              cameraId,
-              config,
-              (decodedText) => {
-                if (/^[0-9]{8,13}$/.test(decodedText)) {
-                  codigoBarras.value = decodedText;
-                  fecharScanner();
-                }
-              },
-              () => {}
-            )
-            .catch((err) => {
-              console.error(err);
-              showAlert("Erro ao iniciar câmera.");
-              fecharScanner();
-            });
-        })
-        .catch((err) => {
-          console.error(err);
-          showAlert("Erro ao acessar câmeras.");
+      try {
+        const devices = await Html5QrcodeClass.getCameras();
+        if (!devices || devices.length === 0) {
+          showAlert("Nenhuma câmera encontrada.");
           fecharScanner();
-        });
+          return;
+        }
+
+        let cameraId = devices[0].id;
+        const traseira = devices.find((d) =>
+          d.label.toLowerCase().includes("back") ||
+          d.label.toLowerCase().includes("traseira")
+        );
+        if (traseira) cameraId = traseira.id;
+        else if (devices.length > 1) cameraId = devices[devices.length - 1].id;
+
+        const config = {
+          fps: 10,
+          qrbox: 250,
+          formatsToSupport: [Html5QrcodeFormats.EAN_13]
+        };
+
+        await html5QrCode.start(
+          cameraId,
+          config,
+          (decodedText) => {
+            if (/^[0-9]{8,13}$/.test(decodedText)) {
+              codigoBarras.value = decodedText;
+              fecharScanner();
+            }
+          },
+          () => {}
+        );
+      } catch (err) {
+        console.error(err);
+        showAlert("Erro ao iniciar câmera.");
+        fecharScanner();
+      }
     }
 
     async function fecharScanner() {
@@ -1955,7 +1999,6 @@
     });
 
     // ===== INICIAL =====
-    // Preenche data lançamento (caso carregue logado)
     (function initDataLancamento() {
       const agora = new Date();
       dataLancamento.value = formatarDataHora(agora);
