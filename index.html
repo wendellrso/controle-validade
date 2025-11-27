@@ -291,15 +291,19 @@
     }
 
     @media (max-width: 640px) {
-      /* esconde algumas colunas na visão mobile */
+      /* esconder algumas colunas no mobile pra não virar bagunça */
       th:nth-child(4),
       td:nth-child(4),
       th:nth-child(5),
       td:nth-child(5),
-      th:nth-child(9),
-      td:nth-child(9),
+      th:nth-child(6),
+      td:nth-child(6),
       th:nth-child(10),
-      td:nth-child(10) {
+      td:nth-child(10),
+      th:nth-child(12),
+      td:nth-child(12),
+      th:nth-child(13),
+      td:nth-child(13) {
         display: none;
       }
       header {
@@ -308,6 +312,13 @@
       }
     }
   </style>
+
+  <!-- jsPDF para PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <!-- jsPDF AutoTable para tabela bonita no PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+  <!-- SheetJS para Excel .xlsx -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body>
   <header>
@@ -366,9 +377,9 @@
 
     <!-- APP (SÓ APARECE LOGADO) -->
     <section id="appContent" class="hidden">
-      <!-- NOVO LANÇAMENTO -->
+      <!-- NOVO LANÇAMENTO / EDIÇÃO -->
       <section class="card">
-        <h2>Novo lançamento</h2>
+        <h2 id="tituloFormulario">Novo lançamento</h2>
         <div class="form-grid">
           <!-- Loja -->
           <div>
@@ -387,6 +398,7 @@
           <div>
             <label for="dataLancamento">Data de lançamento</label>
             <input type="date" id="dataLancamento" disabled />
+            <div class="small">Sempre a data de hoje, registrada automaticamente.</div>
           </div>
 
           <!-- Departamento -->
@@ -446,7 +458,10 @@
             <textarea id="observacao" placeholder="Ex.: ponta de gôndola, oferta, avaria..."></textarea>
           </div>
         </div>
-        <button class="btn-primary" id="btnSalvar">Salvar lançamento</button>
+        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+          <button class="btn-primary" id="btnSalvar">Salvar lançamento</button>
+          <button class="btn-outline hidden" id="btnCancelarEdicao">Cancelar edição</button>
+        </div>
         <div class="small">
           * Status é calculado automaticamente:<br />
           <strong>OK</strong> (&gt; 30 dias) · <strong>Vence em 30 dias</strong> · <strong>Vencido</strong>
@@ -460,8 +475,8 @@
         <!-- Filtros de status -->
         <div class="filters">
           <button class="btn-outline active" data-filter="todos">Todos</button>
-          <button class="btn-outline" data-filter="ok">OK</button>
-          <button class="btn-outline" data-filter="alerta">Vence em 30 dias</button>
+          <button class="btn-outline" data-filter="vence15">Vence em 15 dias</button>
+          <button class="btn-outline" data-filter="vence30">Vence em 30 dias</button>
           <button class="btn-outline" data-filter="vencido">Vencidos</button>
         </div>
 
@@ -482,7 +497,7 @@
 
           <div style="flex:1"></div>
 
-          <button class="btn-outline" id="btnExportCSV">Exportar Excel (CSV)</button>
+          <button class="btn-outline" id="btnExportExcel">Exportar Excel (.xlsx)</button>
           <button class="btn-outline" id="btnExportPDF">Exportar PDF</button>
         </div>
 
@@ -500,11 +515,15 @@
                 <th>Produto</th>
                 <th>Cód. barras</th>
                 <th>Lote</th>
+                <th>Data lançamento</th>
                 <th>Validade</th>
                 <th>Status</th>
                 <th>Qtd</th>
                 <th>Dias p/ vencer</th>
+                <th>Usuário</th>
+                <th>Cadastro</th>
                 <th>Obs.</th>
+                <th>Ações</th>
               </tr>
             </thead>
             <tbody id="tabelaCorpo">
@@ -542,9 +561,6 @@
     </section>
   </main>
 
-  <!-- jsPDF para exportar PDF -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
   <!-- SCRIPT PRINCIPAL -->
   <script type="module">
     // IMPORTS DO FIREBASE (CDN)
@@ -559,7 +575,8 @@
       doc,
       getDoc,
       setDoc,
-      updateDoc
+      updateDoc,
+      deleteDoc
     } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
     import {
       getAuth,
@@ -593,6 +610,9 @@
     // PERFIL DO USUÁRIO (admin/gerente/repositor)
     let perfilUsuario = null;
 
+    // CONTROLE DE EDIÇÃO
+    let itemEmEdicaoId = null;
+
     // ELEMENTOS DOM
     const loginCard = document.getElementById("loginCard");
     const appContent = document.getElementById("appContent");
@@ -612,8 +632,11 @@
     const adminTabelaCorpo = document.getElementById("adminTabelaCorpo");
 
     const filtroDepartamentoSelect = document.getElementById("filtroDepartamento");
-    const btnExportCSV = document.getElementById("btnExportCSV");
+    const btnExportExcel = document.getElementById("btnExportExcel");
     const btnExportPDF = document.getElementById("btnExportPDF");
+
+    const btnCancelarEdicao = document.getElementById("btnCancelarEdicao");
+    const tituloFormulario = document.getElementById("tituloFormulario");
 
     let modoCadastro = false; // false = login, true = criar conta
 
@@ -653,6 +676,24 @@
       const mes = String(hoje.getMonth() + 1).padStart(2, "0");
       const dia = String(hoje.getDate()).padStart(2, "0");
       return `${ano}-${mes}-${dia}`;
+    }
+
+    function formatarDataBr(dataStr) {
+      if (!dataStr) return "";
+      const [ano, mes, dia] = dataStr.split("-");
+      return `${dia}/${mes}/${ano}`;
+    }
+
+    function formatarDataHoraBr(isoString) {
+      if (!isoString) return "";
+      const d = new Date(isoString);
+      if (isNaN(d.getTime())) return "";
+      const dia = String(d.getDate()).padStart(2, "0");
+      const mes = String(d.getMonth() + 1).padStart(2, "0");
+      const ano = d.getFullYear();
+      const horas = String(d.getHours()).padStart(2, "0");
+      const mins = String(d.getMinutes()).padStart(2, "0");
+      return `${dia}/${mes}/${ano} ${horas}:${mins}`;
     }
 
     function atualizarDataLancamento() {
@@ -697,7 +738,7 @@
       }
     });
 
-    // BOTÃO APPLE (APENAS VISUAL POR ENQUANTO)
+    // BOTÃO APPLE (VISUAL)
     btnApple.addEventListener("click", () => {
       alert("Login com Apple ainda não está configurado.\nPor enquanto use e-mail/senha ou Google 🙂");
     });
@@ -796,7 +837,7 @@
       await renderizarUsuariosAdmin();
     }
 
-    // CONTROLE DE STATUS DE LOGIN
+    // CONTROLE DE LOGIN
     onAuthStateChanged(auth, async (user) => {
       if (user) {
         loginCard.classList.add("hidden");
@@ -815,6 +856,7 @@
         userEmailSpan.textContent = "";
         perfilUsuario = null;
         if (adminCard) adminCard.classList.add("hidden");
+        cancelarEdicao();
       }
     });
 
@@ -838,12 +880,6 @@
       }
     }
 
-    function formatarDataBr(dataStr) {
-      if (!dataStr) return "";
-      const [ano, mes, dia] = dataStr.split("-");
-      return `${dia}/${mes}/${ano}`;
-    }
-
     async function carregarItensDoBanco() {
       const q = query(itensRef, orderBy("validade", "asc"));
       const snapshot = await getDocs(q);
@@ -854,10 +890,11 @@
       return itens;
     }
 
-    // Aplica filtros (status, busca, departamento, permissão)
+    // Filtra por status, busca, departamento e permissão
     async function obterItensFiltrados() {
       const filtroStatus =
-        document.querySelector(".filters .btn-outline.active")?.dataset.filter || "todos";
+        document.querySelector(".filters .btn-outline[data-filter].active")?.dataset.filter ||
+        "todos";
       const textoBusca = (document.getElementById("busca")?.value || "")
         .trim()
         .toLowerCase();
@@ -869,16 +906,23 @@
       const uidAtual = auth.currentUser ? auth.currentUser.uid : null;
 
       return itens.filter((item) => {
-        const { status } = calcularStatus(item.validade);
+        const { status, dias } = calcularStatus(item.validade);
 
-        if (filtroStatus === "ok" && status !== "ok") return false;
-        if (filtroStatus === "alerta" && status !== "alerta") return false;
-        if (filtroStatus === "vencido" && status !== "vencido") return false;
+        // Filtro por dias
+        if (filtroStatus === "vence15") {
+          if (!(dias !== null && dias >= 0 && dias <= 15)) return false;
+        } else if (filtroStatus === "vence30") {
+          if (!(dias !== null && dias > 15 && dias <= 30)) return false;
+        } else if (filtroStatus === "vencido") {
+          if (status !== "vencido") return false;
+        }
 
+        // Departamento
         if (filtroDepartamento && filtroDepartamento !== "todos") {
           if ((item.departamento || "") !== filtroDepartamento) return false;
         }
 
+        // Busca
         if (textoBusca) {
           const alvo = (
             (item.descricao || "") +
@@ -888,6 +932,7 @@
           if (!alvo.includes(textoBusca)) return false;
         }
 
+        // Permissões
         if (!perfilUsuario) return false;
 
         if (perfilUsuario.tipo === "admin") {
@@ -900,6 +945,23 @@
       });
     }
 
+    function podeEditarItem(item) {
+      if (!perfilUsuario || !auth.currentUser) return false;
+      if (perfilUsuario.tipo === "admin") return true;
+
+      if (perfilUsuario.tipo !== "repositor") return false;
+      if (item.criadoPorUid !== auth.currentUser.uid) return false;
+
+      // pode editar até 1 dia após a data de lançamento
+      const dataLanc = item.dataLancamento || (item.criadoEm ? item.criadoEm.slice(0, 10) : null);
+      if (!dataLanc) return false;
+      const lanc = new Date(dataLanc + "T00:00:00");
+      const agora = new Date();
+      const diffMs = agora - lanc;
+      const diffDias = diffMs / (1000 * 60 * 60 * 24);
+      return diffDias <= 1;
+    }
+
     async function renderizarTabela() {
       const tbody = document.getElementById("tabelaCorpo");
       if (!tbody) return;
@@ -908,7 +970,7 @@
       if (!perfilUsuario) {
         const tr = document.createElement("tr");
         const td = document.createElement("td");
-        td.colSpan = 10;
+        td.colSpan = 14;
         td.innerHTML = '<div class="empty-state">Carregando perfil do usuário...</div>';
         tr.appendChild(td);
         tbody.appendChild(tr);
@@ -920,7 +982,7 @@
       if (filtrados.length === 0) {
         const tr = document.createElement("tr");
         const td = document.createElement("td");
-        td.colSpan = 10;
+        td.colSpan = 14;
         td.innerHTML = '<div class="empty-state">Nenhum item encontrado.</div>';
         tr.appendChild(td);
         tbody.appendChild(tr);
@@ -950,6 +1012,12 @@
         const tdLote = document.createElement("td");
         tdLote.textContent = item.lote || "-";
         tr.appendChild(tdLote);
+
+        const tdDataLanc = document.createElement("td");
+        tdDataLanc.textContent = item.dataLancamento
+          ? formatarDataBr(item.dataLancamento)
+          : "-";
+        tr.appendChild(tdDataLanc);
 
         const tdVal = document.createElement("td");
         tdVal.textContent = item.validade
@@ -981,9 +1049,43 @@
         tdDias.textContent = dias !== null ? dias : "-";
         tr.appendChild(tdDias);
 
+        const tdUsuario = document.createElement("td");
+        tdUsuario.textContent = item.criadoPorEmail || "-";
+        tr.appendChild(tdUsuario);
+
+        const tdCadastro = document.createElement("td");
+        tdCadastro.textContent = item.criadoEm
+          ? formatarDataHoraBr(item.criadoEm)
+          : "-";
+        tr.appendChild(tdCadastro);
+
         const tdObs = document.createElement("td");
         tdObs.textContent = item.observacao || "-";
         tr.appendChild(tdObs);
+
+        const tdAcoes = document.createElement("td");
+        tdAcoes.style.whiteSpace = "nowrap";
+
+        if (podeEditarItem(item)) {
+          const btnEdit = document.createElement("button");
+          btnEdit.textContent = "Editar";
+          btnEdit.className = "btn-outline";
+          btnEdit.style.fontSize = "11px";
+          btnEdit.addEventListener("click", () => iniciarEdicao(item));
+          tdAcoes.appendChild(btnEdit);
+        }
+
+        if (perfilUsuario && perfilUsuario.tipo === "admin") {
+          const btnDel = document.createElement("button");
+          btnDel.textContent = "Excluir";
+          btnDel.className = "btn-outline";
+          btnDel.style.fontSize = "11px";
+          btnDel.style.marginLeft = "4px";
+          btnDel.addEventListener("click", () => excluirItem(item));
+          tdAcoes.appendChild(btnDel);
+        }
+
+        tr.appendChild(tdAcoes);
 
         tbody.appendChild(tr);
       });
@@ -1010,6 +1112,44 @@
       if (departamento) departamento.value = "";
       if (lote) lote.value = "";
       atualizarDataLancamento();
+      aplicarRestricoesPorPerfil();
+    }
+
+    function iniciarEdicao(item) {
+      itemEmEdicaoId = item.id;
+      tituloFormulario.textContent = "Editar lançamento";
+      const btnSalvar = document.getElementById("btnSalvar");
+      btnSalvar.textContent = "Salvar alterações";
+      btnCancelarEdicao.classList.remove("hidden");
+
+      document.getElementById("loja").value = item.loja || "";
+      document.getElementById("dataLancamento").value =
+        item.dataLancamento || getDataHojeISO();
+      document.getElementById("departamento").value = item.departamento || "";
+      document.getElementById("codigoBarras").value = item.codigoBarras || "";
+      document.getElementById("descricao").value = item.descricao || "";
+      document.getElementById("lote").value = item.lote || "";
+      document.getElementById("quantidade").value =
+        item.quantidade != null ? item.quantidade : "";
+      document.getElementById("validade").value = item.validade || "";
+      document.getElementById("observacao").value = item.observacao || "";
+
+      aplicarRestricoesPorPerfil();
+    }
+
+    function cancelarEdicao() {
+      itemEmEdicaoId = null;
+      tituloFormulario.textContent = "Novo lançamento";
+      const btnSalvar = document.getElementById("btnSalvar");
+      if (btnSalvar) btnSalvar.textContent = "Salvar lançamento";
+      if (btnCancelarEdicao) btnCancelarEdicao.classList.add("hidden");
+      limparFormulario();
+    }
+
+    if (btnCancelarEdicao) {
+      btnCancelarEdicao.addEventListener("click", () => {
+        cancelarEdicao();
+      });
     }
 
     // Enforce numeric-only and max 13 on código de barras
@@ -1020,7 +1160,7 @@
       });
     }
 
-    // SALVAR ITEM
+    // SALVAR / ATUALIZAR ITEM
     const btnSalvar = document.getElementById("btnSalvar");
     if (btnSalvar) {
       btnSalvar.addEventListener("click", async () => {
@@ -1073,7 +1213,8 @@
 
         try {
           const user = auth.currentUser;
-          await addDoc(itensRef, {
+
+          const campos = {
             loja: lojaSelecionada,
             dataLancamento: dataLancamento || getDataHojeISO(),
             departamento,
@@ -1082,19 +1223,46 @@
             lote: lote || null,
             quantidade: quantidade ? Number(quantidade) : null,
             validade,
-            observacao,
-            criadoEm: new Date().toISOString(),
-            criadoPorUid: user ? user.uid : null,
-            criadoPorEmail: user ? user.email : null
-          });
-          limparFormulario();
-          aplicarRestricoesPorPerfil();
+            observacao
+          };
+
+          if (itemEmEdicaoId) {
+            // atualização
+            const docRef = doc(db, "itens_validade", itemEmEdicaoId);
+            await updateDoc(docRef, campos);
+          } else {
+            // novo
+            await addDoc(itensRef, {
+              ...campos,
+              criadoEm: new Date().toISOString(),
+              criadoPorUid: user ? user.uid : null,
+              criadoPorEmail: user ? user.email : null
+            });
+          }
+
+          cancelarEdicao();
           await renderizarTabela();
         } catch (e) {
           console.error("Erro ao salvar:", e);
           alert("Erro ao salvar. Verifique o console do navegador.");
         }
       });
+    }
+
+    async function excluirItem(item) {
+      if (!perfilUsuario || perfilUsuario.tipo !== "admin") return;
+      const ok = confirm(
+        `Tem certeza que deseja excluir o item:\n${item.descricao || ""} (${item.codigoBarras || ""})`
+      );
+      if (!ok) return;
+      try {
+        await deleteDoc(doc(db, "itens_validade", item.id));
+        if (itemEmEdicaoId === item.id) cancelarEdicao();
+        await renderizarTabela();
+      } catch (e) {
+        console.error(e);
+        alert("Erro ao excluir item.");
+      }
     }
 
     // FILTROS E BUSCA
@@ -1124,55 +1292,58 @@
     }
 
     // ---- EXPORTAÇÕES ----
-    function gerarCSV(itens) {
+
+    // Excel (.xlsx) usando SheetJS
+    function exportarExcel(itens) {
       const headers = [
         "Loja",
         "Departamento",
         "Descricao",
         "CodigoBarras",
         "Lote",
+        "DataLancamento",
         "Validade",
         "Status",
         "Quantidade",
         "DiasParaVencer",
+        "Usuario",
+        "CriadoEm",
         "Observacao"
       ];
 
-      const linhas = [headers.join(";")];
+      const data = [headers];
 
       itens.forEach((item) => {
         const { status, dias } = calcularStatus(item.validade);
         let statusTxt =
           status === "ok" ? "OK" : status === "alerta" ? "Vence em 30 dias" : "Vencido";
 
-        const row = [
+        data.push([
           item.loja || "",
           item.departamento || "",
           item.descricao || "",
           item.codigoBarras || "",
           item.lote || "",
+          item.dataLancamento ? formatarDataBr(item.dataLancamento) : "",
           item.validade ? formatarDataBr(item.validade) : "",
           statusTxt,
           item.quantidade != null ? item.quantidade : "",
           dias != null ? dias : "",
+          item.criadoPorEmail || "",
+          item.criadoEm ? formatarDataHoraBr(item.criadoEm) : "",
           item.observacao || ""
-        ];
-
-        linhas.push(
-          row
-            .map((v) => {
-              const s = String(v).replace(/"/g, '""');
-              return `"${s}"`;
-            })
-            .join(";")
-        );
+        ]);
       });
 
-      return linhas.join("\r\n");
+      const ws = XLSX.utils.aoa_to_sheet(data);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Validades");
+
+      XLSX.writeFile(wb, "controle-validade.xlsx");
     }
 
-    if (btnExportCSV) {
-      btnExportCSV.addEventListener("click", async () => {
+    if (btnExportExcel) {
+      btnExportExcel.addEventListener("click", async () => {
         if (!perfilUsuario) {
           alert("Faça login para exportar os dados.");
           return;
@@ -1182,20 +1353,16 @@
           alert("Não há itens para exportar com os filtros atuais.");
           return;
         }
-
-        const csv = gerarCSV(itens);
-        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "controle-validade.csv";
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        try {
+          exportarExcel(itens);
+        } catch (e) {
+          console.error(e);
+          alert("Erro ao gerar Excel. Verifique o console do navegador.");
+        }
       });
     }
 
+    // PDF com tabela (jsPDF + AutoTable)
     if (btnExportPDF) {
       btnExportPDF.addEventListener("click", async () => {
         if (!perfilUsuario) {
@@ -1209,40 +1376,63 @@
         }
 
         const { jsPDF } = window.jspdf || {};
-        if (!jsPDF) {
+        if (!jsPDF || !window.jspdf || !window.jspdf.jsPDF) {
           alert("Biblioteca jsPDF não foi carregada.");
           return;
         }
 
-        const docPDF = new jsPDF();
+        const docPDF = new jsPDF("l", "mm", "a4");
+
         docPDF.setFontSize(14);
-        docPDF.text("Relatório - Controle de Validade", 14, 20);
+        docPDF.text("Relatório - Controle de Validade", 14, 14);
         docPDF.setFontSize(10);
 
-        let y = 28;
-        itens.forEach((item, idx) => {
+        const head = [
+          [
+            "Loja",
+            "Depto",
+            "Produto",
+            "Cód. barras",
+            "Lote",
+            "Data lanc.",
+            "Validade",
+            "Status",
+            "Qtd",
+            "Dias",
+            "Usuário",
+            "Cadastro",
+            "Obs."
+          ]
+        ];
+
+        const body = itens.map((item) => {
           const { status, dias } = calcularStatus(item.validade);
           let statusTxt =
             status === "ok" ? "OK" : status === "alerta" ? "Vence em 30 dias" : "Vencido";
 
-          const linha =
-            `Loja: ${item.loja || ""} | Dept: ${item.departamento || ""} | ` +
-            `Prod: ${item.descricao || ""} | Cod: ${item.codigoBarras || ""} | ` +
-            `Lote: ${item.lote || ""} | Val: ${
-              item.validade ? formatarDataBr(item.validade) : ""
-            } | Qtd: ${item.quantidade != null ? item.quantidade : ""} | ` +
-            `Status: ${statusTxt} | Dias: ${dias != null ? dias : ""} | ` +
-            `Obs: ${item.observacao || ""}`;
+          return [
+            item.loja || "",
+            item.departamento || "",
+            item.descricao || "",
+            item.codigoBarras || "",
+            item.lote || "",
+            item.dataLancamento ? formatarDataBr(item.dataLancamento) : "",
+            item.validade ? formatarDataBr(item.validade) : "",
+            statusTxt,
+            item.quantidade != null ? item.quantidade : "",
+            dias != null ? dias : "",
+            item.criadoPorEmail || "",
+            item.criadoEm ? formatarDataHoraBr(item.criadoEm) : "",
+            item.observacao || ""
+          ];
+        });
 
-          const textoQuebrado = docPDF.splitTextToSize(linha, 180);
-
-          if (y + textoQuebrado.length * 5 > 280) {
-            docPDF.addPage();
-            y = 20;
-          }
-
-          docPDF.text(textoQuebrado, 14, y);
-          y += textoQuebrado.length * 5 + 3;
+        docPDF.autoTable({
+          head,
+          body,
+          startY: 20,
+          styles: { fontSize: 8, cellPadding: 2 },
+          headStyles: { fillColor: [17, 24, 39], textColor: 255 }
         });
 
         docPDF.save("controle-validade.pdf");
@@ -1351,4 +1541,3 @@
   </script>
 </body>
 </html>
-
