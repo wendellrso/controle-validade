@@ -613,4 +613,1055 @@
       setDoc,
       updateDoc,
       deleteDoc
-    } from "https://www.gstatic.com/firebasejs/11.0.0/firebase
+    } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+    import {
+      getAuth,
+      onAuthStateChanged,
+      signInWithEmailAndPassword,
+      createUserWithEmailAndPassword,
+      signOut,
+      sendPasswordResetEmail,
+      GoogleAuthProvider,
+      signInWithPopup
+    } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
+
+    // CONFIG DO SEU FIREBASE
+    const firebaseConfig = {
+      apiKey: "AIzaSyDa1z9LwlSHxwSTC974ci9RMEYdEiA_wEg",
+      authDomain: "controle-validade-fc108.firebaseapp.com",
+      projectId: "controle-validade-fc108",
+      storageBucket: "controle-validade-fc108.firebasestorage.app",
+      messagingSenderId: "737065688686",
+      appId: "1:737065688686:web:ed3e602baf64c1fb4f907f",
+      measurementId: "G-VJ8DMM47EN"
+    };
+
+    // INICIALIZAÇÃO
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+    const itensRef = collection(db, "itens_validade");
+    const usuariosRef = collection(db, "usuarios");
+
+    // PERFIL DO USUÁRIO (admin/gerente/repositor)
+    let perfilUsuario = null;
+
+    // CONTROLE DE EDIÇÃO
+    let itemEmEdicaoId = null;
+
+    // ELEMENTOS DOM
+    const loginCard = document.getElementById("loginCard");
+    const appContent = document.getElementById("appContent");
+    const btnLogout = document.getElementById("btnLogout");
+    const userEmailSpan = document.getElementById("userEmail");
+    const authError = document.getElementById("authError");
+    const emailAuth = document.getElementById("emailAuth");
+    const senhaAuth = document.getElementById("senhaAuth");
+    const btnAuthMain = document.getElementById("btnAuthMain");
+    const btnEsqueceuSenha = document.getElementById("btnEsqueceuSenha");
+    const btnGoogle = document.getElementById("btnGoogle");
+    const btnModoLogin = document.getElementById("btnModoLogin");
+    const btnModoCadastro = document.getElementById("btnModoCadastro");
+    const btnApple = document.getElementById("btnApple");
+
+    const adminCard = document.getElementById("adminCard");
+    const adminTabelaCorpo = document.getElementById("adminTabelaCorpo");
+
+    const filtroDepartamentoSelect = document.getElementById("filtroDepartamento");
+    const btnExportExcel = document.getElementById("btnExportExcel");
+    const btnExportPDF = document.getElementById("btnExportPDF");
+
+    const btnCancelarEdicao = document.getElementById("btnCancelarEdicao");
+    const tituloFormulario = document.getElementById("tituloFormulario");
+
+    const scannerOverlay = document.getElementById("scannerOverlay");
+    const btnScanCodigo = document.getElementById("btnScanCodigo");
+    const btnFecharScanner = document.getElementById("btnFecharScanner");
+
+    let modoCadastro = false; // false = login, true = criar conta
+
+    function setModoAuth(cadastro) {
+      modoCadastro = cadastro;
+      if (cadastro) {
+        btnModoCadastro.classList.add("active");
+        btnModoLogin.classList.remove("active");
+        btnAuthMain.textContent = "Criar conta";
+      } else {
+        btnModoLogin.classList.add("active");
+        btnModoCadastro.classList.remove("active");
+        btnAuthMain.textContent = "Entrar";
+      }
+      authError.textContent = "";
+    }
+
+    btnModoLogin.addEventListener("click", () => setModoAuth(false));
+    btnModoCadastro.addEventListener("click", () => setModoAuth(true));
+
+    function mapearErroAuth(code) {
+      if (!code) return "Erro ao autenticar. Tente novamente.";
+      if (code.includes("auth/invalid-email")) return "E-mail inválido.";
+      if (code.includes("auth/user-not-found")) return "Usuário não encontrado.";
+      if (code.includes("auth/wrong-password")) return "Senha incorreta.";
+      if (code.includes("auth/email-already-in-use")) return "Este e-mail já está em uso.";
+      if (code.includes("auth/weak-password")) return "Senha muito fraca (mín. 6 caracteres).";
+      if (code.includes("operation-not-allowed")) return "Esse tipo de login não está habilitado no Firebase.";
+      return "Erro: " + code.replace("auth/", "");
+    }
+
+    // Funções de data
+    function getDataHojeISO() {
+      const hoje = new Date();
+      hoje.setHours(0, 0, 0, 0);
+      const ano = hoje.getFullYear();
+      const mes = String(hoje.getMonth() + 1).padStart(2, "0");
+      const dia = String(hoje.getDate()).padStart(2, "0");
+      return `${ano}-${mes}-${dia}`;
+    }
+
+    function formatarDataBr(dataStr) {
+      if (!dataStr) return "";
+      const [ano, mes, dia] = dataStr.split("-");
+      return `${dia}/${mes}/${ano}`;
+    }
+
+    function formatarDataHoraBr(isoString) {
+      if (!isoString) return "";
+      const d = new Date(isoString);
+      if (isNaN(d.getTime())) return "";
+      const dia = String(d.getDate()).padStart(2, "0");
+      const mes = String(d.getMonth() + 1).padStart(2, "0");
+      const ano = d.getFullYear();
+      const horas = String(d.getHours()).padStart(2, "0");
+      const mins = String(d.getMinutes()).padStart(2, "0");
+      return `${dia}/${mes}/${ano} ${horas}:${mins}`;
+    }
+
+    function atualizarDataLancamento() {
+      const input = document.getElementById("dataLancamento");
+      if (input) {
+        input.value = getDataHojeISO();
+      }
+    }
+
+    // LOGIN / CADASTRO
+    btnAuthMain.addEventListener("click", async () => {
+      authError.textContent = "";
+      const email = emailAuth.value.trim();
+      const senha = senhaAuth.value.trim();
+
+      if (!email || !senha) {
+        authError.textContent = "Preencha e-mail e senha.";
+        return;
+      }
+
+      try {
+        if (modoCadastro) {
+          await createUserWithEmailAndPassword(auth, email, senha);
+        } else {
+          await signInWithEmailAndPassword(auth, email, senha);
+        }
+      } catch (e) {
+        console.error(e);
+        authError.textContent = mapearErroAuth(e.code || e.message);
+      }
+    });
+
+    // LOGIN COM GOOGLE
+    btnGoogle.addEventListener("click", async () => {
+      authError.textContent = "";
+      try {
+        const provider = new GoogleAuthProvider();
+        await signInWithPopup(auth, provider);
+      } catch (e) {
+        console.error(e);
+        authError.textContent = "Erro ao entrar com Google.";
+      }
+    });
+
+    // BOTÃO APPLE (VISUAL)
+    btnApple.addEventListener("click", () => {
+      alert("Login com Apple ainda não está configurado.\nPor enquanto use e-mail/senha ou Google 🙂");
+    });
+
+    // ESQUECEU SENHA
+    btnEsqueceuSenha.addEventListener("click", async () => {
+      authError.textContent = "";
+      const email = emailAuth.value.trim();
+      if (!email) {
+        authError.textContent = "Digite o e-mail para recuperar a senha.";
+        return;
+      }
+      try {
+        await sendPasswordResetEmail(auth, email);
+        authError.textContent = "E-mail de recuperação enviado.";
+      } catch (e) {
+        console.error(e);
+        authError.textContent = mapearErroAuth(e.code || e.message);
+      }
+    });
+
+    // LOGOUT
+    btnLogout.addEventListener("click", async () => {
+      await signOut(auth);
+    });
+
+    // 🔐 TRAVA E AJUSTA O CAMPO LOJA CONFORME O PERFIL
+    function aplicarRestricoesPorPerfil() {
+      const selectLoja = document.getElementById("loja");
+      const ajudaCampoLoja = document.getElementById("ajudaCampoLoja");
+      if (!selectLoja || !perfilUsuario) return;
+
+      selectLoja.disabled = false;
+      if (ajudaCampoLoja) ajudaCampoLoja.textContent = "";
+
+      if (perfilUsuario.tipo === "admin") {
+        return;
+      }
+
+      if (
+        (perfilUsuario.tipo === "gerente" ||
+          perfilUsuario.tipo === "repositor") &&
+        perfilUsuario.loja
+      ) {
+        selectLoja.value = perfilUsuario.loja;
+        selectLoja.disabled = true;
+        if (ajudaCampoLoja) {
+          ajudaCampoLoja.textContent =
+            "Sua conta está vinculada à loja " +
+            perfilUsuario.loja +
+            ". Você só lança produtos nesta loja.";
+        }
+      } else if (
+        perfilUsuario.tipo === "gerente" ||
+        perfilUsuario.tipo === "repositor"
+      ) {
+        if (ajudaCampoLoja) {
+          ajudaCampoLoja.textContent =
+            "Sua conta não tem loja vinculada. Peça a um ADMIN para definir sua loja na tela de Administração.";
+        }
+      }
+    }
+
+    // 🔐 Carrega ou cria o perfil do usuário (admin/gerente/repositor)
+    async function carregarPerfilUsuario(user) {
+      const usuariosDocRef = doc(db, "usuarios", user.uid);
+      const snap = await getDoc(usuariosDocRef);
+
+      if (snap.exists()) {
+        perfilUsuario = snap.data();
+      } else {
+        perfilUsuario = {
+          tipo: "repositor",
+          loja: "",
+          email: user.email || "",
+          criadoEm: new Date().toISOString()
+        };
+        await setDoc(usuariosDocRef, perfilUsuario);
+      }
+
+      const existingBadge = document.getElementById("roleBadge");
+      if (existingBadge) existingBadge.remove();
+      const userInfoDiv = document.getElementById("userInfo");
+      if (userInfoDiv && perfilUsuario) {
+        const span = document.createElement("span");
+        span.id = "roleBadge";
+        span.className = "tag-loja";
+        const lojaTxt = perfilUsuario.loja ? ` • ${perfilUsuario.loja}` : "";
+        span.textContent = perfilUsuario.tipo.toUpperCase() + lojaTxt;
+        userInfoDiv.insertBefore(span, btnLogout);
+      }
+
+      aplicarRestricoesPorPerfil();
+      atualizarDataLancamento();
+      await renderizarTabela();
+      await renderizarUsuariosAdmin();
+    }
+
+    // CONTROLE DE LOGIN
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        loginCard.classList.add("hidden");
+        appContent.classList.remove("hidden");
+        btnLogout.classList.remove("hidden");
+        userEmailSpan.textContent = user.email || "";
+        emailAuth.value = "";
+        senhaAuth.value = "";
+        authError.textContent = "";
+        atualizarDataLancamento();
+        await carregarPerfilUsuario(user);
+      } else {
+        loginCard.classList.remove("hidden");
+        appContent.classList.add("hidden");
+        btnLogout.classList.add("hidden");
+        userEmailSpan.textContent = "";
+        perfilUsuario = null;
+        if (adminCard) adminCard.classList.add("hidden");
+        cancelarEdicao();
+      }
+    });
+
+    // ---- PARTE DO APP (ITENS) ----
+
+    // calcula status 7 / 15 / 30 / vencido
+    function calcularStatus(dataValidadeStr) {
+      if (!dataValidadeStr) {
+        return { status: "ok", dias: null };
+      }
+      const hoje = new Date();
+      hoje.setHours(0, 0, 0, 0);
+      const dataValidade = new Date(dataValidadeStr + "T00:00:00");
+      const diffMs = dataValidade - hoje;
+      const diffDias = Math.round(diffMs / (1000 * 60 * 60 * 24));
+
+      if (diffDias < 0) {
+        return { status: "vencido", dias: diffDias };
+      } else if (diffDias <= 7) {
+        return { status: "vence7", dias: diffDias };
+      } else if (diffDias <= 15) {
+        return { status: "vence15", dias: diffDias };
+      } else if (diffDias <= 30) {
+        return { status: "vence30", dias: diffDias };
+      } else {
+        return { status: "ok", dias: diffDias };
+      }
+    }
+
+    async function carregarItensDoBanco() {
+      const q = query(itensRef, orderBy("validade", "asc"));
+      const snapshot = await getDocs(q);
+      const itens = [];
+      snapshot.forEach((docSnap) => {
+        itens.push({ id: docSnap.id, ...docSnap.data() });
+      });
+      return itens;
+    }
+
+    // Filtra por status, busca, departamento e permissão
+    async function obterItensFiltrados() {
+      const filtroStatus =
+        document.querySelector(".filters .btn-outline[data-filter].active")?.dataset.filter ||
+        "todos";
+      const textoBusca = (document.getElementById("busca")?.value || "")
+        .trim()
+        .toLowerCase();
+      const filtroDepartamento = filtroDepartamentoSelect
+        ? filtroDepartamentoSelect.value
+        : "todos";
+
+      const itens = await carregarItensDoBanco();
+      const uidAtual = auth.currentUser ? auth.currentUser.uid : null;
+
+      return itens.filter((item) => {
+        const { status, dias } = calcularStatus(item.validade);
+
+        // Filtro por status/dias
+        if (filtroStatus === "vence7" && status !== "vence7") {
+          return false;
+        } else if (filtroStatus === "vence15" && status !== "vence15") {
+          return false;
+        } else if (filtroStatus === "vence30" && status !== "vence30") {
+          return false;
+        } else if (filtroStatus === "vencido" && status !== "vencido") {
+          return false;
+        }
+
+        // Departamento
+        if (filtroDepartamento && filtroDepartamento !== "todos") {
+          if ((item.departamento || "") !== filtroDepartamento) return false;
+        }
+
+        // Busca
+        if (textoBusca) {
+          const alvo = (
+            (item.descricao || "") +
+            " " +
+            (item.codigoBarras || "")
+          ).toLowerCase();
+          if (!alvo.includes(textoBusca)) return false;
+        }
+
+        // Permissões
+        if (!perfilUsuario) return false;
+
+        if (perfilUsuario.tipo === "admin") {
+          return true;
+        } else if (perfilUsuario.tipo === "gerente") {
+          return item.loja === perfilUsuario.loja;
+        } else {
+          return item.criadoPorUid === uidAtual;
+        }
+      });
+    }
+
+    function podeEditarItem(item) {
+      if (!perfilUsuario || !auth.currentUser) return false;
+      if (perfilUsuario.tipo === "admin") return true;
+
+      if (perfilUsuario.tipo !== "repositor") return false;
+      if (item.criadoPorUid !== auth.currentUser.uid) return false;
+
+      // pode editar até 1 dia após a data de lançamento
+      const dataLanc = item.dataLancamento || (item.criadoEm ? item.criadoEm.slice(0, 10) : null);
+      if (!dataLanc) return false;
+      const lanc = new Date(dataLanc + "T00:00:00");
+      const agora = new Date();
+      const diffMs = agora - lanc;
+      const diffDias = diffMs / (1000 * 60 * 60 * 24);
+      return diffDias <= 1;
+    }
+
+    async function renderizarTabela() {
+      const tbody = document.getElementById("tabelaCorpo");
+      if (!tbody) return;
+      tbody.innerHTML = "";
+
+      if (!perfilUsuario) {
+        const tr = document.createElement("tr");
+        const td = document.createElement("td");
+        td.colSpan = 14;
+        td.innerHTML = '<div class="empty-state">Carregando perfil do usuário...</div>';
+        tr.appendChild(td);
+        tbody.appendChild(tr);
+        return;
+      }
+
+      const filtrados = await obterItensFiltrados();
+
+      if (filtrados.length === 0) {
+        const tr = document.createElement("tr");
+        const td = document.createElement("td");
+        td.colSpan = 14;
+        td.innerHTML = '<div class="empty-state">Nenhum item encontrado.</div>';
+        tr.appendChild(td);
+        tbody.appendChild(tr);
+        return;
+      }
+
+      filtrados.forEach((item) => {
+        const { status, dias } = calcularStatus(item.validade);
+        const tr = document.createElement("tr");
+
+        const tdLoja = document.createElement("td");
+        tdLoja.innerHTML = `<span class="tag-loja">${item.loja || "-"}</span>`;
+        tr.appendChild(tdLoja);
+
+        const tdDepto = document.createElement("td");
+        tdDepto.textContent = item.departamento || "-";
+        tr.appendChild(tdDepto);
+
+        const tdDesc = document.createElement("td");
+        tdDesc.textContent = item.descricao || "-";
+        tr.appendChild(tdDesc);
+
+        const tdCod = document.createElement("td");
+        tdCod.textContent = item.codigoBarras || "-";
+        tr.appendChild(tdCod);
+
+        const tdLote = document.createElement("td");
+        tdLote.textContent = item.lote || "-";
+        tr.appendChild(tdLote);
+
+        const tdDataLanc = document.createElement("td");
+        tdDataLanc.textContent = item.dataLancamento
+          ? formatarDataBr(item.dataLancamento)
+          : "-";
+        tr.appendChild(tdDataLanc);
+
+        const tdVal = document.createElement("td");
+        tdVal.textContent = item.validade
+          ? formatarDataBr(item.validade)
+          : "-";
+        tr.appendChild(tdVal);
+
+        const tdStatus = document.createElement("td");
+        const span = document.createElement("span");
+        span.classList.add("badge");
+        if (status === "ok") {
+          span.classList.add("badge-ok");
+          span.textContent = "OK";
+        } else if (status === "vence7") {
+          span.classList.add("badge-alerta");
+          span.textContent = "Vence em 7 dias";
+        } else if (status === "vence15") {
+          span.classList.add("badge-alerta");
+          span.textContent = "Vence em 15 dias";
+        } else if (status === "vence30") {
+          span.classList.add("badge-alerta");
+          span.textContent = "Vence em 30 dias";
+        } else {
+          span.classList.add("badge-vencido");
+          span.textContent = "Vencido";
+        }
+        tdStatus.appendChild(span);
+        tr.appendChild(tdStatus);
+
+        const tdQtd = document.createElement("td");
+        tdQtd.textContent = item.quantidade || "-";
+        tr.appendChild(tdQtd);
+
+        const tdDias = document.createElement("td");
+        tdDias.textContent = dias !== null ? dias : "-";
+        tr.appendChild(tdDias);
+
+        const tdUsuario = document.createElement("td");
+        tdUsuario.textContent = item.criadoPorEmail || "-";
+        tr.appendChild(tdUsuario);
+
+        const tdCadastro = document.createElement("td");
+        tdCadastro.textContent = item.criadoEm
+          ? formatarDataHoraBr(item.criadoEm)
+          : "-";
+        tr.appendChild(tdCadastro);
+
+        const tdObs = document.createElement("td");
+        tdObs.textContent = item.observacao || "-";
+        tr.appendChild(tdObs);
+
+        const tdAcoes = document.createElement("td");
+        tdAcoes.style.whiteSpace = "nowrap";
+
+        if (podeEditarItem(item)) {
+          const btnEdit = document.createElement("button");
+          btnEdit.textContent = "Editar";
+          btnEdit.className = "btn-outline";
+          btnEdit.style.fontSize = "11px";
+          btnEdit.addEventListener("click", () => iniciarEdicao(item));
+          tdAcoes.appendChild(btnEdit);
+        }
+
+        if (perfilUsuario && perfilUsuario.tipo === "admin") {
+          const btnDel = document.createElement("button");
+          btnDel.textContent = "Excluir";
+          btnDel.className = "btn-outline";
+          btnDel.style.fontSize = "11px";
+          btnDel.style.marginLeft = "4px";
+          btnDel.addEventListener("click", () => excluirItem(item));
+          tdAcoes.appendChild(btnDel);
+        }
+
+        tr.appendChild(tdAcoes);
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    function limparFormulario() {
+      const loja = document.getElementById("loja");
+      const codigoBarras = document.getElementById("codigoBarras");
+      const descricao = document.getElementById("descricao");
+      const quantidade = document.getElementById("quantidade");
+      const validade = document.getElementById("validade");
+      const observacao = document.getElementById("observacao");
+      const departamento = document.getElementById("departamento");
+      const lote = document.getElementById("lote");
+
+      if (!loja) return;
+
+      loja.value = "";
+      codigoBarras.value = "";
+      descricao.value = "";
+      quantidade.value = "";
+      validade.value = "";
+      observacao.value = "";
+      if (departamento) departamento.value = "";
+      if (lote) lote.value = "";
+      atualizarDataLancamento();
+      aplicarRestricoesPorPerfil();
+    }
+
+    function iniciarEdicao(item) {
+      itemEmEdicaoId = item.id;
+      tituloFormulario.textContent = "Editar lançamento";
+      const btnSalvar = document.getElementById("btnSalvar");
+      btnSalvar.textContent = "Salvar alterações";
+      btnCancelarEdicao.classList.remove("hidden");
+
+      document.getElementById("loja").value = item.loja || "";
+      document.getElementById("dataLancamento").value =
+        item.dataLancamento || getDataHojeISO();
+      document.getElementById("departamento").value = item.departamento || "";
+      document.getElementById("codigoBarras").value = item.codigoBarras || "";
+      document.getElementById("descricao").value = item.descricao || "";
+      document.getElementById("lote").value = item.lote || "";
+      document.getElementById("quantidade").value =
+        item.quantidade != null ? item.quantidade : "";
+      document.getElementById("validade").value = item.validade || "";
+      document.getElementById("observacao").value = item.observacao || "";
+
+      aplicarRestricoesPorPerfil();
+    }
+
+    function cancelarEdicao() {
+      itemEmEdicaoId = null;
+      tituloFormulario.textContent = "Novo lançamento";
+      const btnSalvar = document.getElementById("btnSalvar");
+      if (btnSalvar) btnSalvar.textContent = "Salvar lançamento";
+      if (btnCancelarEdicao) btnCancelarEdicao.classList.add("hidden");
+      limparFormulario();
+    }
+
+    if (btnCancelarEdicao) {
+      btnCancelarEdicao.addEventListener("click", () => {
+        cancelarEdicao();
+      });
+    }
+
+    // Código de barras: apenas números e até 13 caracteres
+    const inputCodigo = document.getElementById("codigoBarras");
+    if (inputCodigo) {
+      inputCodigo.addEventListener("input", () => {
+        inputCodigo.value = inputCodigo.value.replace(/\D/g, "").slice(0, 13);
+      });
+    }
+
+    // Scanner de código de barras com html5-qrcode
+    let html5QrCodeInstance = null;
+
+    function fecharScanner() {
+      if (html5QrCodeInstance) {
+        html5QrCodeInstance
+          .stop()
+          .then(() => {
+            html5QrCodeInstance.clear();
+            html5QrCodeInstance = null;
+          })
+          .catch((err) => console.error("Erro ao parar scanner:", err));
+      }
+      scannerOverlay.classList.add("hidden");
+    }
+
+    if (btnFecharScanner) {
+      btnFecharScanner.addEventListener("click", () => {
+        fecharScanner();
+      });
+    }
+
+    if (btnScanCodigo && scannerOverlay) {
+      btnScanCodigo.addEventListener("click", async () => {
+        if (!window.Html5Qrcode) {
+          alert("Leitor de código de barras não carregou corretamente.");
+          return;
+        }
+        scannerOverlay.classList.remove("hidden");
+        try {
+          const cameras = await Html5Qrcode.getCameras();
+          if (!cameras || !cameras.length) {
+            alert("Nenhuma câmera encontrada.");
+            fecharScanner();
+            return;
+          }
+          const cameraId = cameras[0].id;
+          html5QrCodeInstance = new Html5Qrcode("reader");
+          await html5QrCodeInstance.start(
+            { deviceId: { exact: cameraId } },
+            { fps: 10, qrbox: 250 },
+            (decodedText, decodedResult) => {
+              const numeric = decodedText.replace(/\D/g, "").slice(0, 13);
+              if (numeric) {
+                if (inputCodigo) {
+                  inputCodigo.value = numeric;
+                }
+                fecharScanner();
+              }
+            },
+            (errorMessage) => {
+              // ignora erros de leitura contínuos
+            }
+          );
+        } catch (err) {
+          console.error(err);
+          alert("Erro ao acessar a câmera.");
+          fecharScanner();
+        }
+      });
+    }
+
+    // SALVAR / ATUALIZAR ITEM
+    const btnSalvar = document.getElementById("btnSalvar");
+    if (btnSalvar) {
+      btnSalvar.addEventListener("click", async () => {
+        let lojaSelecionada = document.getElementById("loja").value.trim();
+        const dataLancamento = document.getElementById("dataLancamento").value;
+        const departamento = document.getElementById("departamento").value.trim();
+        const codigoBarras = document
+          .getElementById("codigoBarras")
+          .value.trim();
+        const descricao = document.getElementById("descricao").value.trim();
+        const lote = document.getElementById("lote").value.trim();
+        const quantidade = document.getElementById("quantidade").value;
+        const validade = document.getElementById("validade").value;
+        const observacao = document
+          .getElementById("observacao")
+          .value.trim();
+
+        // Força a loja pelo perfil para gerente e repositor
+        if (
+          perfilUsuario &&
+          (perfilUsuario.tipo === "gerente" ||
+            perfilUsuario.tipo === "repositor")
+        ) {
+          lojaSelecionada = perfilUsuario.loja || "";
+        }
+
+        if (
+          perfilUsuario &&
+          (perfilUsuario.tipo === "gerente" ||
+            perfilUsuario.tipo === "repositor") &&
+          !lojaSelecionada
+        ) {
+          alert(
+            "Sua conta não está vinculada a nenhuma loja. Peça para um ADMIN definir sua loja na tela de Administração."
+          );
+          return;
+        }
+
+        if (!lojaSelecionada || !departamento || !codigoBarras || !descricao || !validade) {
+          alert(
+            "Preencha pelo menos: Loja, Departamento, Código de barras, Descrição e Validade."
+          );
+          return;
+        }
+
+        if (!/^\d{1,13}$/.test(codigoBarras)) {
+          alert("O código de barras deve conter apenas números, com no máximo 13 dígitos.");
+          return;
+        }
+
+        try {
+          const user = auth.currentUser;
+
+          const campos = {
+            loja: lojaSelecionada,
+            dataLancamento: dataLancamento || getDataHojeISO(),
+            departamento,
+            codigoBarras,
+            descricao,
+            lote: lote || null,
+            quantidade: quantidade ? Number(quantidade) : null,
+            validade,
+            observacao
+          };
+
+          if (itemEmEdicaoId) {
+            // atualização
+            const docRef = doc(db, "itens_validade", itemEmEdicaoId);
+            await updateDoc(docRef, campos);
+          } else {
+            // novo
+            await addDoc(itensRef, {
+              ...campos,
+              criadoEm: new Date().toISOString(),
+              criadoPorUid: user ? user.uid : null,
+              criadoPorEmail: user ? user.email : null
+            });
+          }
+
+          cancelarEdicao();
+          await renderizarTabela();
+        } catch (e) {
+          console.error("Erro ao salvar:", e);
+          alert("Erro ao salvar. Verifique o console do navegador.");
+        }
+      });
+    }
+
+    async function excluirItem(item) {
+      if (!perfilUsuario || perfilUsuario.tipo !== "admin") return;
+      const ok = confirm(
+        `Tem certeza que deseja excluir o item:\n${item.descricao || ""} (${item.codigoBarras || ""})`
+      );
+      if (!ok) return;
+      try {
+        await deleteDoc(doc(db, "itens_validade", item.id));
+        if (itemEmEdicaoId === item.id) cancelarEdicao();
+        await renderizarTabela();
+      } catch (e) {
+        console.error(e);
+        alert("Erro ao excluir item.");
+      }
+    }
+
+    // FILTROS E BUSCA
+    document
+      .querySelectorAll(".filters .btn-outline[data-filter]")
+      .forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          document
+            .querySelectorAll(".filters .btn-outline[data-filter]")
+            .forEach((b) => b.classList.remove("active"));
+          btn.classList.add("active");
+          await renderizarTabela();
+        });
+      });
+
+    const inputBuscaFiltro = document.getElementById("busca");
+    if (inputBuscaFiltro) {
+      inputBuscaFiltro.addEventListener("input", async () => {
+        await renderizarTabela();
+      });
+    }
+
+    if (filtroDepartamentoSelect) {
+      filtroDepartamentoSelect.addEventListener("change", async () => {
+        await renderizarTabela();
+      });
+    }
+
+    // ---- EXPORTAÇÕES ----
+
+    // Excel (.xlsx) usando SheetJS
+    function exportarExcel(itens) {
+      const headers = [
+        "Loja",
+        "Departamento",
+        "Descricao",
+        "CodigoBarras",
+        "Lote",
+        "DataLancamento",
+        "Validade",
+        "Status",
+        "Quantidade",
+        "DiasParaVencer",
+        "Usuario",
+        "CriadoEm",
+        "Observacao"
+      ];
+
+      const data = [headers];
+
+      itens.forEach((item) => {
+        const { status, dias } = calcularStatus(item.validade);
+        let statusTxt = "";
+        if (status === "ok") statusTxt = "OK";
+        else if (status === "vence7") statusTxt = "Vence em 7 dias";
+        else if (status === "vence15") statusTxt = "Vence em 15 dias";
+        else if (status === "vence30") statusTxt = "Vence em 30 dias";
+        else statusTxt = "Vencido";
+
+        data.push([
+          item.loja || "",
+          item.departamento || "",
+          item.descricao || "",
+          item.codigoBarras || "",
+          item.lote || "",
+          item.dataLancamento ? formatarDataBr(item.dataLancamento) : "",
+          item.validade ? formatarDataBr(item.validade) : "",
+          statusTxt,
+          item.quantidade != null ? item.quantidade : "",
+          dias != null ? dias : "",
+          item.criadoPorEmail || "",
+          item.criadoEm ? formatarDataHoraBr(item.criadoEm) : "",
+          item.observacao || ""
+        ]);
+      });
+
+      const ws = XLSX.utils.aoa_to_sheet(data);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Validades");
+
+      XLSX.writeFile(wb, "controle-validade.xlsx");
+    }
+
+    if (btnExportExcel) {
+      btnExportExcel.addEventListener("click", async () => {
+        if (!perfilUsuario) {
+          alert("Faça login para exportar os dados.");
+          return;
+        }
+        const itens = await obterItensFiltrados();
+        if (!itens.length) {
+          alert("Não há itens para exportar com os filtros atuais.");
+          return;
+        }
+        try {
+          exportarExcel(itens);
+        } catch (e) {
+          console.error(e);
+          alert("Erro ao gerar Excel. Verifique o console do navegador.");
+        }
+      });
+    }
+
+    // PDF com tabela (jsPDF + AutoTable)
+    if (btnExportPDF) {
+      btnExportPDF.addEventListener("click", async () => {
+        if (!perfilUsuario) {
+          alert("Faça login para exportar os dados.");
+          return;
+        }
+        const itens = await obterItensFiltrados();
+        if (!itens.length) {
+          alert("Não há itens para exportar com os filtros atuais.");
+          return;
+        }
+
+        const { jsPDF } = window.jspdf || {};
+        if (!jsPDF || !window.jspdf || !window.jspdf.jsPDF) {
+          alert("Biblioteca jsPDF não foi carregada.");
+          return;
+        }
+
+        const docPDF = new jsPDF("l", "mm", "a4");
+
+        docPDF.setFontSize(14);
+        docPDF.text("Relatório - Controle de Validade", 14, 14);
+        docPDF.setFontSize(10);
+
+        const head = [
+          [
+            "Loja",
+            "Depto",
+            "Produto",
+            "Cód. barras",
+            "Lote",
+            "Data lanc.",
+            "Validade",
+            "Status",
+            "Qtd",
+            "Dias",
+            "Usuário",
+            "Cadastro",
+            "Obs."
+          ]
+        ];
+
+        const body = itens.map((item) => {
+          const { status, dias } = calcularStatus(item.validade);
+          let statusTxt = "";
+          if (status === "ok") statusTxt = "OK";
+          else if (status === "vence7") statusTxt = "Vence em 7 dias";
+          else if (status === "vence15") statusTxt = "Vence em 15 dias";
+          else if (status === "vence30") statusTxt = "Vence em 30 dias";
+          else statusTxt = "Vencido";
+
+          return [
+            item.loja || "",
+            item.departamento || "",
+            item.descricao || "",
+            item.codigoBarras || "",
+            item.lote || "",
+            item.dataLancamento ? formatarDataBr(item.dataLancamento) : "",
+            item.validade ? formatarDataBr(item.validade) : "",
+            statusTxt,
+            item.quantidade != null ? item.quantidade : "",
+            dias != null ? dias : "",
+            item.criadoPorEmail || "",
+            item.criadoEm ? formatarDataHoraBr(item.criadoEm) : "",
+            item.observacao || ""
+          ];
+        });
+
+        docPDF.autoTable({
+          head,
+          body,
+          startY: 20,
+          styles: { fontSize: 8, cellPadding: 2 },
+          headStyles: { fillColor: [17, 24, 39], textColor: 255 }
+        });
+
+        docPDF.save("controle-validade.pdf");
+      });
+    }
+
+    // ---- ADMIN – USUÁRIOS ----
+    async function carregarUsuarios() {
+      const snapshot = await getDocs(usuariosRef);
+      const lista = [];
+      snapshot.forEach((d) => {
+        lista.push({ id: d.id, ...d.data() });
+      });
+      return lista;
+    }
+
+    async function renderizarUsuariosAdmin() {
+      if (!adminTabelaCorpo || !adminCard) return;
+
+      if (!perfilUsuario || perfilUsuario.tipo !== "admin") {
+        adminCard.classList.add("hidden");
+        adminTabelaCorpo.innerHTML = "";
+        return;
+      }
+
+      adminCard.classList.remove("hidden");
+      adminTabelaCorpo.innerHTML = "";
+
+      const usuarios = await carregarUsuarios();
+
+      if (usuarios.length === 0) {
+        const tr = document.createElement("tr");
+        const td = document.createElement("td");
+        td.colSpan = 4;
+        td.innerHTML = '<div class="empty-state">Nenhum usuário encontrado.</div>';
+        tr.appendChild(td);
+        adminTabelaCorpo.appendChild(tr);
+        return;
+      }
+
+      usuarios.forEach((u) => {
+        const tr = document.createElement("tr");
+
+        const tdEmail = document.createElement("td");
+        tdEmail.textContent = u.email || "-";
+        tr.appendChild(tdEmail);
+
+        const tdTipo = document.createElement("td");
+        const selTipo = document.createElement("select");
+        selTipo.innerHTML = `
+          <option value="admin">Admin</option>
+          <option value="gerente">Gerente</option>
+          <option value="repositor">Repositor</option>
+        `;
+        selTipo.value = u.tipo || "repositor";
+        tdTipo.appendChild(selTipo);
+        tr.appendChild(tdTipo);
+
+        const tdLoja = document.createElement("td");
+        const selLoja = document.createElement("select");
+        selLoja.innerHTML = `
+          <option value="">(todas/nenhuma)</option>
+          <option value="PV">Ponta Verde</option>
+          <option value="Farol">Farol</option>
+          <option value="Praia">Praia</option>
+          <option value="Riomar">Riomar</option>
+        `;
+        selLoja.value = u.loja || "";
+        tdLoja.appendChild(selLoja);
+        tr.appendChild(tdLoja);
+
+        const tdAcoes = document.createElement("td");
+        const btnSalvar = document.createElement("button");
+        btnSalvar.textContent = "Salvar";
+        btnSalvar.className = "btn-outline";
+        btnSalvar.addEventListener("click", async () => {
+          const novoTipo = selTipo.value;
+          const novaLoja = selLoja.value;
+          try {
+            await updateDoc(doc(db, "usuarios", u.id), {
+              tipo: novoTipo,
+              loja: novaLoja
+            });
+            alert("Perfil atualizado com sucesso.");
+            if (auth.currentUser && auth.currentUser.uid === u.id) {
+              perfilUsuario.tipo = novoTipo;
+              perfilUsuario.loja = novaLoja;
+              aplicarRestricoesPorPerfil();
+              await renderizarTabela();
+              await renderizarUsuariosAdmin();
+            }
+          } catch (e) {
+            console.error(e);
+            alert("Erro ao atualizar usuário.");
+          }
+        });
+        tdAcoes.appendChild(btnSalvar);
+        tr.appendChild(tdAcoes);
+
+        adminTabelaCorpo.appendChild(tr);
+      });
+    }
+
+    // Ao carregar a página sem estar logado, já deixa a data de lançamento em hoje (para quando logar)
+    atualizarDataLancamento();
+  </script>
+</body>
+</html>
