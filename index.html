@@ -5,7 +5,7 @@
   <title>Controle de Validade</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- Tailwind (layout rapidinho) -->
+  <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
 
   <!-- Ícones -->
@@ -14,7 +14,7 @@
   <!-- SheetJS para Excel -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
-  <!-- jsPDF + autoTable para PDF bonito -->
+  <!-- jsPDF + autoTable para PDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 
@@ -92,8 +92,8 @@
         </div>
 
         <p class="mt-4 text-[11px] text-slate-500">
-          A conta precisa ter um perfil cadastrado (admin, gerente ou repositor) no Firestore em
-          <span class="font-mono text-slate-300">users/{uid}</span>.
+          A conta precisa ter um perfil cadastrado (admin, gerente ou repositor) na coleção
+          <span class="font-mono text-slate-300">users</span> do Firestore.
         </p>
 
         <p id="loginError" class="mt-2 text-xs text-red-400 hidden"></p>
@@ -136,7 +136,7 @@
               </select>
             </div>
 
-            <!-- Data lançamento (travada hoje) -->
+            <!-- Data lançamento -->
             <div>
               <label class="block text-[11px] text-slate-300 mb-1">Data lançamento</label>
               <input id="dataLancamentoInput" type="text" readonly
@@ -158,7 +158,7 @@
               </select>
             </div>
 
-            <!-- Código de barras + botão scanner -->
+            <!-- Código de barras + scanner -->
             <div>
               <label class="block text-[11px] text-slate-300 mb-1">Cód. barras (números, máx. 13)</label>
               <div class="flex gap-2">
@@ -352,16 +352,16 @@
       orderBy
     } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
-    // 🔥 CONFIG FIREBASE (TROCAR PELOS SEUS DADOS)
-  const firebaseConfig = {
-  apiKey: "AIzaSyDa1z9LwlSHxwSTC974ci9RMEYdEiA_wEg",
-  authDomain: "controle-validade-fc108.firebaseapp.com",
-  projectId: "controle-validade-fc108",
-  storageBucket: "controle-validade-fc108.firebasestorage.app",
-  messagingSenderId: "737065688686",
-  appId: "1:737065688686:web:ed3e602baf64c1fb4f907f",
-  measurementId: "G-VJ8DMM47EN"
-};
+    // 🔥 CONFIG FIREBASE DO TEU PROJETO
+    const firebaseConfig = {
+      apiKey: "AIzaSyDa1z9LwlSHxwSTC974ci9RMEYdEiA_wEg",
+      authDomain: "controle-validade-fc108.firebaseapp.com",
+      projectId: "controle-validade-fc108",
+      storageBucket: "controle-validade-fc108.firebasestorage.app",
+      messagingSenderId: "737065688686",
+      appId: "1:737065688686:web:ed3e602baf64c1fb4f907f",
+      measurementId: "G-VJ8DMM47EN"
+    };
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
@@ -393,14 +393,37 @@
     const userRoleEl = document.getElementById("userRole");
     const logoutBtn = document.getElementById("logoutBtn");
 
+    // 🔑 BUSCAR PERFIL (UID -> e-mail)
     async function fetchUserRole(user) {
-      const ref = doc(db, "users", user.uid);
-      const snap = await getDoc(ref);
-      if (snap.exists()) {
-        const data = snap.data();
-        currentRole = data.role || "repositor";
-        currentLoja = data.loja || null;
-      } else {
+      try {
+        // 1) tenta pelo UID (forma padrão)
+        let data = null;
+        const uidRef = doc(db, "users", user.uid);
+        const uidSnap = await getDoc(uidRef);
+        if (uidSnap.exists()) {
+          data = uidSnap.data();
+        } else {
+          // 2) se não achar, tenta buscar por e-mail
+          const qRef = query(
+            collection(db, "users"),
+            where("email", "==", user.email)
+          );
+          const qSnap = await getDocs(qRef);
+          if (!qSnap.empty) {
+            data = qSnap.docs[0].data();
+          }
+        }
+
+        if (data) {
+          currentRole =
+            data.role || data.perfil || data.tipo || "repositor";
+          currentLoja = data.loja || null;
+        } else {
+          currentRole = "repositor";
+          currentLoja = null;
+        }
+      } catch (err) {
+        console.error("Erro ao buscar perfil:", err);
         currentRole = "repositor";
         currentLoja = null;
       }
@@ -518,7 +541,7 @@
           createdAt: serverTimestamp(),
           createdByUid: currentUser.uid,
           createdByName: currentUser.displayName || currentUser.email,
-          ofertaStatus: "Não lançado" // 🔔 NOVO CAMPO
+          ofertaStatus: "Não lançado"
         });
 
         cadastroForm.reset();
@@ -669,7 +692,6 @@
           </td>
         `;
 
-        // eventos Oferta
         const ofertaCheckbox = tr.querySelector(".oferta-toggle");
         const ofertaTag = tr.querySelector(".oferta-tag");
         ofertaCheckbox.addEventListener("change", async () => {
@@ -681,7 +703,6 @@
           });
         });
 
-        // excluir
         const excluirBtn = tr.querySelector(".excluir-btn");
         if (excluirBtn) {
           excluirBtn.addEventListener("click", async () => {
@@ -691,11 +712,9 @@
           });
         }
 
-        // editar (apenas abre form preenchido simples)
         const editarBtn = tr.querySelector(".editar-btn");
         if (editarBtn) {
           editarBtn.addEventListener("click", () => {
-            // preenche o formulário de cadastro para edição rápida
             lojaSelect.value = d.loja || "";
             departamentoSelect.value = d.departamento || "";
             codigoBarrasInput.value = d.codigoBarras || "";
@@ -816,7 +835,6 @@
       if (!checkboxes.length) return;
 
       const marcarComoLancado = Array.from(checkboxes).some((c) => !c.checked);
-      // se existir algum desmarcado → marcar todos; se todos marcados → voltar para Não lançado
       const novoStatus = marcarComoLancado ? "Lançado" : "Não lançado";
 
       const snap = await getDocs(collection(db, "validadeItens"));
@@ -865,7 +883,6 @@
             cameraId,
             { fps: 10, qrbox: 250 },
             (decodedText) => {
-              // Preenche campo e fecha
               codigoBarrasInput.value = decodedText.replace(/\D/g, "").slice(0, 13);
               closeBarcode();
             },
@@ -895,4 +912,3 @@
   </script>
 </body>
 </html>
-
