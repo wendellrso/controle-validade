@@ -5,28 +5,23 @@
   <title>Controle de Validade</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- Estilos básicos -->
   <style>
     :root {
-      --bg-main: #050816;
-      --bg-card: #0b1120;
-      --bg-card-soft: #111827;
+      --bg-main: #020617;
+      --bg-card: #020617;
+      --bg-card-alt: #020617;
       --accent: #22c55e;
-      --accent-soft: rgba(34, 197, 94, 0.15);
       --accent-strong: #16a34a;
       --text-main: #f9fafb;
       --text-muted: #9ca3af;
       --danger: #f97373;
-      --danger-soft: rgba(248, 113, 113, 0.13);
+      --danger-soft: rgba(248, 113, 113, 0.16);
       --warning: #facc15;
       --warning-soft: rgba(250, 204, 21, 0.13);
-      --chip-bg: #111827;
-      --chip-border: #1f2937;
-      --chip-text: #e5e7eb;
-      --border-soft: #1f2937;
-      --input-bg: #020617;
-      --input-border: #1e293b;
-      --input-border-focus: #22c55e;
+      --border-soft: #111827;
+      --row-alt: #020617;
+      --row-alt-2: #020617;
+      --chip-bg: #020617;
     }
 
     * {
@@ -37,7 +32,7 @@
       margin: 0;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
         sans-serif;
-      background: radial-gradient(circle at top, #020617 0, #020617 40%, #020617 100%);
+      background: var(--bg-main);
       color: var(--text-main);
     }
 
@@ -48,43 +43,36 @@
     }
 
     header {
-      padding: 14px 32px;
-      background: rgba(2, 6, 23, 0.98);
-      border-bottom: 1px solid #020617;
+      padding: 10px 32px;
+      background: #020617;
+      border-bottom: 1px solid #0f172a;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      position: sticky;
-      top: 0;
-      z-index: 10;
-      backdrop-filter: blur(12px);
     }
 
     .brand {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
     }
 
     .brand-icon {
-      width: 36px;
-      height: 36px;
-      border-radius: 12px;
-      background: radial-gradient(circle at 30% 20%, #4ade80, #16a34a);
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: #22c55e;
       display: flex;
       align-items: center;
       justify-content: center;
       font-weight: 800;
       color: #022c22;
-      box-shadow: 0 0 0 1px rgba(22, 163, 74, 0.5),
-        0 18px 35px rgba(22, 163, 74, 0.45);
-      font-size: 14px;
+      font-size: 13px;
     }
 
     .brand-text-title {
-      font-size: 18px;
-      font-weight: 700;
-      letter-spacing: 0.02em;
+      font-size: 16px;
+      font-weight: 600;
     }
 
     .brand-text-sub {
@@ -97,121 +85,100 @@
       flex-direction: column;
       align-items: flex-end;
       gap: 2px;
-      font-size: 13px;
-    }
-
-    .user-info strong {
-      font-weight: 600;
+      font-size: 12px;
     }
 
     .user-role {
       color: var(--text-muted);
-      font-size: 12px;
+      font-size: 11px;
     }
 
     .link-logout {
-      font-size: 12px;
-      color: #f97373;
+      font-size: 11px;
+      color: var(--danger);
       cursor: pointer;
       text-decoration: none;
     }
 
     main {
       flex: 1;
-      padding: 24px 32px 40px;
+      padding: 20px 32px 32px;
       max-width: 1280px;
       margin: 0 auto;
       width: 100%;
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: minmax(0, 1.2fr) minmax(0, 2fr);
-      gap: 20px;
-      align-items: flex-start;
     }
 
     @media (max-width: 960px) {
       main {
         padding: 16px;
       }
-      .grid {
-        grid-template-columns: minmax(0, 1fr);
-      }
       header {
         padding: 10px 16px;
       }
     }
 
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 2fr);
+      gap: 16px;
+      align-items: flex-start;
+    }
+
+    @media (max-width: 960px) {
+      .grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
     .card {
-      background: radial-gradient(circle at top left, #020617 0, #020617 45%, #020617 100%);
-      border-radius: 18px;
-      padding: 18px 18px 20px;
-      border: 1px solid rgba(15, 23, 42, 0.95);
-      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.9);
-      position: relative;
-      overflow: hidden;
-    }
-
-    .card::before {
-      content: "";
-      position: absolute;
-      inset: -60%;
-      opacity: 0.08;
-      background: radial-gradient(circle at top left, #22c55e 0, transparent 55%);
-      pointer-events: none;
-    }
-
-    .card-content {
-      position: relative;
-      z-index: 1;
+      background: var(--bg-card);
+      border-radius: 10px;
+      padding: 14px 14px 16px;
+      border: 1px solid var(--border-soft);
     }
 
     .card-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 12px;
-      gap: 8px;
+      margin-bottom: 10px;
     }
 
     .card-title {
+      font-size: 14px;
+      font-weight: 600;
       display: flex;
       align-items: center;
-      gap: 10px;
-      font-size: 15px;
-      font-weight: 600;
-      letter-spacing: 0.02em;
+      gap: 6px;
     }
 
     .card-title-icon {
-      width: 24px;
-      height: 24px;
+      width: 20px;
+      height: 20px;
       border-radius: 999px;
-      background: var(--accent-soft);
-      border: 1px solid rgba(34, 197, 94, 0.35);
+      background: #0f172a;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 14px;
-      color: var(--accent);
+      font-size: 12px;
     }
 
     .card-subtitle {
-      font-size: 12px;
+      font-size: 11px;
       color: var(--text-muted);
+      margin-top: 2px;
     }
 
     .badge-soft {
-      padding: 4px 10px;
+      padding: 3px 8px;
       border-radius: 999px;
-      background: rgba(15, 23, 42, 0.9);
-      border: 1px solid rgba(31, 41, 55, 0.9);
+      background: #020617;
+      border: 1px solid #1f2937;
       font-size: 11px;
       color: var(--text-muted);
       display: inline-flex;
       align-items: center;
-      gap: 6px;
+      gap: 4px;
     }
 
     .badge-soft-dot {
@@ -219,14 +186,12 @@
       height: 6px;
       border-radius: 999px;
       background: var(--accent);
-      box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.2);
     }
 
     .form-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 10px 14px;
-      margin-top: 4px;
+      gap: 8px 12px;
     }
 
     @media (max-width: 960px) {
@@ -238,7 +203,7 @@
     .form-group {
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 3px;
       font-size: 12px;
     }
 
@@ -247,41 +212,37 @@
     }
 
     .required-star {
-      color: #f97373;
-      margin-left: 3px;
+      color: var(--danger);
+      margin-left: 2px;
     }
 
     input,
     select,
     textarea {
-      background: var(--input-bg);
-      border-radius: 10px;
-      border: 1px solid var(--input-border);
-      padding: 8px 10px;
+      background: #020617;
+      border-radius: 6px;
+      border: 1px solid #1f2937;
+      padding: 7px 9px;
       color: var(--text-main);
       font-size: 13px;
       outline: none;
-      transition: border-color 0.15s, box-shadow 0.15s, background-color 0.15s,
-        transform 0.08s ease-out;
+      transition: border-color 0.15s, box-shadow 0.15s;
     }
 
     input:focus,
     select:focus,
     textarea:focus {
-      border-color: var(--input-border-focus);
-      box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.4);
-      background: #020617;
-      transform: translateY(-0.5px);
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.35);
     }
 
     input[readonly] {
       opacity: 0.7;
-      cursor: default;
     }
 
     textarea {
       resize: vertical;
-      min-height: 60px;
+      min-height: 50px;
       max-height: 120px;
     }
 
@@ -295,38 +256,31 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
+      gap: 6px;
       border-radius: 999px;
       border: none;
-      padding: 7px 16px;
-      font-size: 13px;
+      padding: 6px 14px;
+      font-size: 12px;
       font-weight: 500;
       cursor: pointer;
-      transition: transform 0.08s ease-out, box-shadow 0.12s ease-out,
-        background-color 0.12s ease-out, opacity 0.12s;
+      transition: background-color 0.12s, transform 0.08s, box-shadow 0.12s;
       white-space: nowrap;
     }
 
     .btn-primary {
       background: linear-gradient(135deg, var(--accent), var(--accent-strong));
       color: #022c22;
-      box-shadow: 0 14px 30px rgba(22, 163, 74, 0.45);
+      box-shadow: 0 8px 18px rgba(22, 163, 74, 0.35);
     }
 
     .btn-primary:hover {
       transform: translateY(-1px);
-      box-shadow: 0 18px 35px rgba(22, 163, 74, 0.55);
-    }
-
-    .btn-primary:active {
-      transform: translateY(0);
-      box-shadow: 0 10px 24px rgba(22, 163, 74, 0.4);
     }
 
     .btn-soft {
-      background: rgba(15, 23, 42, 0.95);
+      background: #020617;
       color: var(--text-main);
-      border: 1px solid rgba(31, 41, 55, 0.9);
+      border: 1px solid #1f2937;
     }
 
     .btn-soft:hover {
@@ -337,45 +291,33 @@
     .btn-danger-soft {
       background: var(--danger-soft);
       color: var(--danger);
-      border: 1px solid rgba(248, 113, 113, 0.45);
-    }
-
-    .btn-icon {
-      font-size: 14px;
+      border: 1px solid rgba(248, 113, 113, 0.55);
     }
 
     .btn-sm {
       padding: 5px 11px;
-      font-size: 12px;
-      border-radius: 999px;
+      font-size: 11px;
     }
 
     .btn-xs {
       padding: 3px 9px;
       font-size: 11px;
-      border-radius: 999px;
     }
 
-    .section-actions {
-      display: flex;
-      align-items: center;
-      gap: 8px;
+    .btn-icon {
+      font-size: 13px;
     }
 
     .divider {
       margin: 12px 0 10px;
       height: 1px;
-      background: radial-gradient(
-        circle at left,
-        rgba(55, 65, 81, 0.7),
-        transparent 60%
-      );
+      background: #111827;
     }
 
     .tabela-wrapper {
-      margin-top: 10px;
-      border-radius: 14px;
-      border: 1px solid rgba(31, 41, 55, 0.95);
+      margin-top: 8px;
+      border-radius: 8px;
+      border: 1px solid #111827;
       overflow: hidden;
       background: #020617;
     }
@@ -387,13 +329,13 @@
     }
 
     thead {
-      background: radial-gradient(circle at top, #020617 0, #020617 60%);
+      background: #020617;
     }
 
     th,
     td {
-      padding: 7px 10px;
-      border-bottom: 1px solid rgba(15, 23, 42, 0.95);
+      padding: 6px 8px;
+      border-bottom: 1px solid #0b1120;
       text-align: left;
       vertical-align: middle;
     }
@@ -404,38 +346,41 @@
       font-size: 11px;
       text-transform: uppercase;
       letter-spacing: 0.04em;
-      background: rgba(15, 23, 42, 0.95);
+      background: #020617;
     }
 
     tbody tr:nth-child(even) {
-      background: rgba(15, 23, 42, 0.65);
+      background: #020617;
+    }
+
+    tbody tr:nth-child(odd) {
+      background: #000814;
     }
 
     tbody tr:hover {
-      background: rgba(15, 23, 42, 0.95);
+      background: #020617;
     }
 
     .tag-status {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      padding: 3px 9px;
+      padding: 3px 8px;
       border-radius: 999px;
-      border: 1px solid rgba(148, 163, 184, 0.5);
+      border: 1px solid #4b5563;
       font-size: 11px;
-      font-weight: 500;
       background: var(--chip-bg);
-      color: var(--chip-text);
+      color: #e5e7eb;
     }
 
     .tag-status-danger {
-      border-color: rgba(248, 113, 113, 0.7);
+      border-color: rgba(248, 113, 113, 0.9);
       background: var(--danger-soft);
       color: #fecaca;
     }
 
     .tag-status-warning {
-      border-color: rgba(250, 204, 21, 0.65);
+      border-color: rgba(250, 204, 21, 0.8);
       background: var(--warning-soft);
       color: #fef9c3;
     }
@@ -444,47 +389,47 @@
       padding: 3px 10px;
       border-radius: 999px;
       font-size: 11px;
-      border: 1px solid rgba(148, 163, 184, 0.6);
-      background: var(--chip-bg);
-      color: var(--chip-text);
+      border: 1px solid #4b5563;
+      background: #020617;
+      color: #e5e7eb;
       cursor: pointer;
+      min-width: 84px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      min-width: 88px;
     }
 
     .tag-oferta-lancado {
-      border-color: rgba(34, 197, 94, 0.8);
-      background: var(--accent-soft);
+      border-color: rgba(34, 197, 94, 0.85);
+      background: rgba(22, 163, 74, 0.15);
       color: #bbf7d0;
     }
 
     .checkbox-flag {
-      width: 15px;
-      height: 15px;
+      width: 14px;
+      height: 14px;
     }
 
     .table-header-actions {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 10px;
-      margin-bottom: 8px;
+      gap: 8px;
+      margin-bottom: 6px;
     }
 
     .filters-group {
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
+      gap: 6px;
       align-items: center;
     }
 
     .select-pill {
-      background: rgba(15, 23, 42, 0.95);
+      background: #020617;
       border-radius: 999px;
-      border: 1px solid rgba(31, 41, 55, 0.9);
-      padding: 4px 9px;
+      border: 1px solid #1f2937;
+      padding: 3px 8px;
       color: var(--text-main);
       font-size: 12px;
     }
@@ -494,17 +439,12 @@
       border: none;
       color: inherit;
       font-size: inherit;
-      padding: 0 2px;
+      padding: 0;
     }
 
     .select-pill select:focus {
       outline: none;
       box-shadow: none;
-      border: none;
-    }
-
-    .text-right {
-      text-align: right;
     }
 
     .muted {
@@ -516,91 +456,94 @@
       font-size: 11px;
       color: var(--text-muted);
       text-align: right;
-      padding: 4px 4px 0 0;
+      padding-right: 2px;
     }
 
-    /* Status / Oferta colunas com mais espaço */
+    .text-right {
+      text-align: right;
+    }
+
+    /* aumentar espaço entre status e oferta */
     .col-status,
     .col-oferta {
-      min-width: 120px;
+      min-width: 110px;
     }
 
-    /* Login */
+    /* LOGIN */
     .login-wrapper {
-      max-width: 380px;
+      max-width: 360px;
       margin: 60px auto;
       background: #020617;
-      border-radius: 18px;
-      padding: 20px 20px 22px;
-      border: 1px solid rgba(15, 23, 42, 0.95);
-      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.9);
+      border-radius: 10px;
+      padding: 16px 14px 18px;
+      border: 1px solid #111827;
     }
 
     .login-title {
       display: flex;
       align-items: center;
       gap: 10px;
-      margin-bottom: 14px;
+      margin-bottom: 10px;
     }
 
     .login-title h1 {
       margin: 0;
-      font-size: 18px;
+      font-size: 16px;
     }
 
     .login-sub {
-      font-size: 12px;
+      font-size: 11px;
       color: var(--text-muted);
-      margin-bottom: 14px;
+      margin-top: 2px;
+    }
+
+    .alert {
+      font-size: 12px;
+      padding: 7px 9px;
+      border-radius: 6px;
+      margin-bottom: 8px;
+    }
+
+    .alert-error {
+      background: var(--danger-soft);
+      border: 1px solid rgba(248, 113, 113, 0.7);
+      color: #fecaca;
+    }
+
+    .alert-info {
+      background: #020617;
+      border: 1px solid #1f2937;
+      color: var(--text-muted);
+    }
+
+    .login-footer {
+      margin-top: 8px;
+      font-size: 11px;
+      color: var(--text-muted);
+      text-align: center;
     }
 
     .login-divider {
       display: flex;
       align-items: center;
       gap: 8px;
-      margin: 12px 0;
+      margin: 10px 0;
     }
 
     .login-divider-line {
       flex: 1;
       height: 1px;
-      background: rgba(30, 64, 175, 0.6);
+      background: #1f2937;
     }
 
     .login-divider-text {
-      font-size: 11px;
+      font-size: 10px;
       color: var(--text-muted);
       text-transform: uppercase;
-      letter-spacing: 0.15em;
+      letter-spacing: 0.12em;
     }
 
-    .login-footer {
-      margin-top: 10px;
-      font-size: 11px;
-      color: var(--text-muted);
-      text-align: center;
-    }
-
-    .alert {
-      font-size: 12px;
-      padding: 8px 10px;
-      border-radius: 10px;
-      margin-bottom: 10px;
-    }
-
-    .alert-error {
-      background: var(--danger-soft);
-      border: 1px solid rgba(248, 113, 113, 0.5);
-      color: #fecaca;
-    }
-
-    .alert-info {
-      background: rgba(15, 23, 42, 0.9);
-      border: 1px solid rgba(55, 65, 81, 0.9);
-      color: var(--text-muted);
-    }
-
-    /* Scanner modal */
+    /* MODAL SCANNER */
     .modal-backdrop {
       position: fixed;
       inset: 0;
@@ -613,35 +556,34 @@
 
     .modal {
       background: #020617;
-      border-radius: 16px;
-      padding: 16px 16px 18px;
-      border: 1px solid rgba(31, 41, 55, 0.95);
+      border-radius: 10px;
+      padding: 14px 14px 16px;
+      border: 1px solid #111827;
       width: 100%;
-      max-width: 420px;
-      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.7);
+      max-width: 400px;
     }
 
     .modal-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
 
     .modal-header h2 {
       margin: 0;
-      font-size: 15px;
+      font-size: 14px;
     }
 
     .modal-body {
-      font-size: 13px;
+      font-size: 12px;
     }
 
     .scanner-container {
-      border-radius: 12px;
+      border-radius: 8px;
       overflow: hidden;
-      border: 1px solid rgba(31, 41, 55, 0.9);
-      margin-top: 10px;
+      border: 1px solid #111827;
+      margin-top: 8px;
       background: #020617;
     }
 
@@ -690,7 +632,7 @@
           <input type="password" id="loginPassword" placeholder="••••••••" />
         </div>
 
-        <div style="margin-top:12px; display:flex; flex-direction:column; gap:8px;">
+        <div style="margin-top:10px; display:flex; flex-direction:column; gap:6px;">
           <button id="btnEmailLogin" class="btn btn-primary">
             <span class="btn-icon">🔐</span> Entrar com e-mail
           </button>
@@ -710,8 +652,8 @@
         </div>
 
         <div class="login-footer">
-          Seu acesso é individual e os lançamentos ficam vinculados ao seu usuário
-          (apenas Admin vê tudo).
+          Seu acesso é individual. Admin vê todos os lançamentos, gerente vê a
+          loja dele, repositor vê apenas o que cadastrou.
         </div>
       </div>
     </div>
@@ -721,283 +663,275 @@
       <div class="grid">
         <!-- CADASTRO -->
         <div class="card">
-          <div class="card-content">
-            <div class="card-header">
-              <div>
-                <div class="card-title">
-                  <div class="card-title-icon">➕</div>
-                  Novo lançamento
-                </div>
-                <div class="card-subtitle">
-                  Registrar validade por loja, departamento e lote.
+          <div class="card-header">
+            <div>
+              <div class="card-title">
+                <div class="card-title-icon">➕</div>
+                Novo lançamento
+              </div>
+              <div class="card-subtitle">
+                Registrar validade por loja, departamento e lote.
+              </div>
+            </div>
+            <span class="badge-soft">
+              <span class="badge-soft-dot"></span> Cadastro rápido
+            </span>
+          </div>
+
+          <form id="cadastroForm">
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Loja<span class="required-star">*</span></label>
+                <select id="loja">
+                  <option value="">Selecione</option>
+                  <option value="Ponta Verde">Ponta Verde</option>
+                  <option value="Farol">Farol</option>
+                  <option value="Praia">Praia</option>
+                  <option value="Riomar">Riomar</option>
+                  <option value="CD">CD</option>
+                  <option value="Compras">Compras</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>Data lançamento</label>
+                <input type="text" id="dataLancamento" readonly />
+              </div>
+
+              <div class="form-group">
+                <label>Departamento<span class="required-star">*</span></label>
+                <select id="departamento">
+                  <option value="">Selecione</option>
+                  <option value="Açougue">Açougue</option>
+                  <option value="Adega">Adega</option>
+                  <option value="Bebidas">Bebidas</option>
+                  <option value="Mercearia Alimentos">Mercearia Alimentos</option>
+                  <option value="Mercearia Não Alimentos">Mercearia Não Alimentos</option>
+                  <option value="Perecíveis Processados">Perecíveis Processados</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>Cód. barras (números, máx. 13)<span class="required-star">*</span></label>
+                <div class="input-inline">
+                  <input
+                    type="text"
+                    id="codigoBarras"
+                    maxlength="13"
+                    inputmode="numeric"
+                    pattern="[0-9]{1,13}"
+                    placeholder="789..."
+                    style="flex:1;"
+                  />
+                  <button type="button" id="btnScan" class="btn btn-soft btn-sm">
+                    📷
+                  </button>
                 </div>
               </div>
-              <span class="badge-soft">
-                <span class="badge-soft-dot"></span>
-                Cadastro rápido
-              </span>
+
+              <div class="form-group">
+                <label>Descrição<span class="required-star">*</span></label>
+                <input type="text" id="descricao" />
+              </div>
+
+              <div class="form-group">
+                <label>Lote</label>
+                <input type="text" id="lote" />
+              </div>
+
+              <div class="form-group">
+                <label>Quantidade<span class="required-star">*</span></label>
+                <input type="number" id="quantidade" min="0" />
+              </div>
+
+              <div class="form-group">
+                <label>Validade<span class="required-star">*</span></label>
+                <input type="date" id="validade" />
+              </div>
+
+              <div class="form-group" style="grid-column:1 / -1;">
+                <label>Observação</label>
+                <textarea id="observacao" placeholder="Lote em oferta, ponto extra, etc."></textarea>
+              </div>
             </div>
 
-            <form id="cadastroForm">
-              <div class="form-grid">
-                <div class="form-group">
-                  <label>Loja<span class="required-star">*</span></label>
-                  <select id="loja">
-                    <option value="">Selecione</option>
-                    <option value="Ponta Verde">Ponta Verde</option>
-                    <option value="Farol">Farol</option>
-                    <option value="Praia">Praia</option>
-                    <option value="Riomar">Riomar</option>
-                    <option value="CD">CD</option>
-                    <option value="Compras">Compras</option>
-                  </select>
-                </div>
-
-                <div class="form-group">
-                  <label>Data lançamento</label>
-                  <input type="text" id="dataLancamento" readonly />
-                </div>
-
-                <div class="form-group">
-                  <label>Departamento<span class="required-star">*</span></label>
-                  <select id="departamento">
-                    <option value="">Selecione</option>
-                    <option value="Açougue">Açougue</option>
-                    <option value="Adega">Adega</option>
-                    <option value="Bebidas">Bebidas</option>
-                    <option value="Mercearia Alimentos">Mercearia Alimentos</option>
-                    <option value="Mercearia Não Alimentos">Mercearia Não Alimentos</option>
-                    <option value="Perecíveis Processados">Perecíveis Processados</option>
-                  </select>
-                </div>
-
-                <div class="form-group">
-                  <label>Cód. barras (números, máx. 13)<span class="required-star">*</span></label>
-                  <div class="input-inline">
-                    <input
-                      type="text"
-                      id="codigoBarras"
-                      maxlength="13"
-                      inputmode="numeric"
-                      pattern="[0-9]{1,13}"
-                      placeholder="789..."
-                      style="flex:1;"
-                    />
-                    <button type="button" id="btnScan" class="btn btn-soft btn-sm">
-                      📷
-                    </button>
-                  </div>
-                </div>
-
-                <div class="form-group">
-                  <label>Descrição<span class="required-star">*</span></label>
-                  <input type="text" id="descricao" />
-                </div>
-
-                <div class="form-group">
-                  <label>Lote</label>
-                  <input type="text" id="lote" />
-                </div>
-
-                <div class="form-group">
-                  <label>Quantidade<span class="required-star">*</span></label>
-                  <input type="number" id="quantidade" min="0" />
-                </div>
-
-                <div class="form-group">
-                  <label>Validade<span class="required-star">*</span></label>
-                  <input type="date" id="validade" />
-                </div>
-
-                <div class="form-group" style="grid-column:1 / -1;">
-                  <label>Observação</label>
-                  <textarea id="observacao" placeholder="Lote em oferta, ponto extra, etc."></textarea>
-                </div>
-              </div>
-
-              <div style="display:flex; justify-content:flex-end; margin-top:16px;">
-                <button type="submit" class="btn btn-primary">
-                  <span class="btn-icon">💾</span> Salvar lançamento
-                </button>
-              </div>
-            </form>
-          </div>
+            <div style="display:flex; justify-content:flex-end; margin-top:12px;">
+              <button type="submit" class="btn btn-primary">
+                <span class="btn-icon">💾</span> Salvar lançamento
+              </button>
+            </div>
+          </form>
         </div>
 
         <!-- ITENS CADASTRADOS -->
         <div class="card">
-          <div class="card-content">
-            <div class="card-header">
-              <div>
-                <div class="card-title">
-                  <div class="card-title-icon">📋</div>
-                  Itens cadastrados
-                </div>
-                <div class="card-subtitle">
-                  Filtros por status de vencimento e controle de oferta.
-                </div>
+          <div class="card-header">
+            <div>
+              <div class="card-title">
+                <div class="card-title-icon">📋</div>
+                Itens cadastrados
               </div>
-              <div class="section-actions">
-                <button id="btnMarcarTodosOferta" class="btn btn-soft btn-sm">
-                  <span class="btn-icon">📣</span> Marcar todos como oferta
-                </button>
-                <button id="btnExportExcel" class="btn btn-soft btn-sm">
-                  📊 Excel
-                </button>
-                <button id="btnExportPdf" class="btn btn-soft btn-sm">
-                  📄 PDF
-                </button>
+              <div class="card-subtitle">
+                Filtros por status de vencimento e controle de oferta.
               </div>
             </div>
+            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+              <button id="btnMarcarTodosOferta" class="btn btn-soft btn-sm">
+                📣 Marcar todos como oferta
+              </button>
+              <button id="btnExportExcel" class="btn btn-soft btn-sm">
+                📊 Excel
+              </button>
+              <button id="btnExportPdf" class="btn btn-soft btn-sm">
+                📄 PDF
+              </button>
+            </div>
+          </div>
 
-            <div class="table-header-actions">
-              <div class="filters-group">
-                <span class="muted">Filtros:</span>
-                <div class="select-pill">
-                  <select id="filtroVencimento">
-                    <option value="todos">Todos</option>
-                    <option value="7">Vence em 7 dias</option>
-                    <option value="15">Vence em 15 dias</option>
-                    <option value="30">Vence em 30 dias</option>
-                    <option value="vencidos">Vencidos</option>
-                  </select>
-                </div>
-                <div class="select-pill">
-                  <select id="filtroDepartamento">
-                    <option value="todos">Todos departamentos</option>
-                    <option value="Açougue">Açougue</option>
-                    <option value="Adega">Adega</option>
-                    <option value="Bebidas">Bebidas</option>
-                    <option value="Mercearia Alimentos">Mercearia Alimentos</option>
-                    <option value="Mercearia Não Alimentos">Mercearia Não Alimentos</option>
-                    <option value="Perecíveis Processados">Perecíveis Processados</option>
-                  </select>
-                </div>
+          <div class="table-header-actions">
+            <div class="filters-group">
+              <span class="muted">Filtros:</span>
+              <div class="select-pill">
+                <select id="filtroVencimento">
+                  <option value="todos">Todos</option>
+                  <option value="7">Vence em 7 dias</option>
+                  <option value="15">Vence em 15 dias</option>
+                  <option value="30">Vence em 30 dias</option>
+                  <option value="vencidos">Vencidos</option>
+                </select>
               </div>
-              <div class="total-itens" id="totalItens">Total de itens: 0</div>
+              <div class="select-pill">
+                <select id="filtroDepartamento">
+                  <option value="todos">Todos departamentos</option>
+                  <option value="Açougue">Açougue</option>
+                  <option value="Adega">Adega</option>
+                  <option value="Bebidas">Bebidas</option>
+                  <option value="Mercearia Alimentos">Mercearia Alimentos</option>
+                  <option value="Mercearia Não Alimentos">Mercearia Não Alimentos</option>
+                  <option value="Perecíveis Processados">Perecíveis Processados</option>
+                </select>
+              </div>
             </div>
+            <div class="total-itens" id="totalItens">Total de itens: 0</div>
+          </div>
 
-            <div class="tabela-wrapper">
-              <table id="tabelaCadastros">
-                <thead>
-                <tr>
-                  <th>Loja</th>
-                  <th>Data lançamento</th>
-                  <th>Departamento</th>
-                  <th>Cód. barras</th>
-                  <th>Descrição</th>
-                  <th>Qtd</th>
-                  <th>Validade</th>
-                  <th class="col-status">Status</th>
-                  <th class="col-oferta">Oferta</th>
-                  <th>Flag</th>
-                  <th>Lote</th>
-                  <th>Usuário</th>
-                  <th>Lançado em</th>
-                  <th>Obs.</th>
-                  <th class="text-right">Ações</th>
-                </tr>
-                </thead>
-                <tbody></tbody>
-              </table>
-            </div>
+          <div class="tabela-wrapper">
+            <table id="tabelaCadastros">
+              <thead>
+              <tr>
+                <th>Loja</th>
+                <th>Data lançamento</th>
+                <th>Departamento</th>
+                <th>Cód. barras</th>
+                <th>Descrição</th>
+                <th>Qtd</th>
+                <th>Validade</th>
+                <th class="col-status">Status</th>
+                <th class="col-oferta">Oferta</th>
+                <th>Flag</th>
+                <th>Lote</th>
+                <th>Usuário</th>
+                <th>Lançado em</th>
+                <th>Obs.</th>
+                <th class="text-right">Ações</th>
+              </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
           </div>
         </div>
       </div>
 
-      <!-- ADMIN USUÁRIOS (apenas Admin) -->
-      <div class="card" id="adminUsuariosCard" style="margin-top:18px; display:none;">
-        <div class="card-content">
-          <div class="card-header">
-            <div>
-              <div class="card-title">
-                <div class="card-title-icon">🛡️</div>
-                Administração de usuários
-              </div>
-              <div class="card-subtitle">
-                Gerencie perfis (admin, gerente, repositor) e lojas vinculadas.
-              </div>
+      <!-- ADMIN USUÁRIOS -->
+      <div class="card" id="adminUsuariosCard" style="margin-top:14px; display:none;">
+        <div class="card-header">
+          <div>
+            <div class="card-title">
+              <div class="card-title-icon">🛡️</div>
+              Administração de usuários
             </div>
-            <button id="btnReloadUsers" class="btn btn-soft btn-sm">
-              🔄 Recarregar
-            </button>
-          </div>
-
-          <div class="divider"></div>
-
-          <div style="margin-bottom:12px;">
-            <strong style="font-size:13px;">Cadastrar novo usuário</strong>
-          </div>
-
-          <div class="form-grid">
-            <div class="form-group">
-              <label>Nome</label>
-              <input type="text" id="admNome" />
-            </div>
-            <div class="form-group">
-              <label>E-mail</label>
-              <input type="email" id="admEmail" />
-            </div>
-            <div class="form-group">
-              <label>Perfil</label>
-              <select id="admPerfil">
-                <option value="repositor">Repositor</option>
-                <option value="gerente">Gerente</option>
-                <option value="admin">Admin</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Loja</label>
-              <select id="admLoja">
-                <option value="">Nenhuma</option>
-                <option value="Ponta Verde">Ponta Verde</option>
-                <option value="Farol">Farol</option>
-                <option value="Praia">Praia</option>
-                <option value="Riomar">Riomar</option>
-                <option value="CD">CD</option>
-                <option value="Compras">Compras</option>
-              </select>
+            <div class="card-subtitle">
+              Gerencie perfis (admin, gerente, repositor) e lojas vinculadas.
             </div>
           </div>
+          <button id="btnReloadUsers" class="btn btn-soft btn-sm">🔄 Recarregar</button>
+        </div>
 
-          <div style="margin-top:10px; display:flex; justify-content:flex-end;">
-            <button id="btnSalvarNovoUsuario" class="btn btn-primary btn-sm">
-              ➕ Salvar usuário
-            </button>
+        <div class="divider"></div>
+
+        <div style="margin-bottom:8px; font-size:13px; font-weight:500;">
+          Cadastrar novo usuário
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Nome</label>
+            <input type="text" id="admNome" />
           </div>
+          <div class="form-group">
+            <label>E-mail</label>
+            <input type="email" id="admEmail" />
+          </div>
+          <div class="form-group">
+            <label>Perfil</label>
+            <select id="admPerfil">
+              <option value="repositor">Repositor</option>
+              <option value="gerente">Gerente</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Loja</label>
+            <select id="admLoja">
+              <option value="">Nenhuma</option>
+              <option value="Ponta Verde">Ponta Verde</option>
+              <option value="Farol">Farol</option>
+              <option value="Praia">Praia</option>
+              <option value="Riomar">Riomar</option>
+              <option value="CD">CD</option>
+              <option value="Compras">Compras</option>
+            </select>
+          </div>
+        </div>
 
-          <div class="divider" style="margin-top:14px;"></div>
+        <div style="margin-top:8px; display:flex; justify-content:flex-end;">
+          <button id="btnSalvarNovoUsuario" class="btn btn-primary btn-sm">
+            ➕ Salvar usuário
+          </button>
+        </div>
 
-          <table style="margin-top:6px; font-size:12px;" id="tabelaUsuarios">
-            <thead>
-            <tr>
-              <th>Nome</th>
-              <th>E-mail</th>
-              <th>Perfil</th>
-              <th>Loja</th>
-              <th style="text-align:right;">Ações</th>
-            </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
+        <div class="divider" style="margin-top:12px;"></div>
 
-          <div class="total-itens" id="totalUsuarios">Nenhum usuário cadastrado na coleção usuarios.</div>
+        <table id="tabelaUsuarios" style="font-size:12px; margin-top:4px;">
+          <thead>
+          <tr>
+            <th>Nome</th>
+            <th>E-mail</th>
+            <th>Perfil</th>
+            <th>Loja</th>
+            <th class="text-right">Ações</th>
+          </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+
+        <div class="total-itens" id="totalUsuarios">
+          Nenhum usuário cadastrado na coleção usuarios.
         </div>
       </div>
     </div>
   </main>
 </div>
 
-<!-- Modal scanner -->
+<!-- MODAL SCANNER -->
 <div id="scannerModal" style="display:none;"></div>
 
-<!-- libs externas -->
+<!-- libs -->
 <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js"></script>
 
-<!-- Firebase + lógica -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
   import {
@@ -1018,13 +952,9 @@
     addDoc,
     updateDoc,
     deleteDoc,
-    query,
-    where,
-    orderBy,
     serverTimestamp,
   } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-  // === CONFIG FIREBASE DO SEU PROJETO ===
   const firebaseConfig = {
     apiKey: "AIzaSyDa1z9LwlSHxwSTC974ci9RMEYdEiA_wEg",
     authDomain: "controle-validade-fc108.firebaseapp.com",
@@ -1044,7 +974,7 @@
   let usersCache = [];
   let html5QrCode = null;
 
-  // ======= LOGIN / AUTH =======
+  // ELEMENTOS
   const loginView = document.getElementById("login-view");
   const appView = document.getElementById("app-view");
   const appHeader = document.getElementById("app-header");
@@ -1058,6 +988,30 @@
   const btnGoogleLogin = document.getElementById("btnGoogleLogin");
   const btnLogout = document.getElementById("btnLogout");
 
+  const lojaInput = document.getElementById("loja");
+  const dataLancInput = document.getElementById("dataLancamento");
+  const departamentoInput = document.getElementById("departamento");
+  const codigoBarrasInput = document.getElementById("codigoBarras");
+  const descricaoInput = document.getElementById("descricao");
+  const loteInput = document.getElementById("lote");
+  const qtdInput = document.getElementById("quantidade");
+  const validadeInput = document.getElementById("validade");
+  const obsInput = document.getElementById("observacao");
+  const cadastroForm = document.getElementById("cadastroForm");
+
+  const tabelaCadastrosBody = document.querySelector("#tabelaCadastros tbody");
+  const filtroVencimento = document.getElementById("filtroVencimento");
+  const filtroDepartamento = document.getElementById("filtroDepartamento");
+  const totalItensLabel = document.getElementById("totalItens");
+
+  const adminCard = document.getElementById("adminUsuariosCard");
+  const tabelaUsuariosBody = document.querySelector("#tabelaUsuarios tbody");
+  const totalUsuariosLabel = document.getElementById("totalUsuarios");
+
+  const scannerModal = document.getElementById("scannerModal");
+  const btnScan = document.getElementById("btnScan");
+
+  // FUNÇÕES AUXILIARES
   function showError(msg) {
     loginError.style.display = "block";
     loginError.textContent = msg;
@@ -1068,49 +1022,10 @@
     loginError.textContent = "";
   }
 
-  async function ensureUserProfile(user) {
-    if (!user) return null;
-    const userRef = doc(db, "usuarios", user.uid);
-    const snap = await getDoc(userRef);
-    if (!snap.exists()) {
-      // cria perfil padrão (repositor, sem loja)
-      const data = {
-        email: user.email,
-        nome: user.displayName || "",
-        tipo: "repositor",
-        loja: "",
-        criadoEm: serverTimestamp(),
-      };
-      await setDoc(userRef, data);
-      return data;
-    } else {
-      return snap.data();
-    }
-  }
-
-  async function loadUserProfile(user) {
-    if (!user) return null;
-    const userRef = doc(db, "usuarios", user.uid);
-    const snap = await getDoc(userRef);
-    if (!snap.exists()) {
-      return await ensureUserProfile(user);
-    }
-    return snap.data();
-  }
-
   function translateRole(tipo) {
     if (tipo === "admin") return "Admin";
     if (tipo === "gerente") return "Gerente";
     return "Repositor";
-  }
-
-  function updateHeader() {
-    if (!currentUserProfile) return;
-    headerUserName.textContent =
-      currentUserProfile.nome || auth.currentUser?.email || "Usuário";
-    headerUserRole.textContent = `Perfil: ${translateRole(
-      currentUserProfile.tipo
-    )}`;
   }
 
   function setLoggedInUI(isLogged) {
@@ -1125,6 +1040,69 @@
     }
   }
 
+  function atualizarHeader() {
+    if (!currentUserProfile) return;
+    headerUserName.textContent =
+      currentUserProfile.nome || auth.currentUser?.email || "Usuário";
+    headerUserRole.textContent = `Perfil: ${translateRole(
+      currentUserProfile.tipo
+    )}`;
+  }
+
+  function preencherDataLancamento() {
+    const now = new Date();
+    const dia = String(now.getDate()).padStart(2, "0");
+    const mes = String(now.getMonth() + 1).padStart(2, "0");
+    const ano = now.getFullYear();
+    const hora = String(now.getHours()).padStart(2, "0");
+    const min = String(now.getMinutes()).padStart(2, "0");
+    dataLancInput.value = `${dia}/${mes}/${ano} ${hora}:${min}`;
+  }
+
+  function formatarDataHora(date) {
+    const dia = String(date.getDate()).padStart(2, "0");
+    const mes = String(date.getMonth() + 1).padStart(2, "0");
+    const ano = date.getFullYear();
+    const hora = String(date.getHours()).padStart(2, "0");
+    const min = String(date.getMinutes()).padStart(2, "0");
+    return `${dia}/${mes}/${ano} ${hora}:${min}`;
+  }
+
+  async function ensureUserProfile(user) {
+    if (!user) return null;
+    const userRef = doc(db, "usuarios", user.uid);
+    const snap = await getDoc(userRef);
+    if (!snap.exists()) {
+      const data = {
+        email: user.email,
+        nome: user.displayName || "",
+        tipo: "repositor",
+        loja: "",
+        criadoEm: serverTimestamp(),
+      };
+      await setDoc(userRef, data);
+      return data;
+    }
+    return snap.data();
+  }
+
+  async function loadUserProfile(user) {
+    if (!user) return null;
+    const userRef = doc(db, "usuarios", user.uid);
+    const snap = await getDoc(userRef);
+    if (!snap.exists()) return await ensureUserProfile(user);
+    return snap.data();
+  }
+
+  function toggleAdminCard() {
+    if (currentUserProfile && currentUserProfile.tipo === "admin") {
+      adminCard.style.display = "block";
+    } else {
+      adminCard.style.display = "none";
+    }
+  }
+
+  // LOGIN
   btnEmailLogin.addEventListener("click", async () => {
     clearError();
     const email = loginEmail.value.trim();
@@ -1166,44 +1144,14 @@
     }
     currentUserProfile = await loadUserProfile(user);
     setLoggedInUI(true);
-    updateHeader();
+    atualizarHeader();
     preencherDataLancamento();
     await carregarCadastros();
     await carregarUsuariosAdmin();
     toggleAdminCard();
   });
 
-  function toggleAdminCard() {
-    const card = document.getElementById("adminUsuariosCard");
-    if (currentUserProfile && currentUserProfile.tipo === "admin") {
-      card.style.display = "block";
-    } else {
-      card.style.display = "none";
-    }
-  }
-
-  // ======= FORM CADASTRO =======
-  const lojaInput = document.getElementById("loja");
-  const dataLancInput = document.getElementById("dataLancamento");
-  const departamentoInput = document.getElementById("departamento");
-  const codigoBarrasInput = document.getElementById("codigoBarras");
-  const descricaoInput = document.getElementById("descricao");
-  const loteInput = document.getElementById("lote");
-  const qtdInput = document.getElementById("quantidade");
-  const validadeInput = document.getElementById("validade");
-  const obsInput = document.getElementById("observacao");
-  const cadastroForm = document.getElementById("cadastroForm");
-
-  function preencherDataLancamento() {
-    const now = new Date();
-    const dia = String(now.getDate()).padStart(2, "0");
-    const mes = String(now.getMonth() + 1).padStart(2, "0");
-    const ano = now.getFullYear();
-    const hora = String(now.getHours()).padStart(2, "0");
-    const min = String(now.getMinutes()).padStart(2, "0");
-    dataLancInput.value = `${dia}/${mes}/${ano} ${hora}:${min}`;
-  }
-
+  // VALIDAÇÕES
   function validarCodigoBarras(valor) {
     if (!valor) return false;
     if (!/^[0-9]+$/.test(valor)) return false;
@@ -1211,6 +1159,7 @@
     return true;
   }
 
+  // CADASTRO
   cadastroForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     if (!auth.currentUser || !currentUserProfile) {
@@ -1232,9 +1181,7 @@
       return;
     }
     if (!validarCodigoBarras(codigo)) {
-      alert(
-        "Código de barras inválido. Use apenas números, até 13 dígitos."
-      );
+      alert("Código de barras inválido. Use apenas números, até 13 dígitos.");
       return;
     }
 
@@ -1272,42 +1219,22 @@
     }
   });
 
-  // ======= CARREGAR CADASTROS (visibilidade por perfil) =======
-  const tabelaCadastrosBody = document.querySelector(
-    "#tabelaCadastros tbody"
-  );
-  const filtroVencimento = document.getElementById("filtroVencimento");
-  const filtroDepartamento = document.getElementById("filtroDepartamento");
-  const totalItensLabel = document.getElementById("totalItens");
-
+  // CARREGAR CADASTROS
   filtroVencimento.addEventListener("change", renderTabelaCadastros);
   filtroDepartamento.addEventListener("change", renderTabelaCadastros);
 
   async function carregarCadastros() {
     if (!auth.currentUser || !currentUserProfile) return;
-
-    let baseRef = collection(db, "cadastros");
-    let q;
-
-    if (currentUserProfile.tipo === "admin") {
-      q = query(baseRef, orderBy("criadoEm", "desc"));
-    } else if (currentUserProfile.tipo === "gerente") {
-      q = query(
-        baseRef,
-        where("loja", "==", currentUserProfile.loja || ""),
-        orderBy("criadoEm", "desc")
-      );
-    } else {
-      // repositor: só o que ele lançou
-      q = query(
-        baseRef,
-        where("criadoPorUid", "==", auth.currentUser.uid),
-        orderBy("criadoEm", "desc")
-      );
-    }
-
-    const snap = await getDocs(q);
+    const snap = await getDocs(collection(db, "cadastros"));
     cadastrosCache = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+
+    // ordena client-side por criadoEm (se tiver)
+    cadastrosCache.sort((a, b) => {
+      const ta = a.criadoEm?.seconds || 0;
+      const tb = b.criadoEm?.seconds || 0;
+      return tb - ta;
+    });
+
     renderTabelaCadastros();
   }
 
@@ -1325,26 +1252,19 @@
     if (diffDias === 0)
       return { label: "Vence hoje", classe: "tag-status-danger" };
     if (diffDias <= 7)
-      return {
-        label: `Vence em ${diffDias} dia(s)`,
-        classe: "tag-status-danger",
-      };
+      return { label: `Vence em ${diffDias} dia(s)`, classe: "tag-status-danger" };
     if (diffDias <= 15)
-      return {
-        label: `Vence em ${diffDias} dia(s)`,
-        classe: "tag-status-warning",
-      };
+      return { label: `Vence em ${diffDias} dia(s)`, classe: "tag-status-warning" };
     if (diffDias <= 30)
-      return {
-        label: `Vence em ${diffDias} dia(s)`,
-        classe: "tag-status",
-      };
+      return { label: `Vence em ${diffDias} dia(s)`, classe: "tag-status" };
     return { label: `Vence em ${diffDias} dia(s)`, classe: "tag-status" };
   }
 
   function aplicaFiltroVencimento(item) {
     const filtro = filtroVencimento.value;
     if (filtro === "todos") return true;
+
+    if (!item.validade) return false;
 
     const hoje = new Date();
     hoje.setHours(0, 0, 0, 0);
@@ -1363,14 +1283,23 @@
     tabelaCadastrosBody.innerHTML = "";
     let lista = [...cadastrosCache];
 
-    // filtro depto
+    // VISIBILIDADE POR PERFIL (agora só aqui, os dados vêm todos do banco)
+    if (currentUserProfile) {
+      if (currentUserProfile.tipo === "gerente") {
+        const lojaGerente = currentUserProfile.loja || "";
+        lista = lista.filter((it) => it.loja === lojaGerente);
+      } else if (currentUserProfile.tipo === "repositor") {
+        const uid = auth.currentUser?.uid;
+        lista = lista.filter((it) => it.criadoPorUid === uid);
+      } // admin vê tudo
+    }
+
+    // filtros de tela
     if (filtroDepartamento.value !== "todos") {
       lista = lista.filter(
         (it) => it.departamento === filtroDepartamento.value
       );
     }
-
-    // filtro vencimento
     lista = lista.filter((it) => aplicaFiltroVencimento(it));
 
     totalItensLabel.textContent = `Total de itens: ${lista.length}`;
@@ -1383,9 +1312,7 @@
 
       const dataLanc =
         item.dataLancamentoTexto ||
-        (item.criadoEm?.toDate
-          ? formatarDataHora(item.criadoEm.toDate())
-          : "-");
+        (item.criadoEm?.toDate ? formatarDataHora(item.criadoEm.toDate()) : "-");
 
       tr.innerHTML = `
         <td>${item.loja || ""}</td>
@@ -1395,9 +1322,7 @@
         <td>${item.descricao || ""}</td>
         <td>${item.quantidade ?? ""}</td>
         <td>${
-          item.validade
-            ? item.validade.split("-").reverse().join("/")
-            : ""
+          item.validade ? item.validade.split("-").reverse().join("/") : ""
         }</td>
         <td class="col-status">
           <span class="tag-status ${status.classe}">${status.label}</span>
@@ -1419,13 +1344,14 @@
         <td>${dataLanc}</td>
         <td>${item.observacao || ""}</td>
         <td class="text-right">
-          <button class="btn btn-soft btn-xs" data-editar-id="${
-            item.id
-          }">Editar</button>
+          <button class="btn btn-soft btn-xs" data-editar-id="${item.id}">
+            Editar
+          </button>
           ${
-            currentUserProfile &&
-            currentUserProfile.tipo === "admin"
-              ? `<button class="btn btn-danger-soft btn-xs" data-excluir-id="${item.id}">Excluir</button>`
+            currentUserProfile && currentUserProfile.tipo === "admin"
+              ? `<button class="btn btn-danger-soft btn-xs" data-excluir-id="${item.id}">
+                   Excluir
+                 </button>`
               : ""
           }
         </td>
@@ -1434,16 +1360,6 @@
     }
   }
 
-  function formatarDataHora(date) {
-    const dia = String(date.getDate()).padStart(2, "0");
-    const mes = String(date.getMonth() + 1).padStart(2, "0");
-    const ano = date.getFullYear();
-    const hora = String(date.getHours()).padStart(2, "0");
-    const min = String(date.getMinutes()).padStart(2, "0");
-    return `${dia}/${mes}/${ano} ${hora}:${min}`;
-  }
-
-  // Clique em oferta / flag / editar / excluir
   tabelaCadastrosBody.addEventListener("click", async (e) => {
     const ofertaBtn = e.target.closest(".tag-oferta");
     if (ofertaBtn) {
@@ -1469,7 +1385,7 @@
 
     const editarId = e.target.getAttribute("data-editar-id");
     if (editarId) {
-      alert("Edição de itens ainda não implementada nessa versão.");
+      alert("Edição de itens ainda não implementada nesta versão.");
       return;
     }
   });
@@ -1487,19 +1403,37 @@
     .getElementById("btnMarcarTodosOferta")
     .addEventListener("click", async () => {
       if (!cadastrosCache.length) return;
-      const confirmacao = confirm(
-        "Marcar todos os itens filtrados como oferta 'Lançado'?"
-      );
-      if (!confirmacao) return;
+      if (!confirm("Marcar todos os itens (visíveis) como oferta 'Lançado'?"))
+        return;
 
-      for (const item of cadastrosCache) {
+      // aplica mesma visibilidade do render
+      let lista = [...cadastrosCache];
+      if (currentUserProfile) {
+        if (currentUserProfile.tipo === "gerente") {
+          lista = lista.filter(
+            (it) => it.loja === (currentUserProfile.loja || "")
+          );
+        } else if (currentUserProfile.tipo === "repositor") {
+          lista = lista.filter(
+            (it) => it.criadoPorUid === auth.currentUser?.uid
+          );
+        }
+      }
+      if (filtroDepartamento.value !== "todos") {
+        lista = lista.filter(
+          (it) => it.departamento === filtroDepartamento.value
+        );
+      }
+      lista = lista.filter((it) => aplicaFiltroVencimento(it));
+
+      for (const item of lista) {
         await updateDoc(doc(db, "cadastros", item.id), { oferta: "Lançado" });
         item.oferta = "Lançado";
       }
       renderTabelaCadastros();
     });
 
-  // ======= EXPORTAÇÕES =======
+  // EXPORTAÇÕES
   document
     .getElementById("btnExportExcel")
     .addEventListener("click", () => exportarExcel());
@@ -1509,6 +1443,18 @@
 
   function getDadosFiltrados() {
     let lista = [...cadastrosCache];
+
+    if (currentUserProfile) {
+      if (currentUserProfile.tipo === "gerente") {
+        lista = lista.filter(
+          (it) => it.loja === (currentUserProfile.loja || "")
+        );
+      } else if (currentUserProfile.tipo === "repositor") {
+        lista = lista.filter(
+          (it) => it.criadoPorUid === auth.currentUser?.uid
+        );
+      }
+    }
     if (filtroDepartamento.value !== "todos") {
       lista = lista.filter(
         (it) => it.departamento === filtroDepartamento.value
@@ -1523,9 +1469,7 @@
       Loja: item.loja || "",
       "Data lançamento":
         item.dataLancamentoTexto ||
-        (item.criadoEm?.toDate
-          ? formatarDataHora(item.criadoEm.toDate())
-          : ""),
+        (item.criadoEm?.toDate ? formatarDataHora(item.criadoEm.toDate()) : ""),
       Departamento: item.departamento || "",
       "Cód. barras": item.codigoBarras || "",
       Descrição: item.descricao || "",
@@ -1540,16 +1484,13 @@
       Usuário: item.criadoPorNome || "",
       "Lançado em":
         item.dataLancamentoTexto ||
-        (item.criadoEm?.toDate
-          ? formatarDataHora(item.criadoEm.toDate())
-          : ""),
+        (item.criadoEm?.toDate ? formatarDataHora(item.criadoEm.toDate()) : ""),
       Observação: item.observacao || "",
     }));
 
     const ws = XLSX.utils.json_to_sheet(dados);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Validades");
-
     XLSX.writeFile(wb, "controle-validade.xlsx");
   }
 
@@ -1560,9 +1501,7 @@
     const dados = getDadosFiltrados().map((item) => [
       item.loja || "",
       item.dataLancamentoTexto ||
-        (item.criadoEm?.toDate
-          ? formatarDataHora(item.criadoEm.toDate())
-          : ""),
+        (item.criadoEm?.toDate ? formatarDataHora(item.criadoEm.toDate()) : ""),
       item.departamento || "",
       item.codigoBarras || "",
       item.descricao || "",
@@ -1606,13 +1545,7 @@
     docPdf.save("controle-validade.pdf");
   }
 
-  // ======= ADMIN USUÁRIOS =======
-  const adminCard = document.getElementById("adminUsuariosCard");
-  const tabelaUsuariosBody = document.querySelector(
-    "#tabelaUsuarios tbody"
-  );
-  const totalUsuariosLabel = document.getElementById("totalUsuarios");
-
+  // ADMIN USUÁRIOS
   document
     .getElementById("btnReloadUsers")
     .addEventListener("click", carregarUsuariosAdmin);
@@ -1679,9 +1612,7 @@
           <button class="btn btn-soft btn-xs" data-salvar-usuario="${u.id}">
             Salvar
           </button>
-          <button class="btn btn-danger-soft btn-xs" data-excluir-usuario="${
-            u.id
-          }">
+          <button class="btn btn-danger-soft btn-xs" data-excluir-usuario="${u.id}">
             Excluir
           </button>
         </td>
@@ -1701,14 +1632,7 @@
       return;
     }
 
-    const data = {
-      nome,
-      email,
-      tipo,
-      loja,
-      criadoEm: serverTimestamp(),
-    };
-
+    const data = { nome, email, tipo, loja, criadoEm: serverTimestamp() };
     await addDoc(collection(db, "usuarios"), data);
 
     document.getElementById("admNome").value = "";
@@ -1738,7 +1662,7 @@
 
       if (auth.currentUser && auth.currentUser.uid === salvarId) {
         currentUserProfile = await loadUserProfile(auth.currentUser);
-        updateHeader();
+        atualizarHeader();
         toggleAdminCard();
         await carregarCadastros();
       }
@@ -1755,10 +1679,7 @@
     }
   });
 
-  // ======= SCANNER CÓDIGO BARRAS =======
-  const scannerModal = document.getElementById("scannerModal");
-  const btnScan = document.getElementById("btnScan");
-
+  // SCANNER – agora força câmera traseira
   btnScan.addEventListener("click", () => {
     abrirScanner();
   });
@@ -1782,25 +1703,45 @@
     `;
     scannerModal.style.display = "block";
 
-    const config = { fps: 10, qrbox: { width: 250, height: 150 } };
-    html5QrCode = new Html5Qrcode("reader");
-    html5QrCode
-      .start(
-        { facingMode: "environment" },
-        config,
-        (decodedText) => {
-          // pega só números
-          const clean = decodedText.replace(/\D/g, "").slice(0, 13);
-          if (clean) {
-            codigoBarrasInput.value = clean;
-          }
+    Html5Qrcode.getCameras()
+      .then((devices) => {
+        if (!devices || devices.length === 0) {
+          alert("Nenhuma câmera encontrada.");
           fecharScanner();
-        },
-        (error) => {}
-      )
+          return;
+        }
+
+        // tenta achar 'back', se não tiver pega a última (geralmente traseira)
+        let device = devices.find((d) =>
+          d.label.toLowerCase().includes("back")
+        );
+        if (!device) device = devices[devices.length - 1];
+
+        html5QrCode = new Html5Qrcode("reader");
+        const config = { fps: 10, qrbox: { width: 250, height: 150 } };
+
+        html5QrCode
+          .start(
+            device.id,
+            config,
+            (decodedText) => {
+              const clean = decodedText.replace(/\D/g, "").slice(0, 13);
+              if (clean) {
+                codigoBarrasInput.value = clean;
+              }
+              fecharScanner();
+            },
+            () => {}
+          )
+          .catch((err) => {
+            console.error(err);
+            alert("Leitor de código de barras não carregou corretamente.");
+            fecharScanner();
+          });
+      })
       .catch((err) => {
         console.error(err);
-        alert("Leitor de código de barras não carregou corretamente.");
+        alert("Erro ao acessar as câmeras do dispositivo.");
         fecharScanner();
       });
 
