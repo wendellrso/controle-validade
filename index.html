@@ -5,7 +5,7 @@
   <title>Controle de Validade • Palato</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <link rel="icon" href="palato-logo.png" />
+  <link rel="icon" href="./palato-logo.png" />
 
   <!-- SheetJS para Excel -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -210,7 +210,6 @@
       background: #020617;
       color: #e5e7eb;
       font-size: 18px;
-      display: flex;
       align-items: center;
       justify-content: center;
       margin-right: 4px;
@@ -673,6 +672,7 @@
       background: #000;
     }
 
+    /* ===== RESPONSIVO ===== */
     @media (max-width: 960px) {
       .side-menu {
         position: fixed;
@@ -682,36 +682,6 @@
         width: 260px;
         padding: 20px 16px;
         transition: left 0.2s ease;
-          /* Ajuste das cards e botões no celular */
-  .card-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
-
-  .card-header > div:last-child {
-    align-self: stretch;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    justify-content: flex-start;
-  }
-
-  .btn-ghost,
-  .btn-export {
-    width: auto;
-    font-size: 12px;
-    padding: 5px 10px;
-  }
-
-  .items-table-wrapper table {
-    font-size: 12px;
-  }
-
-  .items-table-wrapper {
-    border-radius: 12px;
-  }
-
       }
       .side-menu.open {
         left: 0;
@@ -725,6 +695,36 @@
       .app-content {
         padding: 16px;
       }
+
+      /* Ajuste das cards e botões no celular */
+      .card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+      }
+
+      .card-header > div:last-child {
+        align-self: stretch;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        justify-content: flex-start;
+      }
+
+      .btn-ghost,
+      .btn-export {
+        width: auto;
+        font-size: 12px;
+        padding: 5px 10px;
+      }
+
+      .items-table-wrapper table {
+        font-size: 12px;
+      }
+
+      .items-table-wrapper {
+        border-radius: 12px;
+      }
     }
   </style>
 </head>
@@ -733,7 +733,7 @@
   <div id="loginView">
     <div class="login-card">
       <div class="login-logo">
-        <img src="palato-logo.png" alt="Palato" />
+        <img src="./palato-logo.png" alt="Palato" />
       </div>
       <div class="login-title">Controle de Validade</div>
       <div class="login-subtitle">Acesso restrito a colaboradores autorizados.</div>
@@ -762,7 +762,7 @@
     <header class="app-header">
       <div class="app-header-left">
         <button id="btnToggleMenu" class="header-menu-toggle">☰</button>
-        <img src="palato-logo.png" alt="Palato" class="logo-palato" />
+        <img src="./palato-logo.png" alt="Palato" class="logo-palato" />
         <div class="app-title">
           <h1>CONTROLE DE VALIDADE</h1>
           <span>Multi-loja • Lote • Ofertas</span>
@@ -1088,7 +1088,8 @@
       addDoc,
       query,
       orderBy,
-      serverTimestamp
+      serverTimestamp,
+      where
     } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
 
     // ===== CONFIG FIREBASE =====
@@ -1263,7 +1264,7 @@
         perfilAtual === "admin"
           ? "Perfil: admin"
           : perfilAtual === "gerente"
-          ? `Perfil: gerente ${perfilLojaAtual ? " (" + perfilLojaAtual + ")" : ""}`
+          ? `Perfil: gerente${perfilLojaAtual ? " (" + perfilLojaAtual + ")" : ""}`
           : "Perfil: repositor";
 
       userBox.innerHTML = `
@@ -1307,23 +1308,61 @@
     // ===== PERFIL / USUÁRIO FIRESTORE =====
     async function carregarOuCriarPerfilUsuario(user) {
       const ref = doc(db, "usuarios", user.uid);
-      const snap = await getDoc(ref);
+      let tipo = "repositor";
+      let loja = "";
+
+      let snap = await getDoc(ref);
+
+      if (!snap.exists()) {
+        // tenta reaproveitar usuário criado manualmente (mesmo e-mail)
+        const q = query(collection(db, "usuarios"), where("email", "==", user.email));
+        const qSnap = await getDocs(q);
+
+        if (!qSnap.empty) {
+          const docExist = qSnap.docs[0];
+          const dados = docExist.data();
+          tipo = dados.tipo || "repositor";
+          loja = dados.loja || "";
+
+          await setDoc(
+            ref,
+            {
+              email: user.email,
+              nome: dados.nome || user.displayName || "",
+              tipo,
+              loja,
+              criadoEm: dados.criadoEm || serverTimestamp()
+            },
+            { merge: true }
+          );
+
+          // remove registros antigos com o mesmo e-mail (ids aleatórios)
+          qSnap.docs.forEach((d) => {
+            if (d.id !== user.uid) {
+              deleteDoc(d.ref);
+            }
+          });
+        } else {
+          await setDoc(ref, {
+            email: user.email,
+            nome: user.displayName || "",
+            tipo,
+            loja,
+            criadoEm: serverTimestamp()
+          });
+        }
+
+        snap = await getDoc(ref);
+      }
 
       if (snap.exists()) {
         const data = snap.data();
-        perfilAtual = data.tipo || "repositor";
-        perfilLojaAtual = data.loja || "";
-      } else {
-        await setDoc(ref, {
-          email: user.email,
-          nome: user.displayName || "",
-          tipo: "repositor",
-          loja: "",
-          criadoEm: serverTimestamp()
-        });
-        perfilAtual = "repositor";
-        perfilLojaAtual = "";
+        tipo = data.tipo || tipo;
+        loja = data.loja || loja;
       }
+
+      perfilAtual = tipo;
+      perfilLojaAtual = loja;
 
       if (perfilAtual === "admin") {
         menuUsuarios.style.display = "flex";
@@ -1478,46 +1517,46 @@
       aplicarFiltrosETabela();
     }
 
-   function aplicarFiltrosETabela() {
-  tabelaItensBody.innerHTML = "";
-  let filtrados = [...lancamentosCache];
+    function aplicarFiltrosETabela() {
+      tabelaItensBody.innerHTML = "";
+      let filtrados = [...lancamentosCache];
 
-  const filtroStatusVal = filtroStatus.value;
-  const filtroDepVal = filtroDepartamento.value;
+      const filtroStatusVal = filtroStatus.value;
+      const filtroDepVal = filtroDepartamento.value;
 
-  const hoje = new Date();
-  hoje.setHours(0, 0, 0, 0);
+      const hoje = new Date();
+      hoje.setHours(0, 0, 0, 0);
 
-  filtrados = filtrados.filter((item) => {
-    if (item.validade) {
-      const dt = new Date(item.validade);
-      dt.setHours(0, 0, 0, 0);
-      const dias = Math.round((dt - hoje) / (1000 * 60 * 60 * 24));
+      filtrados = filtrados.filter((item) => {
+        if (item.validade) {
+          const dt = new Date(item.validade);
+          dt.setHours(0, 0, 0, 0);
+          const dias = Math.round((dt - hoje) / (1000 * 60 * 60 * 24));
 
-      // 7 dias: 0 a 7
-      if (filtroStatusVal === "7" && !(dias >= 0 && dias <= 7)) return false;
+          // 7 dias: 0 a 7
+          if (filtroStatusVal === "7" && !(dias >= 0 && dias <= 7)) return false;
 
-      // 15 dias: 8 a 15
-      if (filtroStatusVal === "15" && !(dias >= 8 && dias <= 15)) return false;
+          // 15 dias: 8 a 15
+          if (filtroStatusVal === "15" && !(dias >= 8 && dias <= 15)) return false;
 
-      // 30 dias: 16 a 30
-      if (filtroStatusVal === "30" && !(dias >= 16 && dias <= 30)) return false;
+          // 30 dias: 16 a 30
+          if (filtroStatusVal === "30" && !(dias >= 16 && dias <= 30)) return false;
 
-      // vencidos: < 0
-      if (filtroStatusVal === "vencidos" && !(dias < 0)) return false;
-    } else if (filtroStatusVal !== "todos") {
-      // se não tem validade e o filtro não é "todos", ignora
-      return false;
+          // vencidos: < 0
+          if (filtroStatusVal === "vencidos" && !(dias < 0)) return false;
+        } else if (filtroStatusVal !== "todos") {
+          // se não tem validade e o filtro não é "todos", ignora
+          return false;
+        }
+
+        if (filtroDepVal !== "todos" && item.departamento !== filtroDepVal) return false;
+
+        return true;
+      });
+
+      filtrados.forEach((item) => adicionarLinhaNaTabela(item));
+      totalItensSpan.textContent = filtrados.length;
     }
-
-    if (filtroDepVal !== "todos" && item.departamento !== filtroDepVal) return false;
-
-    return true;
-  });
-
-  filtrados.forEach((item) => adicionarLinhaNaTabela(item));
-  totalItensSpan.textContent = filtrados.length;
-}
 
     function adicionarLinhaNaTabela(item) {
       const tr = document.createElement("tr");
@@ -1807,7 +1846,32 @@
     btnMarcarTodosOferta.addEventListener("click", async () => {
       if (!confirm("Marcar todos os itens filtrados como 'Lançado'?")) return;
 
-      const promises = lancamentosCache.map((item) =>
+      const hoje = new Date();
+      hoje.setHours(0, 0, 0, 0);
+
+      // usa os mesmos filtros atuais
+      const filtroStatusVal = filtroStatus.value;
+      const filtroDepVal = filtroDepartamento.value;
+
+      const itensFiltrados = lancamentosCache.filter((item) => {
+        if (item.validade) {
+          const dt = new Date(item.validade);
+          dt.setHours(0, 0, 0, 0);
+          const dias = Math.round((dt - hoje) / (1000 * 60 * 60 * 24));
+
+          if (filtroStatusVal === "7" && !(dias >= 0 && dias <= 7)) return false;
+          if (filtroStatusVal === "15" && !(dias >= 8 && dias <= 15)) return false;
+          if (filtroStatusVal === "30" && !(dias >= 16 && dias <= 30)) return false;
+          if (filtroStatusVal === "vencidos" && !(dias < 0)) return false;
+        } else if (filtroStatusVal !== "todos") {
+          return false;
+        }
+
+        if (filtroDepVal !== "todos" && item.departamento !== filtroDepVal) return false;
+        return true;
+      });
+
+      const promises = itensFiltrados.map((item) =>
         updateDoc(doc(db, "lancamentos", item.id), { oferta: "lancado" })
       );
       try {
@@ -2044,4 +2108,3 @@
   </script>
 </body>
 </html>
-
