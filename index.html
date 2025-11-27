@@ -682,6 +682,36 @@
         width: 260px;
         padding: 20px 16px;
         transition: left 0.2s ease;
+          /* Ajuste das cards e botões no celular */
+  .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .card-header > div:last-child {
+    align-self: stretch;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: flex-start;
+  }
+
+  .btn-ghost,
+  .btn-export {
+    width: auto;
+    font-size: 12px;
+    padding: 5px 10px;
+  }
+
+  .items-table-wrapper table {
+    font-size: 12px;
+  }
+
+  .items-table-wrapper {
+    border-radius: 12px;
+  }
+
       }
       .side-menu.open {
         left: 0;
@@ -1448,38 +1478,46 @@
       aplicarFiltrosETabela();
     }
 
-    function aplicarFiltrosETabela() {
-      tabelaItensBody.innerHTML = "";
-      let filtrados = [...lancamentosCache];
+   function aplicarFiltrosETabela() {
+  tabelaItensBody.innerHTML = "";
+  let filtrados = [...lancamentosCache];
 
-      const filtroStatusVal = filtroStatus.value;
-      const filtroDepVal = filtroDepartamento.value;
+  const filtroStatusVal = filtroStatus.value;
+  const filtroDepVal = filtroDepartamento.value;
 
-      const hoje = new Date();
-      hoje.setHours(0, 0, 0, 0);
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
 
-      filtrados = filtrados.filter((item) => {
-        if (item.validade) {
-          const dt = new Date(item.validade);
-          dt.setHours(0, 0, 0, 0);
-          const dias = Math.round((dt - hoje) / (1000 * 60 * 60 * 24));
+  filtrados = filtrados.filter((item) => {
+    if (item.validade) {
+      const dt = new Date(item.validade);
+      dt.setHours(0, 0, 0, 0);
+      const dias = Math.round((dt - hoje) / (1000 * 60 * 60 * 24));
 
-          if (filtroStatusVal === "7" && !(dias >= 0 && dias <= 7)) return false;
-          if (filtroStatusVal === "15" && !(dias >= 0 && dias <= 15)) return false;
-          if (filtroStatusVal === "30" && !(dias >= 0 && dias <= 30)) return false;
-          if (filtroStatusVal === "vencidos" && !(dias < 0)) return false;
-        } else if (filtroStatusVal !== "todos") {
-          return false;
-        }
+      // 7 dias: 0 a 7
+      if (filtroStatusVal === "7" && !(dias >= 0 && dias <= 7)) return false;
 
-        if (filtroDepVal !== "todos" && item.departamento !== filtroDepVal) return false;
+      // 15 dias: 8 a 15
+      if (filtroStatusVal === "15" && !(dias >= 8 && dias <= 15)) return false;
 
-        return true;
-      });
+      // 30 dias: 16 a 30
+      if (filtroStatusVal === "30" && !(dias >= 16 && dias <= 30)) return false;
 
-      filtrados.forEach((item) => adicionarLinhaNaTabela(item));
-      totalItensSpan.textContent = filtrados.length;
+      // vencidos: < 0
+      if (filtroStatusVal === "vencidos" && !(dias < 0)) return false;
+    } else if (filtroStatusVal !== "todos") {
+      // se não tem validade e o filtro não é "todos", ignora
+      return false;
     }
+
+    if (filtroDepVal !== "todos" && item.departamento !== filtroDepVal) return false;
+
+    return true;
+  });
+
+  filtrados.forEach((item) => adicionarLinhaNaTabela(item));
+  totalItensSpan.textContent = filtrados.length;
+}
 
     function adicionarLinhaNaTabela(item) {
       const tr = document.createElement("tr");
@@ -2006,3 +2044,4 @@
   </script>
 </body>
 </html>
+
