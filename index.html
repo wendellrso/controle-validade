@@ -352,7 +352,7 @@
       orderBy
     } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
-    // 🔥 CONFIG FIREBASE DO TEU PROJETO
+    // 🔥 CONFIG FIREBASE
     const firebaseConfig = {
       apiKey: "AIzaSyDa1z9LwlSHxwSTC974ci9RMEYdEiA_wEg",
       authDomain: "controle-validade-fc108.firebaseapp.com",
@@ -393,17 +393,24 @@
     const userRoleEl = document.getElementById("userRole");
     const logoutBtn = document.getElementById("logoutBtn");
 
-    // 🔑 BUSCAR PERFIL (UID -> e-mail)
+    // 🔑 BUSCAR PERFIL (com override para compras.3076@gmail.com)
     async function fetchUserRole(user) {
       try {
-        // 1) tenta pelo UID (forma padrão)
+        // ✅ Override direto: esse e-mail SEMPRE é admin
+        if (user.email === "compras.3076@gmail.com") {
+          currentRole = "admin";
+          currentLoja = "Compras";
+          return;
+        }
+
+        // 1) tenta pelo UID
         let data = null;
         const uidRef = doc(db, "users", user.uid);
         const uidSnap = await getDoc(uidRef);
         if (uidSnap.exists()) {
           data = uidSnap.data();
         } else {
-          // 2) se não achar, tenta buscar por e-mail
+          // 2) tenta por e-mail
           const qRef = query(
             collection(db, "users"),
             where("email", "==", user.email)
