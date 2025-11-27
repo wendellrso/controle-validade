@@ -5,13 +5,15 @@
   <title>Controle de Validade • Palato</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <link rel="icon" href="./palato-logo.png" />
+  <link rel="icon" href="palato-logo.png" />
 
   <!-- SheetJS para Excel -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <!-- jsPDF para PDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+  <!-- HTML5 QRCode (leitor de código de barras) -->
+  <script src="https://unpkg.com/html5-qrcode@2.3.10/html5-qrcode.min.js"></script>
 
   <style>
     :root {
@@ -210,6 +212,7 @@
       background: #020617;
       color: #e5e7eb;
       font-size: 18px;
+      display: flex;
       align-items: center;
       justify-content: center;
       margin-right: 4px;
@@ -672,7 +675,6 @@
       background: #000;
     }
 
-    /* ===== RESPONSIVO ===== */
     @media (max-width: 960px) {
       .side-menu {
         position: fixed;
@@ -682,21 +684,31 @@
         width: 260px;
         padding: 20px 16px;
         transition: left 0.2s ease;
+        z-index: 40;
       }
+
       .side-menu.open {
         left: 0;
       }
+
       .header-menu-toggle {
         display: flex;
       }
+
       .app-main {
         flex-direction: column;
       }
+
       .app-content {
         padding: 16px;
       }
 
-      /* Ajuste das cards e botões no celular */
+      /* Novo lançamento em 1 coluna no celular */
+      .grid-two-columns {
+        grid-template-columns: 1fr;
+      }
+
+      /* Ajuste de cabeçalho das cards e botões no celular */
       .card-header {
         flex-direction: column;
         align-items: flex-start;
@@ -733,7 +745,7 @@
   <div id="loginView">
     <div class="login-card">
       <div class="login-logo">
-        <img src="./palato-logo.png" alt="Palato" />
+        <img src="palato-logo.png" alt="Palato" />
       </div>
       <div class="login-title">Controle de Validade</div>
       <div class="login-subtitle">Acesso restrito a colaboradores autorizados.</div>
@@ -762,7 +774,7 @@
     <header class="app-header">
       <div class="app-header-left">
         <button id="btnToggleMenu" class="header-menu-toggle">☰</button>
-        <img src="./palato-logo.png" alt="Palato" class="logo-palato" />
+        <img src="palato-logo.png" alt="Palato" class="logo-palato" />
         <div class="app-title">
           <h1>CONTROLE DE VALIDADE</h1>
           <span>Multi-loja • Lote • Ofertas</span>
@@ -1088,8 +1100,7 @@
       addDoc,
       query,
       orderBy,
-      serverTimestamp,
-      where
+      serverTimestamp
     } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
 
     // ===== CONFIG FIREBASE =====
@@ -1167,8 +1178,6 @@
     const btnCloseScanner = document.getElementById("btnCloseScanner");
     let html5QrCode = null;
     let scannerAtivo = false;
-    let Html5QrcodeClass = null;
-    let Html5QrcodeFormats = null;
 
     // ===== ESTADO =====
     let usuarioAtual = null;
@@ -1264,7 +1273,7 @@
         perfilAtual === "admin"
           ? "Perfil: admin"
           : perfilAtual === "gerente"
-          ? `Perfil: gerente${perfilLojaAtual ? " (" + perfilLojaAtual + ")" : ""}`
+          ? `Perfil: gerente ${perfilLojaAtual ? " (" + perfilLojaAtual + ")" : ""}`
           : "Perfil: repositor";
 
       userBox.innerHTML = `
@@ -1308,61 +1317,23 @@
     // ===== PERFIL / USUÁRIO FIRESTORE =====
     async function carregarOuCriarPerfilUsuario(user) {
       const ref = doc(db, "usuarios", user.uid);
-      let tipo = "repositor";
-      let loja = "";
-
-      let snap = await getDoc(ref);
-
-      if (!snap.exists()) {
-        // tenta reaproveitar usuário criado manualmente (mesmo e-mail)
-        const q = query(collection(db, "usuarios"), where("email", "==", user.email));
-        const qSnap = await getDocs(q);
-
-        if (!qSnap.empty) {
-          const docExist = qSnap.docs[0];
-          const dados = docExist.data();
-          tipo = dados.tipo || "repositor";
-          loja = dados.loja || "";
-
-          await setDoc(
-            ref,
-            {
-              email: user.email,
-              nome: dados.nome || user.displayName || "",
-              tipo,
-              loja,
-              criadoEm: dados.criadoEm || serverTimestamp()
-            },
-            { merge: true }
-          );
-
-          // remove registros antigos com o mesmo e-mail (ids aleatórios)
-          qSnap.docs.forEach((d) => {
-            if (d.id !== user.uid) {
-              deleteDoc(d.ref);
-            }
-          });
-        } else {
-          await setDoc(ref, {
-            email: user.email,
-            nome: user.displayName || "",
-            tipo,
-            loja,
-            criadoEm: serverTimestamp()
-          });
-        }
-
-        snap = await getDoc(ref);
-      }
+      const snap = await getDoc(ref);
 
       if (snap.exists()) {
         const data = snap.data();
-        tipo = data.tipo || tipo;
-        loja = data.loja || loja;
+        perfilAtual = data.tipo || "repositor";
+        perfilLojaAtual = data.loja || "";
+      } else {
+        await setDoc(ref, {
+          email: user.email,
+          nome: user.displayName || "",
+          tipo: "repositor",
+          loja: "",
+          criadoEm: serverTimestamp()
+        });
+        perfilAtual = "repositor";
+        perfilLojaAtual = "";
       }
-
-      perfilAtual = tipo;
-      perfilLojaAtual = loja;
 
       if (perfilAtual === "admin") {
         menuUsuarios.style.display = "flex";
@@ -1846,32 +1817,7 @@
     btnMarcarTodosOferta.addEventListener("click", async () => {
       if (!confirm("Marcar todos os itens filtrados como 'Lançado'?")) return;
 
-      const hoje = new Date();
-      hoje.setHours(0, 0, 0, 0);
-
-      // usa os mesmos filtros atuais
-      const filtroStatusVal = filtroStatus.value;
-      const filtroDepVal = filtroDepartamento.value;
-
-      const itensFiltrados = lancamentosCache.filter((item) => {
-        if (item.validade) {
-          const dt = new Date(item.validade);
-          dt.setHours(0, 0, 0, 0);
-          const dias = Math.round((dt - hoje) / (1000 * 60 * 60 * 24));
-
-          if (filtroStatusVal === "7" && !(dias >= 0 && dias <= 7)) return false;
-          if (filtroStatusVal === "15" && !(dias >= 8 && dias <= 15)) return false;
-          if (filtroStatusVal === "30" && !(dias >= 16 && dias <= 30)) return false;
-          if (filtroStatusVal === "vencidos" && !(dias < 0)) return false;
-        } else if (filtroStatusVal !== "todos") {
-          return false;
-        }
-
-        if (filtroDepVal !== "todos" && item.departamento !== filtroDepVal) return false;
-        return true;
-      });
-
-      const promises = itensFiltrados.map((item) =>
+      const promises = lancamentosCache.map((item) =>
         updateDoc(doc(db, "lancamentos", item.id), { oferta: "lancado" })
       );
       try {
@@ -2010,40 +1956,36 @@
       }
     });
 
-    // ===== SCANNER (import dinâmico + câmera traseira) =====
-    async function ensureScannerLib() {
-      if (Html5QrcodeClass && Html5QrcodeFormats) return;
-      try {
-        const mod = await import(
-          "https://unpkg.com/html5-qrcode@2.3.10/esm/html5-qrcode.min.js"
-        );
-        Html5QrcodeClass = mod.Html5Qrcode;
-        Html5QrcodeFormats = mod.Html5QrcodeSupportedFormats;
-      } catch (err) {
-        console.error(err);
-        showAlert("Leitor de código de barras não carregou corretamente.");
-      }
+    // ===== SCANNER (câmera traseira) =====
+    function scannerDisponivel() {
+      return (
+        typeof Html5Qrcode !== "undefined" &&
+        typeof Html5QrcodeSupportedFormats !== "undefined"
+      );
     }
 
     async function abrirScanner() {
-      await ensureScannerLib();
-      if (!Html5QrcodeClass || !Html5QrcodeFormats) return;
+      if (!scannerDisponivel()) {
+        showAlert("Leitor de código de barras não carregou corretamente.");
+        return;
+      }
 
       scannerModal.classList.add("show");
 
       if (html5QrCode) return;
 
-      html5QrCode = new Html5QrcodeClass("qr-reader");
+      html5QrCode = new Html5Qrcode("qr-reader");
       scannerAtivo = true;
 
       try {
-        const devices = await Html5QrcodeClass.getCameras();
+        const devices = await Html5Qrcode.getCameras();
         if (!devices || devices.length === 0) {
           showAlert("Nenhuma câmera encontrada.");
           fecharScanner();
           return;
         }
 
+        // tenta usar câmera traseira
         let cameraId = devices[0].id;
         const traseira = devices.find((d) =>
           d.label.toLowerCase().includes("back") ||
@@ -2055,7 +1997,7 @@
         const config = {
           fps: 10,
           qrbox: 250,
-          formatsToSupport: [Html5QrcodeFormats.EAN_13]
+          formatsToSupport: [Html5QrcodeSupportedFormats.EAN_13]
         };
 
         await html5QrCode.start(
