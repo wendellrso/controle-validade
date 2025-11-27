@@ -5,1168 +5,1819 @@
   <title>Controle de Validade</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- Tailwind -->
-  <script src="https://cdn.tailwindcss.com"></script>
-
-  <!-- Ícones -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.1.0/fonts/remixicon.css" />
-
-  <!-- SheetJS para Excel -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-
-  <!-- jsPDF + autoTable para PDF -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
-
-  <!-- Leitor de código de barras -->
-  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-
+  <!-- Estilos básicos -->
   <style>
-    body { background-color: #0f172a; }
-    .blur-bg { backdrop-filter: blur(10px); }
-    .tag {
-      font-size: 0.75rem;
-      padding: 0.15rem 0.5rem;
-      border-radius: 999px;
+    :root {
+      --bg-main: #050816;
+      --bg-card: #0b1120;
+      --bg-card-soft: #111827;
+      --accent: #22c55e;
+      --accent-soft: rgba(34, 197, 94, 0.15);
+      --accent-strong: #16a34a;
+      --text-main: #f9fafb;
+      --text-muted: #9ca3af;
+      --danger: #f97373;
+      --danger-soft: rgba(248, 113, 113, 0.13);
+      --warning: #facc15;
+      --warning-soft: rgba(250, 204, 21, 0.13);
+      --chip-bg: #111827;
+      --chip-border: #1f2937;
+      --chip-text: #e5e7eb;
+      --border-soft: #1f2937;
+      --input-bg: #020617;
+      --input-border: #1e293b;
+      --input-border-focus: #22c55e;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+      background: radial-gradient(circle at top, #020617 0, #020617 40%, #020617 100%);
+      color: var(--text-main);
+    }
+
+    .app-shell {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      padding: 14px 32px;
+      background: rgba(2, 6, 23, 0.98);
+      border-bottom: 1px solid #020617;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(12px);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 12px;
+      background: radial-gradient(circle at 30% 20%, #4ade80, #16a34a);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      color: #022c22;
+      box-shadow: 0 0 0 1px rgba(22, 163, 74, 0.5),
+        0 18px 35px rgba(22, 163, 74, 0.45);
+      font-size: 14px;
+    }
+
+    .brand-text-title {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    .brand-text-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .user-info {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 2px;
+      font-size: 13px;
+    }
+
+    .user-info strong {
       font-weight: 600;
+    }
+
+    .user-role {
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+
+    .link-logout {
+      font-size: 12px;
+      color: #f97373;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    main {
+      flex: 1;
+      padding: 24px 32px 40px;
+      max-width: 1280px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(0, 2fr);
+      gap: 20px;
+      align-items: flex-start;
+    }
+
+    @media (max-width: 960px) {
+      main {
+        padding: 16px;
+      }
+      .grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      header {
+        padding: 10px 16px;
+      }
+    }
+
+    .card {
+      background: radial-gradient(circle at top left, #020617 0, #020617 45%, #020617 100%);
+      border-radius: 18px;
+      padding: 18px 18px 20px;
+      border: 1px solid rgba(15, 23, 42, 0.95);
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.9);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: -60%;
+      opacity: 0.08;
+      background: radial-gradient(circle at top left, #22c55e 0, transparent 55%);
+      pointer-events: none;
+    }
+
+    .card-content {
+      position: relative;
+      z-index: 1;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      gap: 8px;
+    }
+
+    .card-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    .card-title-icon {
+      width: 24px;
+      height: 24px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      border: 1px solid rgba(34, 197, 94, 0.35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      color: var(--accent);
+    }
+
+    .card-subtitle {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .badge-soft {
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(31, 41, 55, 0.9);
+      font-size: 11px;
+      color: var(--text-muted);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .badge-soft-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: var(--accent);
+      box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.2);
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px 14px;
+      margin-top: 4px;
+    }
+
+    @media (max-width: 960px) {
+      .form-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 12px;
+    }
+
+    label {
+      color: var(--text-muted);
+    }
+
+    .required-star {
+      color: #f97373;
+      margin-left: 3px;
+    }
+
+    input,
+    select,
+    textarea {
+      background: var(--input-bg);
+      border-radius: 10px;
+      border: 1px solid var(--input-border);
+      padding: 8px 10px;
+      color: var(--text-main);
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s, background-color 0.15s,
+        transform 0.08s ease-out;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: var(--input-border-focus);
+      box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.4);
+      background: #020617;
+      transform: translateY(-0.5px);
+    }
+
+    input[readonly] {
+      opacity: 0.7;
+      cursor: default;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 60px;
+      max-height: 120px;
+    }
+
+    .input-inline {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border-radius: 999px;
+      border: none;
+      padding: 7px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: transform 0.08s ease-out, box-shadow 0.12s ease-out,
+        background-color 0.12s ease-out, opacity 0.12s;
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+      color: #022c22;
+      box-shadow: 0 14px 30px rgba(22, 163, 74, 0.45);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 18px 35px rgba(22, 163, 74, 0.55);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+      box-shadow: 0 10px 24px rgba(22, 163, 74, 0.4);
+    }
+
+    .btn-soft {
+      background: rgba(15, 23, 42, 0.95);
+      color: var(--text-main);
+      border: 1px solid rgba(31, 41, 55, 0.9);
+    }
+
+    .btn-soft:hover {
+      background: #020617;
+      transform: translateY(-1px);
+    }
+
+    .btn-danger-soft {
+      background: var(--danger-soft);
+      color: var(--danger);
+      border: 1px solid rgba(248, 113, 113, 0.45);
+    }
+
+    .btn-icon {
+      font-size: 14px;
+    }
+
+    .btn-sm {
+      padding: 5px 11px;
+      font-size: 12px;
+      border-radius: 999px;
+    }
+
+    .btn-xs {
+      padding: 3px 9px;
+      font-size: 11px;
+      border-radius: 999px;
+    }
+
+    .section-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .divider {
+      margin: 12px 0 10px;
+      height: 1px;
+      background: radial-gradient(
+        circle at left,
+        rgba(55, 65, 81, 0.7),
+        transparent 60%
+      );
+    }
+
+    .tabela-wrapper {
+      margin-top: 10px;
+      border-radius: 14px;
+      border: 1px solid rgba(31, 41, 55, 0.95);
+      overflow: hidden;
+      background: #020617;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    thead {
+      background: radial-gradient(circle at top, #020617 0, #020617 60%);
+    }
+
+    th,
+    td {
+      padding: 7px 10px;
+      border-bottom: 1px solid rgba(15, 23, 42, 0.95);
+      text-align: left;
+      vertical-align: middle;
+    }
+
+    th {
+      font-weight: 500;
+      color: var(--text-muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      background: rgba(15, 23, 42, 0.95);
+    }
+
+    tbody tr:nth-child(even) {
+      background: rgba(15, 23, 42, 0.65);
+    }
+
+    tbody tr:hover {
+      background: rgba(15, 23, 42, 0.95);
+    }
+
+    .tag-status {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3px 9px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      font-size: 11px;
+      font-weight: 500;
+      background: var(--chip-bg);
+      color: var(--chip-text);
+    }
+
+    .tag-status-danger {
+      border-color: rgba(248, 113, 113, 0.7);
+      background: var(--danger-soft);
+      color: #fecaca;
+    }
+
+    .tag-status-warning {
+      border-color: rgba(250, 204, 21, 0.65);
+      background: var(--warning-soft);
+      color: #fef9c3;
+    }
+
+    .tag-oferta {
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      background: var(--chip-bg);
+      color: var(--chip-text);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 88px;
+    }
+
+    .tag-oferta-lancado {
+      border-color: rgba(34, 197, 94, 0.8);
+      background: var(--accent-soft);
+      color: #bbf7d0;
+    }
+
+    .checkbox-flag {
+      width: 15px;
+      height: 15px;
+    }
+
+    .table-header-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .filters-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .select-pill {
+      background: rgba(15, 23, 42, 0.95);
+      border-radius: 999px;
+      border: 1px solid rgba(31, 41, 55, 0.9);
+      padding: 4px 9px;
+      color: var(--text-main);
+      font-size: 12px;
+    }
+
+    .select-pill select {
+      background: transparent;
+      border: none;
+      color: inherit;
+      font-size: inherit;
+      padding: 0 2px;
+    }
+
+    .select-pill select:focus {
+      outline: none;
+      box-shadow: none;
+      border: none;
+    }
+
+    .text-right {
+      text-align: right;
+    }
+
+    .muted {
+      color: var(--text-muted);
+      font-size: 11px;
+    }
+
+    .total-itens {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-align: right;
+      padding: 4px 4px 0 0;
+    }
+
+    /* Status / Oferta colunas com mais espaço */
+    .col-status,
+    .col-oferta {
+      min-width: 120px;
+    }
+
+    /* Login */
+    .login-wrapper {
+      max-width: 380px;
+      margin: 60px auto;
+      background: #020617;
+      border-radius: 18px;
+      padding: 20px 20px 22px;
+      border: 1px solid rgba(15, 23, 42, 0.95);
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.9);
+    }
+
+    .login-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .login-title h1 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .login-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 14px;
+    }
+
+    .login-divider {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 12px 0;
+    }
+
+    .login-divider-line {
+      flex: 1;
+      height: 1px;
+      background: rgba(30, 64, 175, 0.6);
+    }
+
+    .login-divider-text {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+    }
+
+    .login-footer {
+      margin-top: 10px;
+      font-size: 11px;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    .alert {
+      font-size: 12px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      margin-bottom: 10px;
+    }
+
+    .alert-error {
+      background: var(--danger-soft);
+      border: 1px solid rgba(248, 113, 113, 0.5);
+      color: #fecaca;
+    }
+
+    .alert-info {
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(55, 65, 81, 0.9);
+      color: var(--text-muted);
+    }
+
+    /* Scanner modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.85);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+    }
+
+    .modal {
+      background: #020617;
+      border-radius: 16px;
+      padding: 16px 16px 18px;
+      border: 1px solid rgba(31, 41, 55, 0.95);
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.7);
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .modal-header h2 {
+      margin: 0;
+      font-size: 15px;
+    }
+
+    .modal-body {
+      font-size: 13px;
+    }
+
+    .scanner-container {
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid rgba(31, 41, 55, 0.9);
+      margin-top: 10px;
+      background: #020617;
+    }
+
+    #reader {
+      width: 100%;
     }
   </style>
 </head>
-<body class="text-slate-100 min-h-screen">
-
-  <!-- Navbar -->
-  <header class="bg-slate-900/80 border-b border-slate-700 sticky top-0 z-20 blur-bg">
-    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <div class="w-8 h-8 rounded-xl bg-emerald-500 flex items-center justify-center font-bold text-slate-900">
-          CV
-        </div>
-        <div>
-          <h1 class="text-lg font-semibold">Controle de Validade</h1>
-          <p class="text-xs text-slate-400">Multi-loja • Acesso por perfil</p>
-        </div>
+<body>
+<div class="app-shell">
+  <header id="app-header" style="display:none;">
+    <div class="brand">
+      <div class="brand-icon">CV</div>
+      <div>
+        <div class="brand-text-title">Controle de Validade</div>
+        <div class="brand-text-sub">Multi-loja • Acesso por perfil</div>
       </div>
-      <div id="userInfo" class="text-right text-xs hidden">
-        <div id="userName" class="font-semibold"></div>
-        <div id="userRole" class="text-slate-400"></div>
-        <button id="logoutBtn" class="mt-1 text-[11px] text-red-400 hover:text-red-300">
-          Sair
-        </button>
-      </div>
+    </div>
+    <div class="user-info">
+      <div><strong id="headerUserName">Usuário</strong></div>
+      <div class="user-role" id="headerUserRole">Perfil</div>
+      <a class="link-logout" id="btnLogout">Sair</a>
     </div>
   </header>
 
-  <main class="max-w-6xl mx-auto px-4 py-6">
-
-    <!-- Tela de login -->
-    <section id="loginSection" class="max-w-md mx-auto">
-      <div class="bg-slate-900/80 border border-slate-700 rounded-2xl p-6 shadow-xl">
-        <h2 class="text-xl font-semibold mb-1">Entrar</h2>
-        <p class="text-sm text-slate-400 mb-4">
-          Acesse o Controle de Validade com seu e-mail corporativo.
-        </p>
-
-        <form id="loginForm" class="space-y-3">
+  <main>
+    <!-- LOGIN -->
+    <div id="login-view">
+      <div class="login-wrapper">
+        <div class="login-title">
+          <div class="brand-icon">CV</div>
           <div>
-            <label class="text-xs text-slate-300">E-mail</label>
-            <input id="emailInput" type="email" required
-              class="mt-1 w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+            <h1>Entrar</h1>
+            <div class="login-sub">Controle interno de validade de produtos</div>
           </div>
-          <div>
-            <label class="text-xs text-slate-300">Senha</label>
-            <input id="passwordInput" type="password" required
-              class="mt-1 w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
-          </div>
+        </div>
 
-          <button type="submit"
-            class="w-full mt-2 bg-emerald-500 hover:bg-emerald-400 text-slate-900 font-semibold py-2 rounded-xl text-sm flex items-center justify-center gap-2">
-            <i class="ri-mail-line text-base"></i> Entrar com e-mail
+        <div id="loginError" class="alert alert-error" style="display:none;"></div>
+
+        <div class="form-group">
+          <label for="loginEmail">E-mail</label>
+          <input type="email" id="loginEmail" placeholder="seu@email.com" />
+        </div>
+        <div class="form-group">
+          <label for="loginPassword">Senha</label>
+          <input type="password" id="loginPassword" placeholder="••••••••" />
+        </div>
+
+        <div style="margin-top:12px; display:flex; flex-direction:column; gap:8px;">
+          <button id="btnEmailLogin" class="btn btn-primary">
+            <span class="btn-icon">🔐</span> Entrar com e-mail
           </button>
-        </form>
-
-        <div class="mt-4 border-t border-slate-700 pt-4">
-          <button id="googleLoginBtn"
-            class="w-full border border-slate-600 hover:bg-slate-800 text-sm py-2 rounded-xl flex items-center justify-center gap-2">
-            <i class="ri-google-fill text-red-400"></i> Entrar com Google
+          <button id="btnGoogleLogin" class="btn btn-soft">
+            <span class="btn-icon">⚡</span> Entrar com Google
           </button>
         </div>
 
-        <p class="mt-4 text-[11px] text-slate-500">
-          A conta precisa ter um perfil cadastrado (admin, gerente ou repositor) na coleção
-          <span class="font-mono text-slate-300">users</span> do Firestore.
-        </p>
+        <div class="login-divider">
+          <div class="login-divider-line"></div>
+          <div class="login-divider-text">ou</div>
+          <div class="login-divider-line"></div>
+        </div>
 
-        <p id="loginError" class="mt-2 text-xs text-red-400 hidden"></p>
-      </div>
-    </section>
+        <div class="alert alert-info">
+          Para usar o app, solicite seu cadastro ao administrador.
+        </div>
 
-    <!-- App principal -->
-    <section id="appSection" class="hidden space-y-6">
-      <!-- Abas -->
-      <div
-        class="bg-slate-900/80 border border-slate-700 rounded-2xl p-3 flex flex-wrap gap-2 text-xs font-medium">
-        <button data-tab="cadastroTab"
-          class="tab-btn px-3 py-1.5 rounded-xl bg-emerald-500 text-slate-900 flex items-center gap-1">
-          <i class="ri-add-circle-line"></i> Cadastro
-        </button>
-        <button data-tab="itensTab"
-          class="tab-btn px-3 py-1.5 rounded-xl bg-slate-800 text-slate-200 flex items-center gap-1">
-          <i class="ri-database-2-line"></i> Itens cadastrados
-        </button>
-        <!-- Aba de administração (só admin enxerga) -->
-        <button id="adminTabBtn" data-tab="adminTab"
-          class="tab-btn px-3 py-1.5 rounded-xl bg-slate-800 text-slate-200 flex items-center gap-1 hidden">
-          <i class="ri-shield-user-line"></i> Administração de usuários
-        </button>
-      </div>
-
-      <!-- CADASTRO -->
-      <div id="cadastroTab" class="tab-panel space-y-4">
-        <div class="bg-slate-900/80 border border-slate-700 rounded-2xl p-4">
-          <h2 class="text-sm font-semibold mb-4 flex items-center gap-2">
-            <i class="ri-add-box-line text-emerald-400"></i> Cadastro de produto
-          </h2>
-
-          <form id="cadastroForm" class="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs">
-            <!-- Loja -->
-            <div>
-              <label class="block text-[11px] text-slate-300 mb-1">Loja</label>
-              <select id="lojaSelect" required
-                class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-xs">
-                <option value="">Selecione</option>
-                <option value="Ponta Verde">Ponta Verde</option>
-                <option value="Farol">Farol</option>
-                <option value="Praia">Praia</option>
-                <option value="Riomar">Riomar</option>
-              </select>
-            </div>
-
-            <!-- Data lançamento -->
-            <div>
-              <label class="block text-[11px] text-slate-300 mb-1">Data lançamento</label>
-              <input id="dataLancamentoInput" type="text" readonly
-                class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs text-slate-400" />
-            </div>
-
-            <!-- Departamento -->
-            <div>
-              <label class="block text-[11px] text-slate-300 mb-1">Departamento</label>
-              <select id="departamentoSelect" required
-                class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-xs">
-                <option value="">Selecione</option>
-                <option>Açougue</option>
-                <option>Adega</option>
-                <option>Bebidas</option>
-                <option>Mercearia Alimentos</option>
-                <option>Mercearia Não Alimentos</option>
-                <option>Perecíveis Processados</option>
-              </select>
-            </div>
-
-            <!-- Código de barras + scanner -->
-            <div>
-              <label class="block text-[11px] text-slate-300 mb-1">Cód. barras (números, máx. 13)</label>
-              <div class="flex gap-2">
-                <input id="codigoBarrasInput" required maxlength="13" inputmode="numeric" pattern="[0-9]{1,13}"
-                  class="flex-1 px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-xs" />
-                <button type="button" id="scanButton"
-                  class="px-3 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-xs flex items-center gap-1">
-                  <i class="ri-qr-scan-2-line text-emerald-400"></i>
-                </button>
-              </div>
-            </div>
-
-            <!-- Descrição -->
-            <div class="md:col-span-2">
-              <label class="block text-[11px] text-slate-300 mb-1">Descrição</label>
-              <input id="descricaoInput" required
-                class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-xs" />
-            </div>
-
-            <!-- Lote -->
-            <div>
-              <label class="block text-[11px] text-slate-300 mb-1">Lote</label>
-              <input id="loteInput"
-                class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs" />
-            </div>
-
-            <!-- Quantidade -->
-            <div>
-              <label class="block text-[11px] text-slate-300 mb-1">Quantidade</label>
-              <input id="quantidadeInput" type="number" min="1" required
-                class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-xs" />
-            </div>
-
-            <!-- Validade -->
-            <div>
-              <label class="block text-[11px] text-slate-300 mb-1">Validade</label>
-              <input id="validadeInput" type="date" required
-                class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-xs" />
-            </div>
-
-            <!-- Observação -->
-            <div class="md:col-span-4">
-              <label class="block text-[11px] text-slate-300 mb-1">Observação</label>
-              <textarea id="observacaoInput" rows="2"
-                class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs"></textarea>
-            </div>
-
-            <div class="md:col-span-4 flex justify-end mt-2">
-              <button type="submit"
-                class="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-900 font-semibold text-xs flex items-center gap-2">
-                <i class="ri-save-3-line"></i> Salvar item
-              </button>
-            </div>
-          </form>
+        <div class="login-footer">
+          Seu acesso é individual e os lançamentos ficam vinculados ao seu usuário
+          (apenas Admin vê tudo).
         </div>
       </div>
+    </div>
 
-      <!-- ITENS CADASTRADOS -->
-      <div id="itensTab" class="tab-panel hidden space-y-4">
-        <div class="bg-slate-900/80 border border-slate-700 rounded-2xl p-4 space-y-4">
-          <div class="flex flex-wrap gap-3 items-center justify-between">
-            <div>
-              <h2 class="text-sm font-semibold flex items-center gap-2">
-                <i class="ri-database-2-line text-emerald-400"></i> Itens cadastrados
-              </h2>
-              <p class="text-[11px] text-slate-400">
-                Filtros por status de vencimento e controle de oferta.
-              </p>
+    <!-- APP -->
+    <div id="app-view" style="display:none;">
+      <div class="grid">
+        <!-- CADASTRO -->
+        <div class="card">
+          <div class="card-content">
+            <div class="card-header">
+              <div>
+                <div class="card-title">
+                  <div class="card-title-icon">➕</div>
+                  Novo lançamento
+                </div>
+                <div class="card-subtitle">
+                  Registrar validade por loja, departamento e lote.
+                </div>
+              </div>
+              <span class="badge-soft">
+                <span class="badge-soft-dot"></span>
+                Cadastro rápido
+              </span>
             </div>
 
-            <div class="flex flex-wrap gap-2 text-[11px]">
-              <select id="statusFilter"
-                class="px-3 py-1.5 rounded-xl bg-slate-800 border border-slate-700">
-                <option value="todos">Todos</option>
-                <option value="7">Vence em até 7 dias</option>
-                <option value="15">Vence em até 15 dias</option>
-                <option value="30">Vence em até 30 dias</option>
-                <option value="vencidos">Vencidos</option>
-              </select>
+            <form id="cadastroForm">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label>Loja<span class="required-star">*</span></label>
+                  <select id="loja">
+                    <option value="">Selecione</option>
+                    <option value="Ponta Verde">Ponta Verde</option>
+                    <option value="Farol">Farol</option>
+                    <option value="Praia">Praia</option>
+                    <option value="Riomar">Riomar</option>
+                    <option value="CD">CD</option>
+                    <option value="Compras">Compras</option>
+                  </select>
+                </div>
 
-              <select id="departamentoFilter"
-                class="px-3 py-1.5 rounded-xl bg-slate-800 border border-slate-700">
-                <option value="todos">Todos departamentos</option>
-                <option>Açougue</option>
-                <option>Adega</option>
-                <option>Bebidas</option>
-                <option>Mercearia Alimentos</option>
-                <option>Mercearia Não Alimentos</option>
-                <option>Perecíveis Processados</option>
-              </select>
+                <div class="form-group">
+                  <label>Data lançamento</label>
+                  <input type="text" id="dataLancamento" readonly />
+                </div>
 
-              <button id="excelBtn"
-                class="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-900 font-semibold flex items-center gap-1">
-                <i class="ri-file-excel-2-line"></i> Excel
-              </button>
+                <div class="form-group">
+                  <label>Departamento<span class="required-star">*</span></label>
+                  <select id="departamento">
+                    <option value="">Selecione</option>
+                    <option value="Açougue">Açougue</option>
+                    <option value="Adega">Adega</option>
+                    <option value="Bebidas">Bebidas</option>
+                    <option value="Mercearia Alimentos">Mercearia Alimentos</option>
+                    <option value="Mercearia Não Alimentos">Mercearia Não Alimentos</option>
+                    <option value="Perecíveis Processados">Perecíveis Processados</option>
+                  </select>
+                </div>
 
-              <button id="pdfBtn"
-                class="px-3 py-1.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-100 font-semibold flex items-center gap-1">
-                <i class="ri-file-pdf-2-line text-red-400"></i> PDF
-              </button>
-            </div>
-          </div>
+                <div class="form-group">
+                  <label>Cód. barras (números, máx. 13)<span class="required-star">*</span></label>
+                  <div class="input-inline">
+                    <input
+                      type="text"
+                      id="codigoBarras"
+                      maxlength="13"
+                      inputmode="numeric"
+                      pattern="[0-9]{1,13}"
+                      placeholder="789..."
+                      style="flex:1;"
+                    />
+                    <button type="button" id="btnScan" class="btn btn-soft btn-sm">
+                      📷
+                    </button>
+                  </div>
+                </div>
 
-          <div class="flex items-center justify-between mb-2 text-[11px]">
-            <div class="flex items-center gap-2">
-              <button id="ofertaToggleAllBtn"
-                class="px-3 py-1.5 rounded-xl bg-slate-700 hover:bg-slate-600 flex items-center gap-1">
-                <i class="ri-megaphone-line text-amber-300"></i> Marcar todos como oferta
-              </button>
-            </div>
-            <div id="totalItensInfo" class="text-slate-400"></div>
-          </div>
+                <div class="form-group">
+                  <label>Descrição<span class="required-star">*</span></label>
+                  <input type="text" id="descricao" />
+                </div>
 
-          <div class="overflow-x-auto border border-slate-800 rounded-xl">
-            <table class="min-w-full text-[11px]" id="itensTable">
-              <thead class="bg-slate-800/80">
-                <tr>
-                  <th class="px-2 py-2 text-left">Loja</th>
-                  <th class="px-2 py-2 text-left">Data lançamento</th>
-                  <th class="px-2 py-2 text-left">Departamento</th>
-                  <th class="px-2 py-2 text-left">Cód. barras</th>
-                  <th class="px-2 py-2 text-left">Descrição</th>
-                  <th class="px-2 py-2 text-right">Qtd</th>
-                  <th class="px-2 py-2 text-left">Validade</th>
-                  <th class="px-2 py-2 text-left">Status</th>
-                  <th class="px-2 py-2 text-left">Oferta</th>
-                  <th class="px-2 py-2 text-left">Flag</th>
-                  <th class="px-2 py-2 text-left">Lote</th>
-                  <th class="px-2 py-2 text-left">Usuário</th>
-                  <th class="px-2 py-2 text-left">Lançado em</th>
-                  <th class="px-2 py-2 text-left">Obs.</th>
-                  <th class="px-2 py-2 text-right">Ações</th>
-                </tr>
-              </thead>
-              <tbody id="itensTbody" class="divide-y divide-slate-800">
-              </tbody>
-            </table>
-          </div>
+                <div class="form-group">
+                  <label>Lote</label>
+                  <input type="text" id="lote" />
+                </div>
 
-          <p id="semItensMsg" class="text-[11px] text-slate-400 mt-2 hidden">
-            Nenhum item encontrado com os filtros atuais.
-          </p>
-        </div>
-      </div>
+                <div class="form-group">
+                  <label>Quantidade<span class="required-star">*</span></label>
+                  <input type="number" id="quantidade" min="0" />
+                </div>
 
-      <!-- ADMINISTRAÇÃO DE USUÁRIOS (apenas admin) -->
-      <div id="adminTab" class="tab-panel hidden space-y-4">
-        <div class="bg-slate-900/80 border border-slate-700 rounded-2xl p-4 space-y-4">
-          <div class="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h2 class="text-sm font-semibold flex items-center gap-2">
-                <i class="ri-shield-user-line text-emerald-400"></i> Administração de usuários
-              </h2>
-              <p class="text-[11px] text-slate-400">
-                Gerencie perfis (admin, gerente, repositor) e lojas vinculadas.
-              </p>
-            </div>
-            <button id="reloadUsersBtn"
-              class="px-3 py-1.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-[11px] flex items-center gap-1">
-              <i class="ri-refresh-line"></i> Recarregar
-            </button>
-          </div>
+                <div class="form-group">
+                  <label>Validade<span class="required-star">*</span></label>
+                  <input type="date" id="validade" />
+                </div>
 
-          <!-- Formulário novo usuário -->
-          <div class="bg-slate-950/40 border border-slate-800 rounded-2xl p-3">
-            <h3 class="text-xs font-semibold mb-2 flex items-center gap-1">
-              <i class="ri-user-add-line text-emerald-400"></i> Cadastrar novo usuário
-            </h3>
-            <form id="newUserForm" class="grid grid-cols-1 md:grid-cols-4 gap-3 text-[11px]">
-              <div>
-                <label class="block mb-1 text-slate-300">Nome</label>
-                <input id="newUserName" type="text" required
-                  class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700" />
+                <div class="form-group" style="grid-column:1 / -1;">
+                  <label>Observação</label>
+                  <textarea id="observacao" placeholder="Lote em oferta, ponto extra, etc."></textarea>
+                </div>
               </div>
-              <div>
-                <label class="block mb-1 text-slate-300">E-mail</label>
-                <input id="newUserEmail" type="email" required
-                  class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700" />
-              </div>
-              <div>
-                <label class="block mb-1 text-slate-300">Perfil</label>
-                <select id="newUserRole" required
-                  class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700">
-                  <option value="repositor">Repositor</option>
-                  <option value="gerente">Gerente</option>
-                  <option value="admin">Admin</option>
-                </select>
-              </div>
-              <div>
-                <label class="block mb-1 text-slate-300">Loja</label>
-                <select id="newUserLoja"
-                  class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700">
-                  <option value="">Nenhuma</option>
-                  <option value="Ponta Verde">Ponta Verde</option>
-                  <option value="Farol">Farol</option>
-                  <option value="Praia">Praia</option>
-                  <option value="Riomar">Riomar</option>
-                  <option value="Compras">Compras</option>
-                </select>
-              </div>
-              <div class="md:col-span-4 flex justify-end">
-                <button type="submit"
-                  class="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-900 font-semibold text-xs flex items-center gap-1">
-                  <i class="ri-save-3-line"></i> Salvar usuário
+
+              <div style="display:flex; justify-content:flex-end; margin-top:16px;">
+                <button type="submit" class="btn btn-primary">
+                  <span class="btn-icon">💾</span> Salvar lançamento
                 </button>
               </div>
             </form>
           </div>
+        </div>
 
-          <!-- Tabela usuários -->
-          <div class="overflow-x-auto border border-slate-800 rounded-xl">
-            <table class="min-w-full text-[11px]">
-              <thead class="bg-slate-800/80">
+        <!-- ITENS CADASTRADOS -->
+        <div class="card">
+          <div class="card-content">
+            <div class="card-header">
+              <div>
+                <div class="card-title">
+                  <div class="card-title-icon">📋</div>
+                  Itens cadastrados
+                </div>
+                <div class="card-subtitle">
+                  Filtros por status de vencimento e controle de oferta.
+                </div>
+              </div>
+              <div class="section-actions">
+                <button id="btnMarcarTodosOferta" class="btn btn-soft btn-sm">
+                  <span class="btn-icon">📣</span> Marcar todos como oferta
+                </button>
+                <button id="btnExportExcel" class="btn btn-soft btn-sm">
+                  📊 Excel
+                </button>
+                <button id="btnExportPdf" class="btn btn-soft btn-sm">
+                  📄 PDF
+                </button>
+              </div>
+            </div>
+
+            <div class="table-header-actions">
+              <div class="filters-group">
+                <span class="muted">Filtros:</span>
+                <div class="select-pill">
+                  <select id="filtroVencimento">
+                    <option value="todos">Todos</option>
+                    <option value="7">Vence em 7 dias</option>
+                    <option value="15">Vence em 15 dias</option>
+                    <option value="30">Vence em 30 dias</option>
+                    <option value="vencidos">Vencidos</option>
+                  </select>
+                </div>
+                <div class="select-pill">
+                  <select id="filtroDepartamento">
+                    <option value="todos">Todos departamentos</option>
+                    <option value="Açougue">Açougue</option>
+                    <option value="Adega">Adega</option>
+                    <option value="Bebidas">Bebidas</option>
+                    <option value="Mercearia Alimentos">Mercearia Alimentos</option>
+                    <option value="Mercearia Não Alimentos">Mercearia Não Alimentos</option>
+                    <option value="Perecíveis Processados">Perecíveis Processados</option>
+                  </select>
+                </div>
+              </div>
+              <div class="total-itens" id="totalItens">Total de itens: 0</div>
+            </div>
+
+            <div class="tabela-wrapper">
+              <table id="tabelaCadastros">
+                <thead>
                 <tr>
-                  <th class="px-2 py-2 text-left">Nome</th>
-                  <th class="px-2 py-2 text-left">E-mail</th>
-                  <th class="px-2 py-2 text-left">Perfil</th>
-                  <th class="px-2 py-2 text-left">Loja</th>
-                  <th class="px-2 py-2 text-right">Ações</th>
+                  <th>Loja</th>
+                  <th>Data lançamento</th>
+                  <th>Departamento</th>
+                  <th>Cód. barras</th>
+                  <th>Descrição</th>
+                  <th>Qtd</th>
+                  <th>Validade</th>
+                  <th class="col-status">Status</th>
+                  <th class="col-oferta">Oferta</th>
+                  <th>Flag</th>
+                  <th>Lote</th>
+                  <th>Usuário</th>
+                  <th>Lançado em</th>
+                  <th>Obs.</th>
+                  <th class="text-right">Ações</th>
                 </tr>
-              </thead>
-              <tbody id="usersTbody" class="divide-y divide-slate-800"></tbody>
-            </table>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ADMIN USUÁRIOS (apenas Admin) -->
+      <div class="card" id="adminUsuariosCard" style="margin-top:18px; display:none;">
+        <div class="card-content">
+          <div class="card-header">
+            <div>
+              <div class="card-title">
+                <div class="card-title-icon">🛡️</div>
+                Administração de usuários
+              </div>
+              <div class="card-subtitle">
+                Gerencie perfis (admin, gerente, repositor) e lojas vinculadas.
+              </div>
+            </div>
+            <button id="btnReloadUsers" class="btn btn-soft btn-sm">
+              🔄 Recarregar
+            </button>
           </div>
 
-          <p id="noUsersMsg" class="text-[11px] text-slate-400 mt-2 hidden">
-            Nenhum usuário cadastrado na coleção <span class="font-mono">users</span>.
-          </p>
-        </div>
-      </div>
-    </section>
+          <div class="divider"></div>
 
-    <!-- Modal leitor código de barras -->
-    <div id="barcodeModal"
-      class="fixed inset-0 bg-black/60 flex items-center justify-center z-30 hidden">
-      <div class="bg-slate-900 border border-slate-700 rounded-2xl p-4 w-full max-w-sm">
-        <div class="flex items-center justify-between mb-2">
-          <h3 class="text-sm font-semibold flex items-center gap-1">
-            <i class="ri-qr-scan-2-line text-emerald-400"></i> Leitor de código de barras
-          </h3>
-          <button id="closeBarcodeModal" class="text-slate-400 text-lg">
-            <i class="ri-close-line"></i>
-          </button>
+          <div style="margin-bottom:12px;">
+            <strong style="font-size:13px;">Cadastrar novo usuário</strong>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Nome</label>
+              <input type="text" id="admNome" />
+            </div>
+            <div class="form-group">
+              <label>E-mail</label>
+              <input type="email" id="admEmail" />
+            </div>
+            <div class="form-group">
+              <label>Perfil</label>
+              <select id="admPerfil">
+                <option value="repositor">Repositor</option>
+                <option value="gerente">Gerente</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Loja</label>
+              <select id="admLoja">
+                <option value="">Nenhuma</option>
+                <option value="Ponta Verde">Ponta Verde</option>
+                <option value="Farol">Farol</option>
+                <option value="Praia">Praia</option>
+                <option value="Riomar">Riomar</option>
+                <option value="CD">CD</option>
+                <option value="Compras">Compras</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="margin-top:10px; display:flex; justify-content:flex-end;">
+            <button id="btnSalvarNovoUsuario" class="btn btn-primary btn-sm">
+              ➕ Salvar usuário
+            </button>
+          </div>
+
+          <div class="divider" style="margin-top:14px;"></div>
+
+          <table style="margin-top:6px; font-size:12px;" id="tabelaUsuarios">
+            <thead>
+            <tr>
+              <th>Nome</th>
+              <th>E-mail</th>
+              <th>Perfil</th>
+              <th>Loja</th>
+              <th style="text-align:right;">Ações</th>
+            </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+
+          <div class="total-itens" id="totalUsuarios">Nenhum usuário cadastrado na coleção usuarios.</div>
         </div>
-        <p class="text-[11px] text-slate-400 mb-2">
-          Aponte a câmera para o código de barras. Ao ler, o código será preenchido automaticamente.
-        </p>
-        <div id="barcodeReader" class="w-full"></div>
       </div>
     </div>
-
   </main>
+</div>
 
-  <!-- Firebase + App -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
-    import {
-      getAuth,
-      signInWithEmailAndPassword,
-      signInWithPopup,
-      GoogleAuthProvider,
-      onAuthStateChanged,
-      signOut
-    } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
-    import {
-      getFirestore,
-      collection,
-      addDoc,
-      getDocs,
-      getDoc,
-      doc,
-      serverTimestamp,
-      updateDoc,
-      deleteDoc,
-      query,
-      where,
-      orderBy,
-      setDoc
-    } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+<!-- Modal scanner -->
+<div id="scannerModal" style="display:none;"></div>
 
-    // 🔥 CONFIG FIREBASE
-    const firebaseConfig = {
-      apiKey: "AIzaSyDa1z9LwlSHxwSTC974ci9RMEYdEiA_wEg",
-      authDomain: "controle-validade-fc108.firebaseapp.com",
-      projectId: "controle-validade-fc108",
-      storageBucket: "controle-validade-fc108.firebasestorage.app",
-      messagingSenderId: "737065688686",
-      appId: "1:737065688686:web:ed3e602baf64c1fb4f907f",
-      measurementId: "G-VJ8DMM47EN"
+<!-- libs externas -->
+<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js"></script>
+
+<!-- Firebase + lógica -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+  import {
+    getAuth,
+    onAuthStateChanged,
+    signOut,
+    signInWithEmailAndPassword,
+    GoogleAuthProvider,
+    signInWithPopup,
+  } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+  import {
+    getFirestore,
+    collection,
+    doc,
+    getDoc,
+    getDocs,
+    setDoc,
+    addDoc,
+    updateDoc,
+    deleteDoc,
+    query,
+    where,
+    orderBy,
+    serverTimestamp,
+  } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+  // === CONFIG FIREBASE DO SEU PROJETO ===
+  const firebaseConfig = {
+    apiKey: "AIzaSyDa1z9LwlSHxwSTC974ci9RMEYdEiA_wEg",
+    authDomain: "controle-validade-fc108.firebaseapp.com",
+    projectId: "controle-validade-fc108",
+    storageBucket: "controle-validade-fc108.firebasestorage.app",
+    messagingSenderId: "737065688686",
+    appId: "1:737065688686:web:ed3e602baf64c1fb4f907f",
+    measurementId: "G-VJ8DMM47EN",
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  let currentUserProfile = null;
+  let cadastrosCache = [];
+  let usersCache = [];
+  let html5QrCode = null;
+
+  // ======= LOGIN / AUTH =======
+  const loginView = document.getElementById("login-view");
+  const appView = document.getElementById("app-view");
+  const appHeader = document.getElementById("app-header");
+  const headerUserName = document.getElementById("headerUserName");
+  const headerUserRole = document.getElementById("headerUserRole");
+  const loginError = document.getElementById("loginError");
+
+  const loginEmail = document.getElementById("loginEmail");
+  const loginPassword = document.getElementById("loginPassword");
+  const btnEmailLogin = document.getElementById("btnEmailLogin");
+  const btnGoogleLogin = document.getElementById("btnGoogleLogin");
+  const btnLogout = document.getElementById("btnLogout");
+
+  function showError(msg) {
+    loginError.style.display = "block";
+    loginError.textContent = msg;
+  }
+
+  function clearError() {
+    loginError.style.display = "none";
+    loginError.textContent = "";
+  }
+
+  async function ensureUserProfile(user) {
+    if (!user) return null;
+    const userRef = doc(db, "usuarios", user.uid);
+    const snap = await getDoc(userRef);
+    if (!snap.exists()) {
+      // cria perfil padrão (repositor, sem loja)
+      const data = {
+        email: user.email,
+        nome: user.displayName || "",
+        tipo: "repositor",
+        loja: "",
+        criadoEm: serverTimestamp(),
+      };
+      await setDoc(userRef, data);
+      return data;
+    } else {
+      return snap.data();
+    }
+  }
+
+  async function loadUserProfile(user) {
+    if (!user) return null;
+    const userRef = doc(db, "usuarios", user.uid);
+    const snap = await getDoc(userRef);
+    if (!snap.exists()) {
+      return await ensureUserProfile(user);
+    }
+    return snap.data();
+  }
+
+  function translateRole(tipo) {
+    if (tipo === "admin") return "Admin";
+    if (tipo === "gerente") return "Gerente";
+    return "Repositor";
+  }
+
+  function updateHeader() {
+    if (!currentUserProfile) return;
+    headerUserName.textContent =
+      currentUserProfile.nome || auth.currentUser?.email || "Usuário";
+    headerUserRole.textContent = `Perfil: ${translateRole(
+      currentUserProfile.tipo
+    )}`;
+  }
+
+  function setLoggedInUI(isLogged) {
+    if (isLogged) {
+      loginView.style.display = "none";
+      appView.style.display = "block";
+      appHeader.style.display = "flex";
+    } else {
+      loginView.style.display = "block";
+      appView.style.display = "none";
+      appHeader.style.display = "none";
+    }
+  }
+
+  btnEmailLogin.addEventListener("click", async () => {
+    clearError();
+    const email = loginEmail.value.trim();
+    const pass = loginPassword.value.trim();
+    if (!email || !pass) {
+      showError("Informe e-mail e senha.");
+      return;
+    }
+    try {
+      const cred = await signInWithEmailAndPassword(auth, email, pass);
+      await ensureUserProfile(cred.user);
+    } catch (e) {
+      console.error(e);
+      showError("Erro ao entrar. Verifique as credenciais.");
+    }
+  });
+
+  const provider = new GoogleAuthProvider();
+  btnGoogleLogin.addEventListener("click", async () => {
+    clearError();
+    try {
+      const cred = await signInWithPopup(auth, provider);
+      await ensureUserProfile(cred.user);
+    } catch (e) {
+      console.error(e);
+      showError("Erro ao entrar com Google.");
+    }
+  });
+
+  btnLogout.addEventListener("click", async () => {
+    await signOut(auth);
+  });
+
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      currentUserProfile = null;
+      setLoggedInUI(false);
+      return;
+    }
+    currentUserProfile = await loadUserProfile(user);
+    setLoggedInUI(true);
+    updateHeader();
+    preencherDataLancamento();
+    await carregarCadastros();
+    await carregarUsuariosAdmin();
+    toggleAdminCard();
+  });
+
+  function toggleAdminCard() {
+    const card = document.getElementById("adminUsuariosCard");
+    if (currentUserProfile && currentUserProfile.tipo === "admin") {
+      card.style.display = "block";
+    } else {
+      card.style.display = "none";
+    }
+  }
+
+  // ======= FORM CADASTRO =======
+  const lojaInput = document.getElementById("loja");
+  const dataLancInput = document.getElementById("dataLancamento");
+  const departamentoInput = document.getElementById("departamento");
+  const codigoBarrasInput = document.getElementById("codigoBarras");
+  const descricaoInput = document.getElementById("descricao");
+  const loteInput = document.getElementById("lote");
+  const qtdInput = document.getElementById("quantidade");
+  const validadeInput = document.getElementById("validade");
+  const obsInput = document.getElementById("observacao");
+  const cadastroForm = document.getElementById("cadastroForm");
+
+  function preencherDataLancamento() {
+    const now = new Date();
+    const dia = String(now.getDate()).padStart(2, "0");
+    const mes = String(now.getMonth() + 1).padStart(2, "0");
+    const ano = now.getFullYear();
+    const hora = String(now.getHours()).padStart(2, "0");
+    const min = String(now.getMinutes()).padStart(2, "0");
+    dataLancInput.value = `${dia}/${mes}/${ano} ${hora}:${min}`;
+  }
+
+  function validarCodigoBarras(valor) {
+    if (!valor) return false;
+    if (!/^[0-9]+$/.test(valor)) return false;
+    if (valor.length > 13) return false;
+    return true;
+  }
+
+  cadastroForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!auth.currentUser || !currentUserProfile) {
+      alert("Faça login novamente.");
+      return;
+    }
+
+    const loja = lojaInput.value.trim();
+    const departamento = departamentoInput.value.trim();
+    const codigo = codigoBarrasInput.value.trim();
+    const descricao = descricaoInput.value.trim();
+    const lote = loteInput.value.trim();
+    const qtd = Number(qtdInput.value || "0");
+    const validade = validadeInput.value;
+    const obs = obsInput.value.trim();
+
+    if (!loja || !departamento || !codigo || !descricao || !validade) {
+      alert("Preencha todos os campos obrigatórios.");
+      return;
+    }
+    if (!validarCodigoBarras(codigo)) {
+      alert(
+        "Código de barras inválido. Use apenas números, até 13 dígitos."
+      );
+      return;
+    }
+
+    const docData = {
+      loja,
+      dataLancamentoTexto: dataLancInput.value,
+      dataLancamento: serverTimestamp(),
+      departamento,
+      codigoBarras: codigo,
+      descricao,
+      lote,
+      quantidade: qtd,
+      validade,
+      observacao: obs,
+      oferta: "Não Lançado",
+      flagOferta: false,
+      criadoPorUid: auth.currentUser.uid,
+      criadoPorNome: currentUserProfile.nome || auth.currentUser.email,
+      criadoEm: serverTimestamp(),
     };
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-    const googleProvider = new GoogleAuthProvider();
-
-    // 🔐 Estado global
-    let currentUser = null;
-    let currentRole = null; // admin | gerente | repositor
-    let currentLoja = null;
-    let html5QrCode = null;
-
-    // ⏱️ data hoje travada no cadastro
-    const dataLancamentoInput = document.getElementById("dataLancamentoInput");
-    const hoje = new Date();
-    const pad = (n) => (n < 10 ? "0" + n : n);
-    const dataHojeStr =
-      pad(hoje.getDate()) + "/" + pad(hoje.getMonth() + 1) + "/" + hoje.getFullYear();
-    dataLancamentoInput.value = dataHojeStr;
-
-    // ------------------ LOGIN ------------------ //
-    const loginSection = document.getElementById("loginSection");
-    const appSection = document.getElementById("appSection");
-    const loginForm = document.getElementById("loginForm");
-    const loginError = document.getElementById("loginError");
-    const googleLoginBtn = document.getElementById("googleLoginBtn");
-    const userInfo = document.getElementById("userInfo");
-    const userNameEl = document.getElementById("userName");
-    const userRoleEl = document.getElementById("userRole");
-    const logoutBtn = document.getElementById("logoutBtn");
-    const adminTabBtn = document.getElementById("adminTabBtn");
-
-    // 🔑 BUSCAR / CRIAR PERFIL (com override para compras.3076@gmail.com)
-    async function fetchUserRole(user) {
-      try {
-        // ✅ Override direto: esse e-mail SEMPRE é admin
-        if (user.email === "compras.3076@gmail.com") {
-          currentRole = "admin";
-          currentLoja = "Compras";
-
-          // garante que exista doc na coleção users para você também
-          const uidRef = doc(db, "users", user.uid);
-          const uidSnap = await getDoc(uidRef);
-          if (!uidSnap.exists()) {
-            await setDoc(uidRef, {
-              nome: user.displayName || "Wendell Oliveira",
-              email: user.email,
-              role: "admin",
-              loja: "Compras"
-            });
-          }
-          return;
-        }
-
-        let data = null;
-
-        // 1) tenta achar doc com id = uid
-        const uidRef = doc(db, "users", user.uid);
-        const uidSnap = await getDoc(uidRef);
-        if (uidSnap.exists()) {
-          data = uidSnap.data();
-        } else {
-          // 2) tenta por e-mail
-          const qRef = query(
-            collection(db, "users"),
-            where("email", "==", user.email)
-          );
-          const qSnap = await getDocs(qRef);
-          if (!qSnap.empty) {
-            data = qSnap.docs[0].data();
-          }
-        }
-
-        if (data) {
-          currentRole =
-            data.role || data.perfil || data.tipo || "repositor";
-          currentLoja = data.loja || null;
-        } else {
-          // 3) se não encontrou nada, cria doc automático com id = uid
-          await setDoc(doc(db, "users", user.uid), {
-            nome: user.displayName || "",
-            email: user.email,
-            role: "repositor",
-            loja: null
-          });
-          currentRole = "repositor";
-          currentLoja = null;
-        }
-      } catch (err) {
-        console.error("Erro ao buscar/criar perfil:", err);
-        currentRole = "repositor";
-        currentLoja = null;
-      }
+    try {
+      await addDoc(collection(db, "cadastros"), docData);
+      preencherDataLancamento();
+      codigoBarrasInput.value = "";
+      descricaoInput.value = "";
+      loteInput.value = "";
+      qtdInput.value = "";
+      validadeInput.value = "";
+      obsInput.value = "";
+      await carregarCadastros();
+    } catch (err) {
+      console.error(err);
+      alert("Erro ao salvar lançamento.");
     }
+  });
 
-    function updateUIAuth() {
-      if (currentUser) {
-        loginSection.classList.add("hidden");
-        appSection.classList.remove("hidden");
-        userInfo.classList.remove("hidden");
-        userNameEl.textContent = currentUser.displayName || currentUser.email;
-        userRoleEl.textContent = currentRole
-          ? `Perfil: ${currentRole}${currentLoja ? " • " + currentLoja : ""}`
-          : "Perfil: não definido";
+  // ======= CARREGAR CADASTROS (visibilidade por perfil) =======
+  const tabelaCadastrosBody = document.querySelector(
+    "#tabelaCadastros tbody"
+  );
+  const filtroVencimento = document.getElementById("filtroVencimento");
+  const filtroDepartamento = document.getElementById("filtroDepartamento");
+  const totalItensLabel = document.getElementById("totalItens");
 
-        // mostrar/ocultar aba admin
-        if (currentRole === "admin") {
-          adminTabBtn.classList.remove("hidden");
-        } else {
-          adminTabBtn.classList.add("hidden");
-        }
+  filtroVencimento.addEventListener("change", renderTabelaCadastros);
+  filtroDepartamento.addEventListener("change", renderTabelaCadastros);
 
-        loadItens();
-        if (currentRole === "admin") {
-          loadUsers();
-        }
-      } else {
-        loginSection.classList.remove("hidden");
-        appSection.classList.add("hidden");
-        userInfo.classList.add("hidden");
-      }
-    }
+  async function carregarCadastros() {
+    if (!auth.currentUser || !currentUserProfile) return;
 
-    loginForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      loginError.classList.add("hidden");
-      const email = document.getElementById("emailInput").value.trim();
-      const password = document.getElementById("passwordInput").value.trim();
-      try {
-        const cred = await signInWithEmailAndPassword(auth, email, password);
-        await fetchUserRole(cred.user);
-      } catch (err) {
-        console.error(err);
-        loginError.textContent = "Erro ao entrar. Verifique e-mail/senha.";
-        loginError.classList.remove("hidden");
-      }
-    });
+    let baseRef = collection(db, "cadastros");
+    let q;
 
-    googleLoginBtn.addEventListener("click", async () => {
-      loginError.classList.add("hidden");
-      try {
-        const result = await signInWithPopup(auth, googleProvider);
-        await fetchUserRole(result.user);
-      } catch (err) {
-        console.error(err);
-        loginError.textContent = "Erro ao entrar com Google.";
-        loginError.classList.remove("hidden");
-      }
-    });
-
-    logoutBtn.addEventListener("click", async () => {
-      await signOut(auth);
-    });
-
-    onAuthStateChanged(auth, async (user) => {
-      currentUser = user;
-      if (user) {
-        await fetchUserRole(user);
-      }
-      updateUIAuth();
-    });
-
-    // ------------------ ABAS ------------------ //
-    const tabButtons = document.querySelectorAll(".tab-btn");
-    const tabPanels = document.querySelectorAll(".tab-panel");
-    tabButtons.forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const tabId = btn.dataset.tab;
-        tabButtons.forEach((b) =>
-          b.classList.toggle("bg-emerald-500", b === btn)
-        );
-        tabButtons.forEach((b) =>
-          b.classList.toggle("text-slate-900", b === btn)
-        );
-        tabButtons.forEach((b) =>
-          b.classList.toggle("bg-slate-800", b !== btn)
-        );
-        tabPanels.forEach((panel) => {
-          panel.classList.toggle("hidden", panel.id !== tabId);
-        });
-
-        if (tabId === "adminTab" && currentRole === "admin") {
-          loadUsers();
-        }
-      });
-    });
-
-    // ------------------ CADASTRO ------------------ //
-    const cadastroForm = document.getElementById("cadastroForm");
-    const lojaSelect = document.getElementById("lojaSelect");
-    const departamentoSelect = document.getElementById("departamentoSelect");
-    const codigoBarrasInput = document.getElementById("codigoBarrasInput");
-    const descricaoInput = document.getElementById("descricaoInput");
-    const loteInput = document.getElementById("loteInput");
-    const quantidadeInput = document.getElementById("quantidadeInput");
-    const validadeInput = document.getElementById("validadeInput");
-    const observacaoInput = document.getElementById("observacaoInput");
-
-    cadastroForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      if (!currentUser) return;
-
-      const codigo = codigoBarrasInput.value.trim();
-      if (!/^[0-9]{1,13}$/.test(codigo)) {
-        alert("Código de barras deve ter apenas números e no máximo 13 dígitos.");
-        return;
-      }
-
-      try {
-        await addDoc(collection(db, "validadeItens"), {
-          loja: lojaSelect.value,
-          dataLancamentoTexto: dataLancamentoInput.value,
-          departamento: departamentoSelect.value,
-          codigoBarras: codigo,
-          descricao: descricaoInput.value.trim(),
-          lote: loteInput.value.trim(),
-          quantidade: Number(quantidadeInput.value),
-          validade: validadeInput.value,
-          observacao: observacaoInput.value.trim(),
-          createdAt: serverTimestamp(),
-          createdByUid: currentUser.uid,
-          createdByName: currentUser.displayName || currentUser.email,
-          ofertaStatus: "Não lançado"
-        });
-
-        cadastroForm.reset();
-        dataLancamentoInput.value = dataHojeStr;
-        alert("Item cadastrado com sucesso!");
-        loadItens();
-      } catch (err) {
-        console.error(err);
-        alert("Erro ao salvar item.");
-      }
-    });
-
-    // ------------------ LISTAGEM / FILTROS ------------------ //
-    const statusFilter = document.getElementById("statusFilter");
-    const departamentoFilter = document.getElementById("departamentoFilter");
-    const itensTbody = document.getElementById("itensTbody");
-    const semItensMsg = document.getElementById("semItensMsg");
-    const totalItensInfo = document.getElementById("totalItensInfo");
-
-    statusFilter.addEventListener("change", loadItens);
-    departamentoFilter.addEventListener("change", loadItens);
-
-    function calcStatus(validadeStr) {
-      const hoje = new Date();
-      const validade = new Date(validadeStr + "T00:00:00");
-      const diffMs = validade.getTime() - hoje.getTime();
-      const diffDias = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-      if (diffDias < 0) return { label: "Vencido", tipo: "vencidos" };
-      if (diffDias <= 7) return { label: `Vence em ${diffDias} dia(s)`, tipo: "7" };
-      if (diffDias <= 15) return { label: `Vence em ${diffDias} dia(s)`, tipo: "15" };
-      if (diffDias <= 30) return { label: `Vence em ${diffDias} dia(s)`, tipo: "30" };
-      return { label: `> 30 dias`, tipo: "ok" };
-    }
-
-    function statusClass(tipo) {
-      switch (tipo) {
-        case "vencidos":
-          return "bg-red-500/20 text-red-200 border border-red-400/60";
-        case "7":
-          return "bg-rose-500/20 text-rose-100 border border-rose-400/60";
-        case "15":
-          return "bg-amber-500/20 text-amber-100 border border-amber-400/60";
-        case "30":
-          return "bg-yellow-500/20 text-yellow-100 border border-yellow-400/60";
-        default:
-          return "bg-emerald-500/20 text-emerald-100 border border-emerald-400/60";
-      }
-    }
-
-    function ofertaClass(status) {
-      return status === "Lançado"
-        ? "bg-emerald-500/20 text-emerald-100 border border-emerald-400/60"
-        : "bg-slate-600/30 text-slate-200 border border-slate-500/80";
-    }
-
-    async function loadItens() {
-      if (!currentUser) return;
-
-      // 🔎 Regra de visibilidade:
-      // admin -> tudo
-      // gerente -> tudo da loja dele
-      // repositor -> sempre só o que ele cadastrou (com ou sem loja)
-      let qRef;
-
-      if (currentRole === "admin") {
-        qRef = query(
-          collection(db, "validadeItens"),
-          orderBy("validade", "asc")
-        );
-      } else if (currentRole === "gerente" && currentLoja) {
-        qRef = query(
-          collection(db, "validadeItens"),
-          where("loja", "==", currentLoja),
-          orderBy("validade", "asc")
-        );
-      } else if (currentRole === "repositor" && currentLoja) {
-        qRef = query(
-          collection(db, "validadeItens"),
-          where("createdByUid", "==", currentUser.uid),
-          where("loja", "==", currentLoja),
-          orderBy("validade", "asc")
-        );
-      } else if (currentRole === "repositor") {
-        // repositor sem loja definida -> vê apenas o que ele mesmo lançou
-        qRef = query(
-          collection(db, "validadeItens"),
-          where("createdByUid", "==", currentUser.uid),
-          orderBy("validade", "asc")
-        );
-      } else {
-        // fallback geral (por segurança)
-        qRef = query(
-          collection(db, "validadeItens"),
-          orderBy("validade", "asc")
-        );
-      }
-
-      const snap = await getDocs(qRef);
-      itensTbody.innerHTML = "";
-      let total = 0;
-
-      const statusFiltro = statusFilter.value;
-      const depFiltro = departamentoFilter.value;
-
-      snap.forEach((docSnap) => {
-        const d = docSnap.data();
-        const st = calcStatus(d.validade);
-        if (statusFiltro !== "todos" && st.tipo !== statusFiltro) return;
-        if (depFiltro !== "todos" && d.departamento !== depFiltro) return;
-
-        total++;
-
-        const ofertaStatus = d.ofertaStatus || "Não lançado";
-
-        const tr = document.createElement("tr");
-        tr.className = "hover:bg-slate-800/60";
-
-        // diff para controle de edição (24h)
-        let podeEditar = currentRole === "admin";
-        if (!podeEditar && currentRole === "repositor" && d.createdAt) {
-          const created = d.createdAt.toDate ? d.createdAt.toDate() : new Date(d.createdAt);
-          const diffHoras = (Date.now() - created.getTime()) / (1000 * 60 * 60);
-          if (diffHoras <= 24 && d.createdByUid === currentUser.uid) podeEditar = true;
-        }
-        if (!podeEditar && currentRole === "gerente") {
-          podeEditar = true;
-        }
-
-        const podeExcluir = currentRole === "admin";
-
-        const criadoEmTexto = d.createdAt?.toDate
-          ? formatDateTime(d.createdAt.toDate())
-          : "";
-
-        tr.innerHTML = `
-          <td class="px-2 py-1.5">${d.loja || ""}</td>
-          <td class="px-2 py-1.5 whitespace-nowrap">${d.dataLancamentoTexto || ""}</td>
-          <td class="px-2 py-1.5">${d.departamento || ""}</td>
-          <td class="px-2 py-1.5 whitespace-nowrap">${d.codigoBarras || ""}</td>
-          <td class="px-2 py-1.5">${d.descricao || ""}</td>
-          <td class="px-2 py-1.5 text-right">${d.quantidade || ""}</td>
-          <td class="px-2 py-1.5 whitespace-nowrap">${formatDate(d.validade)}</td>
-          <td class="px-2 py-1.5">
-            <span class="tag ${statusClass(st.tipo)}">${st.label}</span>
-          </td>
-          <td class="px-2 py-1.5">
-            <span class="tag oferta-tag ${ofertaClass(ofertaStatus)}">${ofertaStatus}</span>
-          </td>
-          <td class="px-2 py-1.5 text-center">
-            <input type="checkbox" class="oferta-toggle" ${ofertaStatus === "Lançado" ? "checked" : ""} />
-          </td>
-          <td class="px-2 py-1.5">${d.lote || ""}</td>
-          <td class="px-2 py-1.5 whitespace-nowrap">${d.createdByName || ""}</td>
-          <td class="px-2 py-1.5 whitespace-nowrap">${criadoEmTexto}</td>
-          <td class="px-2 py-1.5 max-w-[180px] truncate" title="${d.observacao || ""}">
-            ${d.observacao || ""}
-          </td>
-          <td class="px-2 py-1.5 text-right">
-            ${
-              podeEditar
-                ? `<button class="text-xs text-amber-300 hover:text-amber-200 mr-2 editar-btn">Editar</button>`
-                : ""
-            }
-            ${
-              podeExcluir
-                ? `<button class="text-xs text-red-400 hover:text-red-300 excluir-btn">Excluir</button>`
-                : ""
-            }
-          </td>
-        `;
-
-        const ofertaCheckbox = tr.querySelector(".oferta-toggle");
-        const ofertaTag = tr.querySelector(".oferta-tag");
-        ofertaCheckbox.addEventListener("change", async () => {
-          const novoStatus = ofertaCheckbox.checked ? "Lançado" : "Não lançado";
-          ofertaTag.textContent = novoStatus;
-          ofertaTag.className = "tag oferta-tag " + ofertaClass(novoStatus);
-          await updateDoc(doc(db, "validadeItens", docSnap.id), {
-            ofertaStatus: novoStatus
-          });
-        });
-
-        const excluirBtn = tr.querySelector(".excluir-btn");
-        if (excluirBtn) {
-          excluirBtn.addEventListener("click", async () => {
-            if (!confirm("Tem certeza que deseja excluir este item?")) return;
-            await deleteDoc(doc(db, "validadeItens", docSnap.id));
-            loadItens();
-          });
-        }
-
-        const editarBtn = tr.querySelector(".editar-btn");
-        if (editarBtn) {
-          editarBtn.addEventListener("click", () => {
-            lojaSelect.value = d.loja || "";
-            departamentoSelect.value = d.departamento || "";
-            codigoBarrasInput.value = d.codigoBarras || "";
-            descricaoInput.value = d.descricao || "";
-            loteInput.value = d.lote || "";
-            quantidadeInput.value = d.quantidade || "";
-            validadeInput.value = d.validade || "";
-            observacaoInput.value = d.observacao || "";
-            window.scrollTo({ top: 0, behavior: "smooth" });
-            alert("Edite os campos e salve como um novo lançamento. (Edição direta está simplificada.)");
-          });
-        }
-
-        itensTbody.appendChild(tr);
-      });
-
-      semItensMsg.classList.toggle("hidden", total > 0);
-      totalItensInfo.textContent = `Total de itens: ${total}`;
-    }
-
-    function formatDate(dateStr) {
-      if (!dateStr) return "";
-      const d = new Date(dateStr + "T00:00:00");
-      const pad = (n) => (n < 10 ? "0" + n : n);
-      return pad(d.getDate()) + "/" + pad(d.getMonth() + 1) + "/" + d.getFullYear();
-    }
-
-    function formatDateTime(date) {
-      const pad = (n) => (n < 10 ? "0" + n : n);
-      return (
-        pad(date.getDate()) +
-        "/" +
-        pad(date.getMonth() + 1) +
-        "/" +
-        date.getFullYear() +
-        " " +
-        pad(date.getHours()) +
-        ":" +
-        pad(date.getMinutes())
+    if (currentUserProfile.tipo === "admin") {
+      q = query(baseRef, orderBy("criadoEm", "desc"));
+    } else if (currentUserProfile.tipo === "gerente") {
+      q = query(
+        baseRef,
+        where("loja", "==", currentUserProfile.loja || ""),
+        orderBy("criadoEm", "desc")
+      );
+    } else {
+      // repositor: só o que ele lançou
+      q = query(
+        baseRef,
+        where("criadoPorUid", "==", auth.currentUser.uid),
+        orderBy("criadoEm", "desc")
       );
     }
 
-    // ------------------ EXCEL / PDF ------------------ //
-    const excelBtn = document.getElementById("excelBtn");
-    const pdfBtn = document.getElementById("pdfBtn");
+    const snap = await getDocs(q);
+    cadastrosCache = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    renderTabelaCadastros();
+  }
 
-    excelBtn.addEventListener("click", () => {
-      const table = document.getElementById("itensTable");
-      const wb = XLSX.utils.book_new();
-      const ws = XLSX.utils.table_to_sheet(table);
-      XLSX.utils.book_append_sheet(wb, ws, "Itens");
-      XLSX.writeFile(wb, "controle-validade.xlsx");
+  function calcularStatus(validadeStr) {
+    if (!validadeStr) return { label: "-", classe: "" };
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+
+    const [ano, mes, dia] = validadeStr.split("-");
+    const dataVal = new Date(Number(ano), Number(mes) - 1, Number(dia));
+    const diffMs = dataVal.getTime() - hoje.getTime();
+    const diffDias = Math.round(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffDias < 0) return { label: "Vencido", classe: "tag-status-danger" };
+    if (diffDias === 0)
+      return { label: "Vence hoje", classe: "tag-status-danger" };
+    if (diffDias <= 7)
+      return {
+        label: `Vence em ${diffDias} dia(s)`,
+        classe: "tag-status-danger",
+      };
+    if (diffDias <= 15)
+      return {
+        label: `Vence em ${diffDias} dia(s)`,
+        classe: "tag-status-warning",
+      };
+    if (diffDias <= 30)
+      return {
+        label: `Vence em ${diffDias} dia(s)`,
+        classe: "tag-status",
+      };
+    return { label: `Vence em ${diffDias} dia(s)`, classe: "tag-status" };
+  }
+
+  function aplicaFiltroVencimento(item) {
+    const filtro = filtroVencimento.value;
+    if (filtro === "todos") return true;
+
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+    const [ano, mes, dia] = item.validade.split("-");
+    const dataVal = new Date(Number(ano), Number(mes) - 1, Number(dia));
+    const diffDias = Math.round(
+      (dataVal.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24)
+    );
+
+    if (filtro === "vencidos") return diffDias < 0;
+    const limite = Number(filtro);
+    return diffDias >= 0 && diffDias <= limite;
+  }
+
+  function renderTabelaCadastros() {
+    tabelaCadastrosBody.innerHTML = "";
+    let lista = [...cadastrosCache];
+
+    // filtro depto
+    if (filtroDepartamento.value !== "todos") {
+      lista = lista.filter(
+        (it) => it.departamento === filtroDepartamento.value
+      );
+    }
+
+    // filtro vencimento
+    lista = lista.filter((it) => aplicaFiltroVencimento(it));
+
+    totalItensLabel.textContent = `Total de itens: ${lista.length}`;
+
+    for (const item of lista) {
+      const tr = document.createElement("tr");
+      const status = calcularStatus(item.validade);
+      const oferta = item.oferta || "Não Lançado";
+      const usuario = item.criadoPorNome || "-";
+
+      const dataLanc =
+        item.dataLancamentoTexto ||
+        (item.criadoEm?.toDate
+          ? formatarDataHora(item.criadoEm.toDate())
+          : "-");
+
+      tr.innerHTML = `
+        <td>${item.loja || ""}</td>
+        <td>${dataLanc}</td>
+        <td>${item.departamento || ""}</td>
+        <td>${item.codigoBarras || ""}</td>
+        <td>${item.descricao || ""}</td>
+        <td>${item.quantidade ?? ""}</td>
+        <td>${
+          item.validade
+            ? item.validade.split("-").reverse().join("/")
+            : ""
+        }</td>
+        <td class="col-status">
+          <span class="tag-status ${status.classe}">${status.label}</span>
+        </td>
+        <td class="col-oferta">
+          <button class="tag-oferta ${
+            oferta === "Lançado" ? "tag-oferta-lancado" : ""
+          }" data-id="${item.id}">
+            ${oferta}
+          </button>
+        </td>
+        <td>
+          <input type="checkbox" class="checkbox-flag" data-flag-id="${
+            item.id
+          }" ${item.flagOferta ? "checked" : ""} />
+        </td>
+        <td>${item.lote || ""}</td>
+        <td>${usuario}</td>
+        <td>${dataLanc}</td>
+        <td>${item.observacao || ""}</td>
+        <td class="text-right">
+          <button class="btn btn-soft btn-xs" data-editar-id="${
+            item.id
+          }">Editar</button>
+          ${
+            currentUserProfile &&
+            currentUserProfile.tipo === "admin"
+              ? `<button class="btn btn-danger-soft btn-xs" data-excluir-id="${item.id}">Excluir</button>`
+              : ""
+          }
+        </td>
+      `;
+      tabelaCadastrosBody.appendChild(tr);
+    }
+  }
+
+  function formatarDataHora(date) {
+    const dia = String(date.getDate()).padStart(2, "0");
+    const mes = String(date.getMonth() + 1).padStart(2, "0");
+    const ano = date.getFullYear();
+    const hora = String(date.getHours()).padStart(2, "0");
+    const min = String(date.getMinutes()).padStart(2, "0");
+    return `${dia}/${mes}/${ano} ${hora}:${min}`;
+  }
+
+  // Clique em oferta / flag / editar / excluir
+  tabelaCadastrosBody.addEventListener("click", async (e) => {
+    const ofertaBtn = e.target.closest(".tag-oferta");
+    if (ofertaBtn) {
+      const id = ofertaBtn.getAttribute("data-id");
+      const item = cadastrosCache.find((c) => c.id === id);
+      if (!item) return;
+      const novoStatus = item.oferta === "Lançado" ? "Não Lançado" : "Lançado";
+      await updateDoc(doc(db, "cadastros", id), { oferta: novoStatus });
+      item.oferta = novoStatus;
+      renderTabelaCadastros();
+      return;
+    }
+
+    const excluirId = e.target.getAttribute("data-excluir-id");
+    if (excluirId) {
+      if (!currentUserProfile || currentUserProfile.tipo !== "admin") return;
+      if (!confirm("Confirma excluir este lançamento?")) return;
+      await deleteDoc(doc(db, "cadastros", excluirId));
+      cadastrosCache = cadastrosCache.filter((c) => c.id !== excluirId);
+      renderTabelaCadastros();
+      return;
+    }
+
+    const editarId = e.target.getAttribute("data-editar-id");
+    if (editarId) {
+      alert("Edição de itens ainda não implementada nessa versão.");
+      return;
+    }
+  });
+
+  tabelaCadastrosBody.addEventListener("change", async (e) => {
+    const flagId = e.target.getAttribute("data-flag-id");
+    if (!flagId) return;
+    const checked = e.target.checked;
+    await updateDoc(doc(db, "cadastros", flagId), { flagOferta: checked });
+    const item = cadastrosCache.find((c) => c.id === flagId);
+    if (item) item.flagOferta = checked;
+  });
+
+  document
+    .getElementById("btnMarcarTodosOferta")
+    .addEventListener("click", async () => {
+      if (!cadastrosCache.length) return;
+      const confirmacao = confirm(
+        "Marcar todos os itens filtrados como oferta 'Lançado'?"
+      );
+      if (!confirmacao) return;
+
+      for (const item of cadastrosCache) {
+        await updateDoc(doc(db, "cadastros", item.id), { oferta: "Lançado" });
+        item.oferta = "Lançado";
+      }
+      renderTabelaCadastros();
     });
 
-    pdfBtn.addEventListener("click", () => {
-      const { jsPDF } = window.jspdf;
-      const docPdf = new jsPDF("l", "pt", "a4");
+  // ======= EXPORTAÇÕES =======
+  document
+    .getElementById("btnExportExcel")
+    .addEventListener("click", () => exportarExcel());
+  document
+    .getElementById("btnExportPdf")
+    .addEventListener("click", () => exportarPdf());
 
-      docPdf.setFontSize(14);
-      docPdf.text("Controle de Validade - Itens Cadastrados", 40, 40);
+  function getDadosFiltrados() {
+    let lista = [...cadastrosCache];
+    if (filtroDepartamento.value !== "todos") {
+      lista = lista.filter(
+        (it) => it.departamento === filtroDepartamento.value
+      );
+    }
+    lista = lista.filter((it) => aplicaFiltroVencimento(it));
+    return lista;
+  }
 
-      const head = [
+  function exportarExcel() {
+    const dados = getDadosFiltrados().map((item) => ({
+      Loja: item.loja || "",
+      "Data lançamento":
+        item.dataLancamentoTexto ||
+        (item.criadoEm?.toDate
+          ? formatarDataHora(item.criadoEm.toDate())
+          : ""),
+      Departamento: item.departamento || "",
+      "Cód. barras": item.codigoBarras || "",
+      Descrição: item.descricao || "",
+      Quantidade: item.quantidade ?? "",
+      Validade: item.validade
+        ? item.validade.split("-").reverse().join("/")
+        : "",
+      Status: calcularStatus(item.validade).label,
+      Oferta: item.oferta || "Não Lançado",
+      Flag: item.flagOferta ? "Sim" : "Não",
+      Lote: item.lote || "",
+      Usuário: item.criadoPorNome || "",
+      "Lançado em":
+        item.dataLancamentoTexto ||
+        (item.criadoEm?.toDate
+          ? formatarDataHora(item.criadoEm.toDate())
+          : ""),
+      Observação: item.observacao || "",
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(dados);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Validades");
+
+    XLSX.writeFile(wb, "controle-validade.xlsx");
+  }
+
+  function exportarPdf() {
+    const { jsPDF } = window.jspdf;
+    const docPdf = new jsPDF("l", "pt", "a4");
+
+    const dados = getDadosFiltrados().map((item) => [
+      item.loja || "",
+      item.dataLancamentoTexto ||
+        (item.criadoEm?.toDate
+          ? formatarDataHora(item.criadoEm.toDate())
+          : ""),
+      item.departamento || "",
+      item.codigoBarras || "",
+      item.descricao || "",
+      item.quantidade ?? "",
+      item.validade
+        ? item.validade.split("-").reverse().join("/")
+        : "",
+      calcularStatus(item.validade).label,
+      item.oferta || "Não Lançado",
+      item.flagOferta ? "Sim" : "Não",
+      item.lote || "",
+      item.criadoPorNome || "",
+    ]);
+
+    docPdf.setFontSize(12);
+    docPdf.text("Relatório - Controle de Validade", 40, 35);
+
+    docPdf.autoTable({
+      startY: 45,
+      head: [
         [
           "Loja",
-          "Data lançamento",
-          "Depto.",
-          "Cód. barras",
+          "Lançamento",
+          "Depto",
+          "Cód.",
           "Descrição",
           "Qtd",
           "Validade",
           "Status",
           "Oferta",
+          "Flag",
           "Lote",
           "Usuário",
-          "Lançado em",
-          "Obs."
-        ]
-      ];
-
-      const body = [];
-      document.querySelectorAll("#itensTbody tr").forEach((tr) => {
-        const tds = tr.querySelectorAll("td");
-        if (!tds.length) return;
-        body.push([
-          tds[0].innerText,
-          tds[1].innerText,
-          tds[2].innerText,
-          tds[3].innerText,
-          tds[4].innerText,
-          tds[5].innerText,
-          tds[6].innerText,
-          tds[7].innerText,
-          tds[8].innerText,
-          tds[10].innerText,
-          tds[11].innerText,
-          tds[12].innerText,
-          tds[13].innerText
-        ]);
-      });
-
-      docPdf.autoTable({
-        head,
-        body,
-        startY: 60,
-        styles: { fontSize: 7, cellPadding: 3 },
-        headStyles: { fillColor: [15, 23, 42], textColor: [248, 250, 252] },
-        alternateRowStyles: { fillColor: [30, 41, 59] },
-        bodyStyles: { textColor: [15, 23, 42] }
-      });
-
-      docPdf.save("controle-validade.pdf");
+        ],
+      ],
+      body: dados,
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [15, 23, 42] },
     });
 
-    // ------------------ OFERTA: SELECIONAR TODOS ------------------ //
-    const ofertaToggleAllBtn = document.getElementById("ofertaToggleAllBtn");
-    ofertaToggleAllBtn.addEventListener("click", async () => {
-      const checkboxes = document.querySelectorAll(".oferta-toggle");
-      if (!checkboxes.length) return;
+    docPdf.save("controle-validade.pdf");
+  }
 
-      const marcarComoLancado = Array.from(checkboxes).some((c) => !c.checked);
-      const novoStatus = marcarComoLancado ? "Lançado" : "Não lançado";
+  // ======= ADMIN USUÁRIOS =======
+  const adminCard = document.getElementById("adminUsuariosCard");
+  const tabelaUsuariosBody = document.querySelector(
+    "#tabelaUsuarios tbody"
+  );
+  const totalUsuariosLabel = document.getElementById("totalUsuarios");
 
-      const snap = await getDocs(collection(db, "validadeItens"));
-      const updates = [];
-      snap.forEach((docSnap) => {
-        updates.push(
-          updateDoc(doc(db, "validadeItens", docSnap.id), { ofertaStatus: novoStatus })
-        );
+  document
+    .getElementById("btnReloadUsers")
+    .addEventListener("click", carregarUsuariosAdmin);
+  document
+    .getElementById("btnSalvarNovoUsuario")
+    .addEventListener("click", salvarNovoUsuario);
+
+  async function carregarUsuariosAdmin() {
+    if (!currentUserProfile || currentUserProfile.tipo !== "admin") return;
+    const snap = await getDocs(collection(db, "usuarios"));
+    usersCache = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    renderTabelaUsuarios();
+  }
+
+  function renderTabelaUsuarios() {
+    tabelaUsuariosBody.innerHTML = "";
+    if (!usersCache.length) {
+      totalUsuariosLabel.textContent =
+        "Nenhum usuário cadastrado na coleção usuarios.";
+      return;
+    }
+    totalUsuariosLabel.textContent = `Total de usuários: ${usersCache.length}`;
+
+    for (const u of usersCache) {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${u.nome || u.email || ""}</td>
+        <td>${u.email || ""}</td>
+        <td>
+          <select data-user-id="${u.id}" data-field="tipo">
+            <option value="repositor" ${
+              u.tipo === "repositor" ? "selected" : ""
+            }>Repositor</option>
+            <option value="gerente" ${
+              u.tipo === "gerente" ? "selected" : ""
+            }>Gerente</option>
+            <option value="admin" ${
+              u.tipo === "admin" ? "selected" : ""
+            }>Admin</option>
+          </select>
+        </td>
+        <td>
+          <select data-user-id="${u.id}" data-field="loja">
+            <option value="" ${!u.loja ? "selected" : ""}>Nenhuma</option>
+            <option value="Ponta Verde" ${
+              u.loja === "Ponta Verde" ? "selected" : ""
+            }>Ponta Verde</option>
+            <option value="Farol" ${
+              u.loja === "Farol" ? "selected" : ""
+            }>Farol</option>
+            <option value="Praia" ${
+              u.loja === "Praia" ? "selected" : ""
+            }>Praia</option>
+            <option value="Riomar" ${
+              u.loja === "Riomar" ? "selected" : ""
+            }>Riomar</option>
+            <option value="CD" ${u.loja === "CD" ? "selected" : ""}>CD</option>
+            <option value="Compras" ${
+              u.loja === "Compras" ? "selected" : ""
+            }>Compras</option>
+          </select>
+        </td>
+        <td class="text-right">
+          <button class="btn btn-soft btn-xs" data-salvar-usuario="${u.id}">
+            Salvar
+          </button>
+          <button class="btn btn-danger-soft btn-xs" data-excluir-usuario="${
+            u.id
+          }">
+            Excluir
+          </button>
+        </td>
+      `;
+      tabelaUsuariosBody.appendChild(tr);
+    }
+  }
+
+  async function salvarNovoUsuario() {
+    const nome = document.getElementById("admNome").value.trim();
+    const email = document.getElementById("admEmail").value.trim();
+    const tipo = document.getElementById("admPerfil").value;
+    const loja = document.getElementById("admLoja").value;
+
+    if (!email) {
+      alert("Informe o e-mail.");
+      return;
+    }
+
+    const data = {
+      nome,
+      email,
+      tipo,
+      loja,
+      criadoEm: serverTimestamp(),
+    };
+
+    await addDoc(collection(db, "usuarios"), data);
+
+    document.getElementById("admNome").value = "";
+    document.getElementById("admEmail").value = "";
+    document.getElementById("admPerfil").value = "repositor";
+    document.getElementById("admLoja").value = "";
+
+    await carregarUsuariosAdmin();
+  }
+
+  tabelaUsuariosBody.addEventListener("click", async (e) => {
+    const salvarId = e.target.getAttribute("data-salvar-usuario");
+    const excluirId = e.target.getAttribute("data-excluir-usuario");
+
+    if (salvarId) {
+      const tipoSelect = tabelaUsuariosBody.querySelector(
+        `select[data-user-id="${salvarId}"][data-field="tipo"]`
+      );
+      const lojaSelect = tabelaUsuariosBody.querySelector(
+        `select[data-user-id="${salvarId}"][data-field="loja"]`
+      );
+
+      await updateDoc(doc(db, "usuarios", salvarId), {
+        tipo: tipoSelect.value,
+        loja: lojaSelect.value,
       });
-      await Promise.all(updates);
-      loadItens();
-    });
 
-    // ------------------ LEITOR CÓDIGO DE BARRAS ------------------ //
-    const barcodeModal = document.getElementById("barcodeModal");
-    const barcodeReaderDiv = document.getElementById("barcodeReader");
-    const scanButton = document.getElementById("scanButton");
-    const closeBarcodeModal = document.getElementById("closeBarcodeModal");
-
-    scanButton.addEventListener("click", () => {
-      if (typeof Html5Qrcode === "undefined") {
-        alert("Leitor de código de barras não carregou corretamente. Verifique sua internet.");
-        return;
+      if (auth.currentUser && auth.currentUser.uid === salvarId) {
+        currentUserProfile = await loadUserProfile(auth.currentUser);
+        updateHeader();
+        toggleAdminCard();
+        await carregarCadastros();
       }
-      openBarcodeModal();
-    });
 
-    closeBarcodeModal.addEventListener("click", closeBarcode);
+      alert("Usuário atualizado.");
+      return;
+    }
 
-    function openBarcodeModal() {
-      barcodeModal.classList.remove("hidden");
+    if (excluirId) {
+      if (!confirm("Excluir usuário da coleção usuarios?")) return;
+      await deleteDoc(doc(db, "usuarios", excluirId));
+      usersCache = usersCache.filter((u) => u.id !== excluirId);
+      renderTabelaUsuarios();
+    }
+  });
 
-      if (html5QrCode) {
-        return;
-      }
+  // ======= SCANNER CÓDIGO BARRAS =======
+  const scannerModal = document.getElementById("scannerModal");
+  const btnScan = document.getElementById("btnScan");
 
-      html5QrCode = new Html5Qrcode("barcodeReader");
-      Html5Qrcode.getCameras()
-        .then((devices) => {
-          if (!devices || !devices.length) {
-            alert("Nenhuma câmera encontrada.");
-            return;
+  btnScan.addEventListener("click", () => {
+    abrirScanner();
+  });
+
+  function abrirScanner() {
+    scannerModal.innerHTML = `
+      <div class="modal-backdrop">
+        <div class="modal">
+          <div class="modal-header">
+            <h2>Scanner de código de barras</h2>
+            <button id="btnFecharScanner" class="btn btn-soft btn-xs">Fechar</button>
+          </div>
+          <div class="modal-body">
+            Aponte a câmera para o código de barras do produto.
+            <div class="scanner-container">
+              <div id="reader"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    scannerModal.style.display = "block";
+
+    const config = { fps: 10, qrbox: { width: 250, height: 150 } };
+    html5QrCode = new Html5Qrcode("reader");
+    html5QrCode
+      .start(
+        { facingMode: "environment" },
+        config,
+        (decodedText) => {
+          // pega só números
+          const clean = decodedText.replace(/\D/g, "").slice(0, 13);
+          if (clean) {
+            codigoBarrasInput.value = clean;
           }
-          const cameraId = devices[0].id;
-          html5QrCode.start(
-            cameraId,
-            { fps: 10, qrbox: 250 },
-            (decodedText) => {
-              codigoBarrasInput.value = decodedText.replace(/\D/g, "").slice(0, 13);
-              closeBarcode();
-            },
-            (errorMessage) => {
-              console.log(errorMessage);
-            }
-          );
-        })
-        .catch((err) => {
-          console.error(err);
-          alert("Erro ao acessar a câmera.");
-        });
-    }
-
-    function closeBarcode() {
-      barcodeModal.classList.add("hidden");
-      if (html5QrCode) {
-        html5QrCode
-          .stop()
-          .then(() => {
-            html5QrCode.clear();
-            html5QrCode = null;
-          })
-          .catch((err) => console.error(err));
-      }
-    }
-
-    // ------------------ ADMIN USUÁRIOS ------------------ //
-    const usersTbody = document.getElementById("usersTbody");
-    const noUsersMsg = document.getElementById("noUsersMsg");
-    const reloadUsersBtn = document.getElementById("reloadUsersBtn");
-    const newUserForm = document.getElementById("newUserForm");
-    const newUserName = document.getElementById("newUserName");
-    const newUserEmail = document.getElementById("newUserEmail");
-    const newUserRole = document.getElementById("newUserRole");
-    const newUserLoja = document.getElementById("newUserLoja");
-
-    reloadUsersBtn.addEventListener("click", () => {
-      if (currentRole === "admin") loadUsers();
-    });
-
-    async function loadUsers() {
-      if (!currentUser || currentRole !== "admin") return;
-
-      const snap = await getDocs(collection(db, "users"));
-      usersTbody.innerHTML = "";
-      let total = 0;
-
-      snap.forEach((docSnap) => {
-        total++;
-        const d = docSnap.data();
-        const tr = document.createElement("tr");
-        tr.className = "hover:bg-slate-800/60";
-        tr.innerHTML = `
-          <td class="px-2 py-1.5">${d.nome || ""}</td>
-          <td class="px-2 py-1.5">${d.email || ""}</td>
-          <td class="px-2 py-1.5">
-            <select class="role-select px-2 py-1 rounded-lg bg-slate-800 border border-slate-700">
-              <option value="repositor" ${ (d.role || "repositor") === "repositor" ? "selected" : "" }>Repositor</option>
-              <option value="gerente" ${ (d.role || "repositor") === "gerente" ? "selected" : "" }>Gerente</option>
-              <option value="admin" ${ (d.role || "repositor") === "admin" ? "selected" : "" }>Admin</option>
-            </select>
-          </td>
-          <td class="px-2 py-1.5">
-            <select class="loja-select px-2 py-1 rounded-lg bg-slate-800 border border-slate-700">
-              <option value="">Nenhuma</option>
-              <option value="Ponta Verde" ${d.loja === "Ponta Verde" ? "selected" : ""}>Ponta Verde</option>
-              <option value="Farol" ${d.loja === "Farol" ? "selected" : ""}>Farol</option>
-              <option value="Praia" ${d.loja === "Praia" ? "selected" : ""}>Praia</option>
-              <option value="Riomar" ${d.loja === "Riomar" ? "selected" : ""}>Riomar</option>
-              <option value="Compras" ${d.loja === "Compras" ? "selected" : ""}>Compras</option>
-            </select>
-          </td>
-          <td class="px-2 py-1.5 text-right">
-            <button class="text-xs text-emerald-300 hover:text-emerald-200 mr-2 salvar-user-btn">Salvar</button>
-            <button class="text-xs text-red-400 hover:text-red-300 excluir-user-btn">Excluir</button>
-          </td>
-        `;
-
-        const roleSelect = tr.querySelector(".role-select");
-        const lojaSelectUser = tr.querySelector(".loja-select");
-        const salvarBtn = tr.querySelector(".salvar-user-btn");
-        const excluirBtn = tr.querySelector(".excluir-user-btn");
-
-        salvarBtn.addEventListener("click", async () => {
-          await updateDoc(doc(db, "users", docSnap.id), {
-            role: roleSelect.value,
-            loja: lojaSelectUser.value
-          });
-          alert("Usuário atualizado.");
-          if (d.email === currentUser.email) {
-            await fetchUserRole(currentUser);
-            updateUIAuth();
-          }
-        });
-
-        excluirBtn.addEventListener("click", async () => {
-          if (!confirm("Deseja realmente excluir este usuário da coleção?")) return;
-          await deleteDoc(doc(db, "users", docSnap.id));
-          loadUsers();
-        });
-
-        usersTbody.appendChild(tr);
-      });
-
-      noUsersMsg.classList.toggle("hidden", total > 0);
-    }
-
-    newUserForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      if (!currentUser || currentRole !== "admin") return;
-
-      try {
-        await addDoc(collection(db, "users"), {
-          nome: newUserName.value.trim(),
-          email: newUserEmail.value.trim(),
-          role: newUserRole.value,
-          loja: newUserLoja.value || null
-        });
-        newUserForm.reset();
-        alert("Usuário cadastrado na coleção users.");
-        loadUsers();
-      } catch (err) {
+          fecharScanner();
+        },
+        (error) => {}
+      )
+      .catch((err) => {
         console.error(err);
-        alert("Erro ao cadastrar usuário.");
-      }
-    });
-  </script>
+        alert("Leitor de código de barras não carregou corretamente.");
+        fecharScanner();
+      });
+
+    document
+      .getElementById("btnFecharScanner")
+      .addEventListener("click", fecharScanner);
+  }
+
+  function fecharScanner() {
+    if (html5QrCode) {
+      html5QrCode.stop().catch(() => {});
+      html5QrCode.clear().catch(() => {});
+      html5QrCode = null;
+    }
+    scannerModal.style.display = "none";
+    scannerModal.innerHTML = "";
+  }
+</script>
 </body>
 </html>
