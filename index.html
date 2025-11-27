@@ -277,7 +277,6 @@
       min-height: 16px;
     }
 
-    /* Tabela da área de admin */
     .admin-table table {
       font-size: 13px;
     }
@@ -367,6 +366,7 @@
       <section class="card">
         <h2>Novo lançamento</h2>
         <div class="form-grid">
+          <!-- Loja -->
           <div>
             <label for="loja">Loja</label>
             <select id="loja">
@@ -378,23 +378,67 @@
             </select>
             <div class="small" id="ajudaCampoLoja"></div>
           </div>
+
+          <!-- Data de lançamento (hoje, travada) -->
           <div>
-            <label for="codigoBarras">Código de barras</label>
-            <input type="text" id="codigoBarras" />
+            <label for="dataLancamento">Data de lançamento</label>
+            <input type="date" id="dataLancamento" disabled />
+            <div class="small">Sempre a data de hoje, registrada automaticamente.</div>
           </div>
+
+          <!-- Departamento -->
+          <div>
+            <label for="departamento">Departamento</label>
+            <select id="departamento">
+              <option value="">Selecione...</option>
+              <option value="Açougue">Açougue</option>
+              <option value="Adega">Adega</option>
+              <option value="Bebidas">Bebidas</option>
+              <option value="Mercearia Alimentos">Mercearia Alimentos</option>
+              <option value="Mercearia Não Alimentos">Mercearia Não Alimentos</option>
+              <option value="Perecíveis Processados">Perecíveis Processados</option>
+            </select>
+          </div>
+
+          <!-- Código de barras -->
+          <div>
+            <label for="codigoBarras">Código de barras (somente números, máx. 13)</label>
+            <input
+              type="text"
+              id="codigoBarras"
+              maxlength="13"
+              inputmode="numeric"
+              pattern="\\d*"
+              placeholder="Ex.: 7891234567890"
+            />
+          </div>
+
+          <!-- Descrição -->
           <div>
             <label for="descricao">Descrição</label>
             <input type="text" id="descricao" />
           </div>
+
+          <!-- Lote -->
+          <div>
+            <label for="lote">Lote</label>
+            <input type="text" id="lote" />
+          </div>
+
+          <!-- Quantidade -->
           <div>
             <label for="quantidade">Quantidade</label>
             <input type="number" id="quantidade" min="1" />
           </div>
+
+          <!-- Validade -->
           <div>
             <label for="validade">Data de validade</label>
             <input type="date" id="validade" />
           </div>
-          <div>
+
+          <!-- Observação -->
+          <div style="grid-column: 1 / -1;">
             <label for="observacao">Observação</label>
             <textarea id="observacao" placeholder="Ex.: ponta de gôndola, oferta, avaria..."></textarea>
           </div>
@@ -564,6 +608,23 @@
       return "Erro: " + code.replace("auth/", "");
     }
 
+    // Funções de data
+    function getDataHojeISO() {
+      const hoje = new Date();
+      hoje.setHours(0, 0, 0, 0);
+      const ano = hoje.getFullYear();
+      const mes = String(hoje.getMonth() + 1).padStart(2, "0");
+      const dia = String(hoje.getDate()).padStart(2, "0");
+      return `${ano}-${mes}-${dia}`;
+    }
+
+    function atualizarDataLancamento() {
+      const input = document.getElementById("dataLancamento");
+      if (input) {
+        input.value = getDataHojeISO();
+      }
+    }
+
     // LOGIN / CADASTRO
     btnAuthMain.addEventListener("click", async () => {
       authError.textContent = "";
@@ -632,16 +693,13 @@
       const ajudaCampoLoja = document.getElementById("ajudaCampoLoja");
       if (!selectLoja || !perfilUsuario) return;
 
-      // padrão: tudo liberado
       selectLoja.disabled = false;
       if (ajudaCampoLoja) ajudaCampoLoja.textContent = "";
 
-      // admin: escolhe qualquer loja
       if (perfilUsuario.tipo === "admin") {
         return;
       }
 
-      // gerente ou repositor com loja definida → trava na loja
       if (
         (perfilUsuario.tipo === "gerente" ||
           perfilUsuario.tipo === "repositor") &&
@@ -674,9 +732,8 @@
       if (snap.exists()) {
         perfilUsuario = snap.data();
       } else {
-        // Primeiro login: vira REPOSITOR por padrão
         perfilUsuario = {
-          tipo: "repositor", // admin | gerente | repositor
+          tipo: "repositor",
           loja: "",
           email: user.email || "",
           criadoEm: new Date().toISOString()
@@ -684,7 +741,6 @@
         await setDoc(usuariosDocRef, perfilUsuario);
       }
 
-      // Mostra no header (badge)
       const existingBadge = document.getElementById("roleBadge");
       if (existingBadge) existingBadge.remove();
       const userInfoDiv = document.getElementById("userInfo");
@@ -698,6 +754,7 @@
       }
 
       aplicarRestricoesPorPerfil();
+      atualizarDataLancamento();
       await renderizarTabela();
       await renderizarUsuariosAdmin();
     }
@@ -705,7 +762,6 @@
     // CONTROLE DE STATUS DE LOGIN
     onAuthStateChanged(auth, async (user) => {
       if (user) {
-        // Logado
         loginCard.classList.add("hidden");
         appContent.classList.remove("hidden");
         btnLogout.classList.remove("hidden");
@@ -713,9 +769,9 @@
         emailAuth.value = "";
         senhaAuth.value = "";
         authError.textContent = "";
+        atualizarDataLancamento();
         await carregarPerfilUsuario(user);
       } else {
-        // Deslogado
         loginCard.classList.remove("hidden");
         appContent.classList.add("hidden");
         btnLogout.classList.add("hidden");
@@ -766,7 +822,6 @@
       if (!tbody) return;
       tbody.innerHTML = "";
 
-      // Se ainda não carregou perfil, mostra mensagem
       if (!perfilUsuario) {
         const tr = document.createElement("tr");
         const td = document.createElement("td");
@@ -789,12 +844,10 @@
       const filtrados = itens.filter((item) => {
         const { status } = calcularStatus(item.validade);
 
-        // Filtro por status
         if (filtroAtivo === "ok" && status !== "ok") return false;
         if (filtroAtivo === "alerta" && status !== "alerta") return false;
         if (filtroAtivo === "vencido" && status !== "vencido") return false;
 
-        // Filtro por busca
         if (textoBusca) {
           const alvo = (
             (item.descricao || "") +
@@ -804,7 +857,6 @@
           if (!alvo.includes(textoBusca)) return false;
         }
 
-        // RESTRIÇÃO POR PERFIL
         if (perfilUsuario.tipo === "admin") {
           return true;
         } else if (perfilUsuario.tipo === "gerente") {
@@ -885,6 +937,8 @@
       const quantidade = document.getElementById("quantidade");
       const validade = document.getElementById("validade");
       const observacao = document.getElementById("observacao");
+      const departamento = document.getElementById("departamento");
+      const lote = document.getElementById("lote");
 
       if (!loja) return;
 
@@ -894,6 +948,17 @@
       quantidade.value = "";
       validade.value = "";
       observacao.value = "";
+      if (departamento) departamento.value = "";
+      if (lote) lote.value = "";
+      atualizarDataLancamento();
+    }
+
+    // Enforce numeric-only and max 13 on código de barras
+    const inputCodigo = document.getElementById("codigoBarras");
+    if (inputCodigo) {
+      inputCodigo.addEventListener("input", () => {
+        inputCodigo.value = inputCodigo.value.replace(/\D/g, "").slice(0, 13);
+      });
     }
 
     // SALVAR ITEM
@@ -901,10 +966,13 @@
     if (btnSalvar) {
       btnSalvar.addEventListener("click", async () => {
         let lojaSelecionada = document.getElementById("loja").value.trim();
+        const dataLancamento = document.getElementById("dataLancamento").value;
+        const departamento = document.getElementById("departamento").value.trim();
         const codigoBarras = document
           .getElementById("codigoBarras")
           .value.trim();
         const descricao = document.getElementById("descricao").value.trim();
+        const lote = document.getElementById("lote").value.trim();
         const quantidade = document.getElementById("quantidade").value;
         const validade = document.getElementById("validade").value;
         const observacao = document
@@ -920,7 +988,6 @@
           lojaSelecionada = perfilUsuario.loja || "";
         }
 
-        // Se deveria ter loja mas não tem → bloqueia
         if (
           perfilUsuario &&
           (perfilUsuario.tipo === "gerente" ||
@@ -933,10 +1000,15 @@
           return;
         }
 
-        if (!lojaSelecionada || !codigoBarras || !descricao || !validade) {
+        if (!lojaSelecionada || !departamento || !codigoBarras || !descricao || !validade) {
           alert(
-            "Preencha pelo menos: Loja, Código de barras, Descrição e Validade."
+            "Preencha pelo menos: Loja, Departamento, Código de barras, Descrição e Validade."
           );
+          return;
+        }
+
+        if (!/^\d{1,13}$/.test(codigoBarras)) {
+          alert("O código de barras deve conter apenas números, com no máximo 13 dígitos.");
           return;
         }
 
@@ -944,8 +1016,11 @@
           const user = auth.currentUser;
           await addDoc(itensRef, {
             loja: lojaSelecionada,
+            dataLancamento: dataLancamento || getDataHojeISO(),
+            departamento,
             codigoBarras,
             descricao,
+            lote: lote || null,
             quantidade: quantidade ? Number(quantidade) : null,
             validade,
             observacao,
@@ -954,7 +1029,7 @@
             criadoPorEmail: user ? user.email : null
           });
           limparFormulario();
-          aplicarRestricoesPorPerfil(); // garante que o campo loja volte travado quando limpar
+          aplicarRestricoesPorPerfil();
           await renderizarTabela();
         } catch (e) {
           console.error("Erro ao salvar:", e);
@@ -1079,6 +1154,9 @@
         adminTabelaCorpo.appendChild(tr);
       });
     }
+
+    // Ao carregar a página sem estar logado, já deixa a data de lançamento em hoje (para quando logar)
+    atualizarDataLancamento();
   </script>
 </body>
 </html>
