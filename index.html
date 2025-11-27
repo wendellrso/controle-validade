@@ -368,18 +368,16 @@
         <h2>Novo lançamento</h2>
         <div class="form-grid">
           <div>
-           <div>
-  <label for="loja">Loja</label>
-  <select id="loja">
-    <option value="">Selecione...</option>
-    <option value="PV">Ponta Verde</option>
-    <option value="Farol">Farol</option>
-    <option value="Praia">Praia</option>
-    <option value="Riomar">Riomar</option>
-  </select>
-  <!-- Mensagem que vou preencher via JS -->
-  <div class="small" id="ajudaCampoLoja"></div>
-</div>
+            <label for="loja">Loja</label>
+            <select id="loja">
+              <option value="">Selecione...</option>
+              <option value="PV">Ponta Verde</option>
+              <option value="Farol">Farol</option>
+              <option value="Praia">Praia</option>
+              <option value="Riomar">Riomar</option>
+            </select>
+            <div class="small" id="ajudaCampoLoja"></div>
+          </div>
           <div>
             <label for="codigoBarras">Código de barras</label>
             <input type="text" id="codigoBarras" />
@@ -601,6 +599,11 @@
       }
     });
 
+    // BOTÃO APPLE (APENAS VISUAL POR ENQUANTO)
+    btnApple.addEventListener("click", () => {
+      alert("Login com Apple ainda não está configurado.\nPor enquanto use e-mail/senha ou Google 🙂");
+    });
+
     // ESQUECEU SENHA
     btnEsqueceuSenha.addEventListener("click", async () => {
       authError.textContent = "";
@@ -623,6 +626,46 @@
       await signOut(auth);
     });
 
+    // 🔐 TRAVA E AJUSTA O CAMPO LOJA CONFORME O PERFIL
+    function aplicarRestricoesPorPerfil() {
+      const selectLoja = document.getElementById("loja");
+      const ajudaCampoLoja = document.getElementById("ajudaCampoLoja");
+      if (!selectLoja || !perfilUsuario) return;
+
+      // padrão: tudo liberado
+      selectLoja.disabled = false;
+      if (ajudaCampoLoja) ajudaCampoLoja.textContent = "";
+
+      // admin: escolhe qualquer loja
+      if (perfilUsuario.tipo === "admin") {
+        return;
+      }
+
+      // gerente ou repositor com loja definida → trava na loja
+      if (
+        (perfilUsuario.tipo === "gerente" ||
+          perfilUsuario.tipo === "repositor") &&
+        perfilUsuario.loja
+      ) {
+        selectLoja.value = perfilUsuario.loja;
+        selectLoja.disabled = true;
+        if (ajudaCampoLoja) {
+          ajudaCampoLoja.textContent =
+            "Sua conta está vinculada à loja " +
+            perfilUsuario.loja +
+            ". Você só lança produtos nesta loja.";
+        }
+      } else if (
+        perfilUsuario.tipo === "gerente" ||
+        perfilUsuario.tipo === "repositor"
+      ) {
+        if (ajudaCampoLoja) {
+          ajudaCampoLoja.textContent =
+            "Sua conta não tem loja vinculada. Peça a um ADMIN para definir sua loja na tela de Administração.";
+        }
+      }
+    }
+
     // 🔐 Carrega ou cria o perfil do usuário (admin/gerente/repositor)
     async function carregarPerfilUsuario(user) {
       const usuariosDocRef = doc(db, "usuarios", user.uid);
@@ -641,44 +684,6 @@
         await setDoc(usuariosDocRef, perfilUsuario);
       }
 
-          function aplicarRestricoesPorPerfil() {
-      const selectLoja = document.getElementById("loja");
-      const ajudaCampoLoja = document.getElementById("ajudaCampoLoja");
-      if (!selectLoja || !perfilUsuario) return;
-
-      // libera por padrão
-      selectLoja.disabled = false;
-      if (ajudaCampoLoja) ajudaCampoLoja.textContent = "";
-
-      // Admin continua podendo escolher qualquer loja
-      if (perfilUsuario.tipo === "admin") {
-        return;
-      }
-
-      // Gerente e Repositor: loja travada na que está no perfil
-      if (
-        (perfilUsuario.tipo === "gerente" ||
-          perfilUsuario.tipo === "repositor") &&
-        perfilUsuario.loja
-      ) {
-        selectLoja.value = perfilUsuario.loja;
-        selectLoja.disabled = true;
-        if (ajudaCampoLoja) {
-          ajudaCampoLoja.textContent =
-            "Sua conta está vinculada à loja " + perfilUsuario.loja + ". Você só lança produtos nesta loja.";
-        }
-      } else if (
-        perfilUsuario.tipo === "gerente" ||
-        perfilUsuario.tipo === "repositor"
-      ) {
-        // Sem loja definida no perfil → avisa que precisa de um admin
-        if (ajudaCampoLoja) {
-          ajudaCampoLoja.textContent =
-            "Sua conta não tem loja vinculada. Peça a um ADMIN para definir sua loja na tela de Administração.";
-        }
-      }
-    }
-
       // Mostra no header (badge)
       const existingBadge = document.getElementById("roleBadge");
       if (existingBadge) existingBadge.remove();
@@ -695,7 +700,6 @@
       aplicarRestricoesPorPerfil();
       await renderizarTabela();
       await renderizarUsuariosAdmin();
-
     }
 
     // CONTROLE DE STATUS DE LOGIN
@@ -780,18 +784,17 @@
         .toLowerCase();
 
       const itens = await carregarItensDoBanco();
-
       const uidAtual = auth.currentUser ? auth.currentUser.uid : null;
 
       const filtrados = itens.filter((item) => {
         const { status } = calcularStatus(item.validade);
 
-        // Filtro por status (OK / alerta / vencido)
+        // Filtro por status
         if (filtroAtivo === "ok" && status !== "ok") return false;
         if (filtroAtivo === "alerta" && status !== "alerta") return false;
         if (filtroAtivo === "vencido" && status !== "vencido") return false;
 
-        // Filtro por busca de texto
+        // Filtro por busca
         if (textoBusca) {
           const alvo = (
             (item.descricao || "") +
@@ -801,15 +804,12 @@
           if (!alvo.includes(textoBusca)) return false;
         }
 
-        // 🔐 RESTRIÇÃO POR PERFIL
+        // RESTRIÇÃO POR PERFIL
         if (perfilUsuario.tipo === "admin") {
-          // Admin vê tudo
           return true;
         } else if (perfilUsuario.tipo === "gerente") {
-          // Gerente vê tudo da LOJA dele
           return item.loja === perfilUsuario.loja;
         } else {
-          // Repositor vê só o que ELE cadastrou
           return item.criadoPorUid === uidAtual;
         }
       });
@@ -897,7 +897,8 @@
     }
 
     // SALVAR ITEM
-      if (btnSalvar) {
+    const btnSalvar = document.getElementById("btnSalvar");
+    if (btnSalvar) {
       btnSalvar.addEventListener("click", async () => {
         let lojaSelecionada = document.getElementById("loja").value.trim();
         const codigoBarras = document
@@ -910,7 +911,7 @@
           .getElementById("observacao")
           .value.trim();
 
-        // 🔒 Força a loja pelo perfil para gerente e repositor
+        // Força a loja pelo perfil para gerente e repositor
         if (
           perfilUsuario &&
           (perfilUsuario.tipo === "gerente" ||
@@ -919,7 +920,7 @@
           lojaSelecionada = perfilUsuario.loja || "";
         }
 
-        // Se o usuário deveria ter loja fixa mas não tem, bloqueia o lançamento
+        // Se deveria ter loja mas não tem → bloqueia
         if (
           perfilUsuario &&
           (perfilUsuario.tipo === "gerente" ||
@@ -954,29 +955,6 @@
           });
           limparFormulario();
           aplicarRestricoesPorPerfil(); // garante que o campo loja volte travado quando limpar
-          await renderizarTabela();
-        } catch (e) {
-          console.error("Erro ao salvar:", e);
-          alert("Erro ao salvar. Verifique o console do navegador.");
-        }
-      });
-    }
-
-
-        try {
-          const user = auth.currentUser;
-          await addDoc(itensRef, {
-            loja,
-            codigoBarras,
-            descricao,
-            quantidade: quantidade ? Number(quantidade) : null,
-            validade,
-            observacao,
-            criadoEm: new Date().toISOString(),
-            criadoPorUid: user ? user.uid : null,
-            criadoPorEmail: user ? user.email : null
-          });
-          limparFormulario();
           await renderizarTabela();
         } catch (e) {
           console.error("Erro ao salvar:", e);
@@ -1086,6 +1064,7 @@
             if (auth.currentUser && auth.currentUser.uid === u.id) {
               perfilUsuario.tipo = novoTipo;
               perfilUsuario.loja = novaLoja;
+              aplicarRestricoesPorPerfil();
               await renderizarTabela();
               await renderizarUsuariosAdmin();
             }
@@ -1103,4 +1082,3 @@
   </script>
 </body>
 </html>
-
