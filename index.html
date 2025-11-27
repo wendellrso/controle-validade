@@ -2,156 +2,200 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <title>Controle de Validade • Palato</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Controle de Validade - Palato</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- Fonte -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
-  <!-- SheetJS para Excel -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-
-  <!-- jsPDF + autotable para PDF -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js"></script>
-
-  <!-- html5-qrcode para scanner -->
-  <script src="https://unpkg.com/html5-qrcode@2.3.10/html5-qrcode.min.js"></script>
-
+  <!-- Paleta Palato: fundo preto, texto branco, detalhes em vermelho -->
   <style>
     :root {
       --bg-main: #050608;
       --bg-card: #10121a;
-      --bg-soft: #171924;
-      --border-soft: #22263a;
-      --accent: #e30613;
-      --accent-soft: rgba(227, 6, 19, 0.18);
-      --accent-alt: #1fbf5a;
-      --text-main: #f5f5f5;
+      --bg-card-soft: #151824;
+      --border-soft: #242838;
+      --accent-red: #e30613;
+      --accent-green: #2ecc71;
+      --accent-yellow: #f1c40f;
+      --accent-badge: #b33939;
+      --text-main: #ffffff;
       --text-muted: #a0a4b8;
-      --badge-bg: #262a3d;
-      --input-bg: #141726;
-      --danger: #ff4b5c;
-      --warning: #ffb020;
-      --success: #1fbf5a;
+      --input-bg: #0f1119;
+      --input-border: #2b3045;
+      --pill-bg: #1e2233;
+      --pill-offer-bg: #1f2833;
+      --danger: #e74c3c;
     }
 
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
 
     body {
-      background: radial-gradient(circle at top left, #151824, #050608);
+      background: radial-gradient(circle at top, #151821 0, #050608 60%);
       color: var(--text-main);
       min-height: 100vh;
     }
 
-    .app-max {
-      max-width: 1320px;
-      margin: 0 auto;
-      padding: 20px 12px 40px;
-    }
+    .hidden { display: none !important; }
 
-    .topbar {
+    /* HEADER */
+
+    header.app-header {
+      height: 64px;
+      background: #000000;
+      border-bottom: 1px solid #1d202b;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 18px;
+      padding: 0 24px;
     }
 
-    .topbar-left {
+    .app-header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .logo-box {
       display: flex;
       align-items: center;
       gap: 12px;
     }
 
-    .topbar-logo {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      background: #000;
-      border-radius: 999px;
-      padding: 6px 12px 6px 6px;
-      border: 1px solid #2a2e42;
+    .logo-box img {
+      height: 28px;
+      object-fit: contain;
     }
 
-    .topbar-logo img {
-      height: 26px;
-    }
-
-    .topbar-logo span {
-      font-size: 13px;
-      letter-spacing: 0.14em;
-      color: #ffffff;
-    }
-
-    .topbar-title-block {
+    .app-title {
       display: flex;
       flex-direction: column;
-      gap: 2px;
     }
 
-    .topbar-title {
-      font-size: 18px;
+    .app-title-main {
       font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      font-size: 15px;
     }
 
-    .topbar-subtitle {
-      font-size: 13px;
-      color: var(--text-muted);
-    }
-
-    .topbar-user {
-      text-align: right;
-      font-size: 13px;
-    }
-
-    .topbar-user-name {
-      font-weight: 600;
-    }
-
-    .topbar-user-role {
-      color: var(--text-muted);
-    }
-
-    .link-sair {
-      margin-top: 2px;
+    .app-title-sub {
       font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .app-header-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 13px;
+    }
+
+    .user-name {
+      font-weight: 500;
+    }
+
+    .user-role {
+      color: var(--accent-yellow);
+      font-size: 11px;
+    }
+
+    .btn-text-danger {
       color: var(--danger);
       cursor: pointer;
-      text-decoration: none;
+      font-size: 13px;
     }
 
-    .link-sair:hover {
+    .btn-text-danger:hover {
       text-decoration: underline;
     }
 
-    /* Layout principal */
-    .main-grid {
+    /* LAYOUT GERAL */
+
+    .app-wrapper {
+      display: flex;
+      min-height: calc(100vh - 64px);
+    }
+
+    .sidebar {
+      width: 230px;
+      background: #050608;
+      border-right: 1px solid #151823;
+      padding: 24px 16px;
+    }
+
+    .sidebar h3 {
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    .nav-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .nav-item {
+      padding: 10px 12px;
+      border-radius: 999px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+
+    .nav-item span.icon {
+      width: 18px;
+      text-align: center;
+      font-size: 14px;
+    }
+
+    .nav-item.active {
+      background: var(--accent-red);
+      color: #ffffff;
+    }
+
+    .nav-item:not(.active):hover {
+      background: #11131e;
+      color: var(--text-main);
+    }
+
+    .content {
+      flex: 1;
+      padding: 24px 24px 40px;
+      overflow-x: auto;
+    }
+
+    /* CARDS / SECTIONS */
+
+    .section-row {
       display: grid;
-      grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.45fr);
-      gap: 18px;
+      grid-template-columns: minmax(320px, 380px) minmax(0, 1fr);
+      gap: 24px;
       align-items: flex-start;
     }
 
     .card {
-      background: linear-gradient(145deg, var(--bg-card), #070810);
-      border-radius: 16px;
+      background: var(--bg-card);
+      border-radius: 18px;
       border: 1px solid var(--border-soft);
-      box-shadow: 0 26px 45px rgba(0, 0, 0, 0.45);
-      padding: 18px 18px 14px;
+      padding: 18px 20px 20px;
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
     }
 
     .card-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 10px;
+      margin-bottom: 12px;
     }
 
     .card-title {
@@ -162,239 +206,206 @@
       font-weight: 600;
     }
 
-    .card-title-icon {
-      width: 26px;
-      height: 26px;
+    .card-title span.icon {
+      width: 20px;
+      height: 20px;
       border-radius: 999px;
-      display: flex;
+      display: inline-flex;
       align-items: center;
       justify-content: center;
-      background: var(--accent-soft);
-      color: var(--accent);
-      font-size: 16px;
+      background: rgba(227, 6, 19, 0.12);
+      color: var(--accent-red);
+      font-size: 12px;
     }
 
     .card-subtitle {
       font-size: 12px;
       color: var(--text-muted);
+      margin-bottom: 10px;
     }
 
-    /* Campos / inputs */
-    .form-grid-2 {
+    /* FORM */
+
+    .form-grid {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: 1fr;
       gap: 10px;
-      margin-bottom: 8px;
+      margin-top: 4px;
     }
 
     .form-row {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-      margin-bottom: 8px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
     }
 
     label {
-      font-size: 12px;
+      font-size: 11px;
       color: var(--text-muted);
+      margin-bottom: 4px;
+      display: block;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
     }
 
-    .required::after {
-      content: " *";
-      color: var(--accent);
+    .field {
+      display: flex;
+      flex-direction: column;
     }
 
-    input,
+    input[type="text"],
+    input[type="number"],
+    input[type="password"],
+    input[type="email"],
+    input[type="date"],
     select,
     textarea {
       background: var(--input-bg);
-      border-radius: 9px;
-      border: 1px solid #272a3b;
+      border-radius: 999px;
+      border: 1px solid var(--input-border);
       color: var(--text-main);
+      padding: 8px 12px;
       font-size: 13px;
-      padding: 7px 10px;
       outline: none;
-      width: 100%;
-      transition: border 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+    }
+
+    select,
+    select option {
+      background-color: var(--input-bg);
+      color: var(--text-main);
+    }
+
+    textarea {
+      border-radius: 14px;
+      resize: vertical;
+      min-height: 68px;
     }
 
     input:focus,
     select:focus,
     textarea:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 1px rgba(227, 6, 19, 0.35);
-      background: #151728;
+      border-color: var(--accent-red);
+      box-shadow: 0 0 0 1px rgba(227, 6, 19, 0.4);
     }
 
-    select {
-      appearance: none;
-      -webkit-appearance: none;
-      -moz-appearance: none;
-      background-image: linear-gradient(45deg, transparent 50%, #ffffff 50%),
-        linear-gradient(135deg, #ffffff 50%, transparent 50%);
-      background-position: calc(100% - 18px) 12px, calc(100% - 12px) 12px;
-      background-size: 6px 6px, 6px 6px;
-      background-repeat: no-repeat;
-      padding-right: 30px;
+    .input-with-icon {
+      position: relative;
     }
 
-    select option {
-      background: #131520;
-      color: #ffffff;
-    }
-
-    textarea {
-      min-height: 70px;
-      resize: vertical;
-    }
-
-    .input-inline {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .scan-btn {
-      width: 32px;
-      height: 32px;
-      border-radius: 8px;
-      border: 1px solid #333852;
-      background: #151726;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    .input-with-icon button {
+      position: absolute;
+      right: 6px;
+      top: 50%;
+      transform: translateY(-50%);
+      border: none;
+      background: #202538;
+      color: var(--text-main);
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 11px;
       cursor: pointer;
-      color: var(--text-muted);
-      transition: background 0.15s ease, border 0.15s ease, transform 0.08s;
-      flex-shrink: 0;
     }
 
-    .scan-btn:hover {
-      background: #1b1f32;
-      border-color: var(--accent);
-      color: var(--accent);
-      transform: translateY(-1px);
+    .input-with-icon button:hover {
+      background: var(--accent-red);
     }
 
-    .scan-btn span {
-      font-size: 14px;
-    }
-
-    .primary-btn {
-      background: var(--accent-alt);
-      color: #0b120f;
+    .btn-main {
+      margin-top: 12px;
+      width: 100%;
       border-radius: 999px;
       border: none;
-      padding: 9px 16px;
+      padding: 10px 14px;
       font-size: 14px;
       font-weight: 600;
       cursor: pointer;
+      background: linear-gradient(90deg, var(--accent-red), #ff4b5c);
+      color: #fff;
+      box-shadow: 0 10px 22px rgba(227, 6, 19, 0.4);
+    }
+
+    .btn-main:hover {
+      filter: brightness(1.05);
+    }
+
+    /* TABLE */
+
+    .table-header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .badge-muted {
+      background: #1a1d28;
+      color: var(--text-muted);
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 11px;
+    }
+
+    .btn-pill {
+      border-radius: 999px;
+      border: none;
+      padding: 8px 12px;
+      font-size: 12px;
+      cursor: pointer;
+      background: #1b1f2b;
+      color: var(--accent-yellow);
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      transition: transform 0.08s ease, box-shadow 0.1s ease;
     }
 
-    .primary-btn:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 8px 20px rgba(12, 180, 87, 0.35);
+    .btn-pill:hover {
+      background: #23283a;
     }
 
-    .primary-btn span.icon {
-      font-size: 16px;
+    .btn-pill svg {
+      width: 14px;
+      height: 14px;
     }
 
-    .btn-small {
-      padding: 6px 10px;
-      font-size: 12px;
+    .btn-export {
       border-radius: 999px;
-    }
-
-    .btn-danger {
-      background: rgba(255, 84, 84, 0.14);
-      color: #ff9494;
-    }
-
-    .btn-danger:hover {
-      background: rgba(255, 84, 84, 0.24);
-    }
-
-    .btn-ghost {
-      background: #151822;
-      color: var(--text-main);
-      border-radius: 999px;
-      border: 1px solid #2c3042;
-      padding: 6px 12px;
+      border: none;
+      padding: 8px 12px;
       font-size: 12px;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
       gap: 6px;
+      background: #102713;
+      color: #aef6b3;
     }
 
-    .btn-ghost:hover {
-      border-color: var(--accent);
-      color: var(--accent);
+    .btn-export.pdf {
+      background: #2d1515;
+      color: #ffb1b1;
+      margin-left: 8px;
     }
 
-    .tag-pill {
-      display: inline-flex;
-      align-items: center;
-      padding: 3px 8px;
-      border-radius: 999px;
-      background: #181b2a;
-      color: var(--text-muted);
-      font-size: 11px;
-      gap: 6px;
+    .btn-export:hover {
+      filter: brightness(1.05);
     }
 
-    .tag-pill-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 999px;
-      background: var(--accent-alt);
-    }
-
-    /* Tabela de itens */
-    .items-header-row {
+    .filters-row {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      margin-top: 4px;
-      margin-bottom: 10px;
       gap: 10px;
+      margin-bottom: 10px;
     }
 
-    .items-filters {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-      font-size: 12px;
-    }
-
-    .items-filters label {
-      font-size: 12px;
-      color: var(--text-muted);
-    }
-
-    .items-filters select {
-      min-width: 150px;
-    }
-
-    .items-actions {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
+    .filters-row select {
+      min-width: 160px;
     }
 
     .table-wrapper {
-      margin-top: 6px;
-      border-radius: 12px;
+      border-radius: 16px;
+      border: 1px solid var(--border-soft);
       overflow: hidden;
-      border: 1px solid #24283a;
-      background: #090a11;
+      background: var(--bg-card-soft);
     }
 
     table {
@@ -404,658 +415,623 @@
     }
 
     thead {
-      background: #141826;
+      background: #191d29;
     }
 
     th, td {
-      padding: 7px 8px;
-      text-align: left;
-      border-bottom: 1px solid #202337;
+      padding: 8px 10px;
+      border-bottom: 1px solid #151823;
+      white-space: nowrap;
     }
 
     th {
+      text-align: left;
       font-weight: 500;
       color: var(--text-muted);
       font-size: 11px;
-      white-space: nowrap;
-    }
-
-    tbody tr:nth-child(even) {
-      background: #090b15;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
     }
 
     tbody tr:hover {
-      background: #15192a;
-    }
-
-    .col-status,
-    .col-oferta {
-      white-space: nowrap;
-    }
-
-    .col-status {
-      padding-right: 4px;
-    }
-
-    .col-oferta {
-      padding-left: 4px;
+      background: rgba(255, 255, 255, 0.02);
     }
 
     .badge-status {
       display: inline-flex;
-      padding: 3px 9px;
       border-radius: 999px;
+      padding: 3px 10px;
       font-size: 11px;
-      align-items: center;
-      justify-content: center;
-      background: #2a1c24;
-      color: #ffb7c6;
-      border: 1px solid rgba(255, 143, 163, 0.6);
+      background: var(--accent-badge);
+      color: #ffe6e6;
     }
 
-    .badge-status.badge-vencido {
-      background: rgba(255, 17, 64, 0.18);
-      color: #ff9aa7;
-      border-color: rgba(255, 105, 130, 0.9);
+    .badge-status.vencido {
+      background: #6c1c1c;
+      color: #ffd1d1;
     }
 
-    .badge-status.badge-longo {
-      background: rgba(71, 187, 122, 0.18);
-      color: #a4ffcc;
-      border-color: rgba(75, 214, 142, 0.9);
+    .badge-status.curto {
+      background: #9b2c2c;
+    }
+
+    .badge-status.medio {
+      background: #9b6b2c;
+    }
+
+    .badge-status.longo {
+      background: #2c7a4b;
     }
 
     .badge-oferta {
       display: inline-flex;
-      padding: 3px 9px;
       border-radius: 999px;
+      padding: 3px 10px;
       font-size: 11px;
-      background: #1b1e2d;
-      color: var(--text-main);
-      border: 1px solid #32364b;
+      background: var(--pill-offer-bg);
+      color: #d7dfff;
     }
 
-    .badge-oferta.badge-oferta-on {
-      background: rgba(31, 191, 90, 0.18);
-      border-color: var(--accent-alt);
-      color: #a9ffd1;
+    .badge-oferta.lancado {
+      background: #14301b;
+      color: #aef6b3;
     }
 
-    .checkbox-flag {
-      width: 16px;
-      height: 16px;
-    }
-
-    .actions-cell {
-      display: flex;
-      gap: 5px;
-      flex-wrap: wrap;
-    }
-
-    .link-action {
+    .table-actions a {
+      color: #f5d76e;
       font-size: 11px;
       cursor: pointer;
-      color: #5ab9ff;
+      margin-right: 8px;
     }
 
-    .link-action:hover {
-      text-decoration: underline;
+    .table-actions a.delete {
+      color: #ff8a8a;
     }
 
-    .link-delete {
-      color: #ff7b7b;
-    }
-
-    .total-itens {
-      margin-top: 5px;
+    .table-footer {
+      padding: 6px 10px;
       font-size: 11px;
       color: var(--text-muted);
       text-align: right;
+      background: #141724;
     }
 
-    /* Login */
-    #login-screen {
+    /* ADMIN USUÁRIOS */
+
+    .users-table-wrapper {
+      margin-top: 8px;
+    }
+
+    .btn-outline {
+      border-radius: 999px;
+      border: 1px solid var(--border-soft);
+      padding: 6px 10px;
+      font-size: 12px;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+
+    .btn-outline:hover {
+      border-color: var(--accent-red);
+      color: var(--text-main);
+    }
+
+    /* LOGIN */
+
+    .login-wrapper {
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
+      background: radial-gradient(circle at top, #202331 0, #050608 60%);
     }
 
     .login-card {
-      background: radial-gradient(circle at top, #171a28, #050609);
-      border-radius: 18px;
-      border: 1px solid #25293b;
-      padding: 22px 24px 18px;
-      width: 350px;
-      box-shadow: 0 26px 50px rgba(0, 0, 0, 0.55);
+      width: 100%;
+      max-width: 420px;
+      background: #050608;
+      border-radius: 20px;
+      padding: 24px 26px 26px;
+      border: 1px solid #1d2030;
+      box-shadow: 0 24px 50px rgba(0, 0, 0, 0.9);
     }
 
     .login-logo {
-      display: flex;
-      justify-content: center;
-      margin-bottom: 14px;
+      text-align: center;
+      margin-bottom: 10px;
     }
 
     .login-logo img {
-      height: 40px;
+      height: 34px;
     }
 
     .login-title {
-      font-size: 17px;
-      font-weight: 600;
       text-align: center;
       margin-bottom: 4px;
+      font-weight: 600;
+      font-size: 18px;
     }
 
-    .login-subtitle {
-      font-size: 12px;
+    .login-sub {
       text-align: center;
+      font-size: 12px;
       color: var(--text-muted);
-      margin-bottom: 12px;
+      margin-bottom: 18px;
     }
 
     .login-divider {
-      display: flex;
-      align-items: center;
-      gap: 6px;
+      text-align: center;
+      margin: 12px 0;
       font-size: 11px;
       color: var(--text-muted);
-      margin: 8px 0;
+      position: relative;
     }
 
-    .login-divider span.line {
-      flex: 1;
+    .login-divider::before,
+    .login-divider::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      width: 38%;
       height: 1px;
-      background: #24273a;
+      background: #1b1e2a;
     }
 
-    .social-btn {
+    .login-divider::before {
+      left: 0;
+    }
+
+    .login-divider::after {
+      right: 0;
+    }
+
+    .btn-google {
       width: 100%;
       border-radius: 999px;
-      border: 1px solid #2a2e42;
-      background: #101321;
-      color: var(--text-main);
+      border: 1px solid #2b3040;
+      padding: 9px 12px;
+      background: #10121a;
+      color: #f5f5f5;
       font-size: 13px;
-      padding: 7px 12px;
-      margin-bottom: 6px;
+      cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
-      cursor: pointer;
+      margin-bottom: 10px;
     }
 
-    .social-btn:hover {
-      border-color: var(--accent);
-    }
-
-    .social-icon {
+    .btn-google img {
       width: 16px;
       height: 16px;
-      border-radius: 4px;
-      background: #fff;
+    }
+
+    .btn-google:hover {
+      border-color: var(--accent-red);
     }
 
     .login-footer {
       margin-top: 10px;
       font-size: 11px;
-      text-align: center;
       color: var(--text-muted);
+      text-align: center;
     }
 
-    .login-footer span {
-      color: #ffffff;
-    }
-
-    /* Scanner modal */
-    #scanner-modal {
+    .scanner-modal {
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.7);
-      display: none;
+      background: rgba(0, 0, 0, 0.85);
+      display: flex;
       align-items: center;
       justify-content: center;
-      z-index: 40;
+      z-index: 50;
     }
 
-    #scanner-box {
-      background: #02030a;
-      border-radius: 14px;
-      border: 1px solid #383e59;
-      padding: 16px 16px 10px;
-      width: 320px;
-      max-width: 94vw;
+    .scanner-box {
+      width: min(420px, 96vw);
+      background: #050608;
+      border-radius: 18px;
+      border: 1px solid #2b3045;
+      padding: 14px 14px 18px;
     }
 
-    #scanner-box h3 {
-      font-size: 14px;
-      margin-bottom: 6px;
-    }
-
-    #scanner-container {
-      width: 100%;
-      height: 260px;
-    }
-
-    #scanner-actions {
+    .scanner-header {
       display: flex;
-      justify-content: flex-end;
-      margin-top: 6px;
-      gap: 8px;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      font-size: 13px;
     }
 
-    /* Administração de usuários */
-    .admin-card {
-      margin-top: 18px;
+    .scanner-close {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 13px;
     }
 
-    .users-table-wrapper {
-      margin-top: 8px;
+    .scanner-close:hover {
+      color: var(--accent-red);
+    }
+
+    #reader {
+      width: 100%;
+      background: #000;
       border-radius: 12px;
       overflow: hidden;
-      border: 1px solid #252a3d;
-      background: #090b15;
     }
 
-    .users-table th,
-    .users-table td {
-      padding: 7px 8px;
-      border-bottom: 1px solid #1f2233;
-      font-size: 12px;
-    }
-
-    .users-table th {
-      background: #151827;
-      color: var(--text-muted);
-      font-weight: 500;
-      font-size: 11px;
-      white-space: nowrap;
-    }
-
-    .users-actions-cell {
-      white-space: nowrap;
-    }
-
-    .pill-role {
-      display: inline-flex;
-      align-items: center;
-      padding: 3px 8px;
-      border-radius: 999px;
-      font-size: 11px;
-      background: #171a26;
-      color: var(--text-muted);
-    }
-
-    /* Utilidades */
-    .hidden {
-      display: none;
-    }
-
-    @media (max-width: 1050px) {
-      .main-grid {
-        grid-template-columns: minmax(0, 1fr);
+    @media (max-width: 1024px) {
+      .section-row {
+        grid-template-columns: 1fr;
       }
-    }
-
-    @media (max-width: 600px) {
-      .login-card {
-        width: 92vw;
+      .sidebar {
+        display: none;
       }
-
-      .topbar {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 8px;
-      }
-
-      .topbar-user {
-        text-align: left;
+      .content {
+        padding: 16px;
       }
     }
   </style>
 </head>
 <body>
 
-<div id="login-screen">
+<!-- LOGIN -->
+<div id="loginView" class="login-wrapper">
   <div class="login-card">
     <div class="login-logo">
-      <!-- Coloque palato-logo.png na raiz do projeto -->
-      <img src="palato-logo.png" alt="Palato">
+      <!-- Substitua o src pelo caminho da logo do Palato no seu repo -->
+      <img src="palato-logo.png" alt="Palato" />
     </div>
     <div class="login-title">Controle de Validade</div>
-    <div class="login-subtitle">Acesso restrito a colaboradores autorizados.</div>
+    <div class="login-sub">Acesso restrito a colaboradores autorizados.</div>
 
-    <div class="form-row">
-      <label class="required">E-mail</label>
-      <input id="login-email" type="email" placeholder="voce@palato.com.br" />
-    </div>
-    <div class="form-row">
-      <label class="required">Senha</label>
-      <input id="login-password" type="password" placeholder="••••••••" />
-    </div>
-    <button id="btn-login-email" class="primary-btn" style="width:100%; margin-top:4px;">
-      <span class="icon">⏵</span> Entrar
-    </button>
-
-    <div class="login-divider">
-      <span class="line"></span>
-      <span>ou</span>
-      <span class="line"></span>
-    </div>
-
-    <button id="btn-login-google" class="social-btn">
-      <div class="social-icon"></div>
+    <button id="btnGoogle" class="btn-google">
+      <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="">
       Entrar com Google
     </button>
 
+    <div class="login-divider">ou acessar com e-mail corporativo</div>
+
+    <div class="form-grid">
+      <div class="field">
+        <label for="loginEmail">E-mail *</label>
+        <input id="loginEmail" type="email" placeholder="seu.email@palato.com.br" />
+      </div>
+      <div class="field">
+        <label for="loginPassword">Senha *</label>
+        <input id="loginPassword" type="password" placeholder="Sua senha" />
+      </div>
+      <button id="btnLogin" class="btn-main" type="button">Entrar</button>
+    </div>
+
     <div class="login-footer">
-      <span>Palato</span> • Uso interno para gestão de validades.
+      Dica: primeiro acesso via Google cria seu usuário como <b>repositor</b>.
     </div>
   </div>
 </div>
 
-<div id="app-screen" class="hidden">
-  <div class="app-max">
-    <header class="topbar">
-      <div class="topbar-left">
-        <div class="topbar-logo">
-          <img src="palato-logo.png" alt="Palato">
-          <span>QUALIDADE</span>
-        </div>
-        <div class="topbar-title-block">
-          <div class="topbar-title">Controle de Validade</div>
-          <div class="topbar-subtitle">Multi-loja • Acesso por perfil</div>
+<!-- APP -->
+<div id="appView" class="hidden">
+  <header class="app-header">
+    <div class="app-header-left">
+      <div class="logo-box">
+        <img src="palato-logo.png" alt="Palato" />
+        <div class="app-title">
+          <span class="app-title-main">Controle de Validade</span>
+          <span class="app-title-sub">Multi-loja · Lote · Ofertas</span>
         </div>
       </div>
-      <div class="topbar-user">
-        <div class="topbar-user-name" id="user-nome">Usuário</div>
-        <div class="topbar-user-role" id="user-perfil">Perfil</div>
-        <a id="btn-logout" class="link-sair">Sair</a>
+    </div>
+    <div class="app-header-right">
+      <div>
+        <div class="user-name" id="headerUserName">Usuário</div>
+        <div class="user-role" id="headerUserRole">Perfil</div>
       </div>
-    </header>
+      <span class="btn-text-danger" id="btnLogout">Sair</span>
+    </div>
+  </header>
 
-    <main class="main-grid">
-      <!-- NOVO LANÇAMENTO -->
-      <section class="card">
-        <div class="card-header">
-          <div>
+  <div class="app-wrapper">
+    <aside class="sidebar">
+      <h3>Menu</h3>
+      <ul class="nav-list">
+        <li class="nav-item active" data-section="section-main">
+          <span class="icon">＋</span> <span>Novo lançamento</span>
+        </li>
+        <li class="nav-item" data-section="section-main">
+          <span class="icon">📋</span> <span>Itens cadastrados</span>
+        </li>
+        <li class="nav-item" id="nav-admin" data-section="section-admin">
+          <span class="icon">⚙️</span> <span>Gerenciar usuários</span>
+        </li>
+      </ul>
+    </aside>
+
+    <main class="content">
+      <!-- SEÇÃO PRINCIPAL (FORM + TABELA) -->
+      <section id="section-main" class="section-row">
+        <!-- FORM -->
+        <div class="card">
+          <div class="card-header">
             <div class="card-title">
-              <div class="card-title-icon">＋</div>
+              <span class="icon">＋</span>
               <span>Novo lançamento</span>
             </div>
-            <div class="card-subtitle">Registrar validade por loja, departamento e lote.</div>
+            <span class="badge-muted" id="labelCadastroRapido">Cadastro rápido</span>
           </div>
-          <div class="tag-pill">
-            <span class="tag-pill-dot"></span>
-            <span>Cadastro rápido</span>
+          <div class="card-subtitle">
+            Registrar validade por loja, departamento e lote.
           </div>
-        </div>
 
-        <div class="form-row">
-          <label class="required">Loja</label>
-          <select id="field-loja">
-            <option value="">Selecione</option>
-            <option value="Ponta Verde">Ponta Verde</option>
-            <option value="Farol">Farol</option>
-            <option value="Praia">Praia</option>
-            <option value="Riomar">Riomar</option>
-            <option value="CD">CD</option>
-          </select>
-        </div>
+          <div class="form-grid">
+            <div class="form-row">
+              <div class="field">
+                <label for="lojaSelect">Loja *</label>
+                <select id="lojaSelect">
+                  <option value="">Selecione</option>
+                  <option>Ponta Verde</option>
+                  <option>Farol</option>
+                  <option>Praia</option>
+                  <option>Riomar</option>
+                  <option>CD Farol</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="dataLancamento">Data lançamento</label>
+                <input id="dataLancamento" type="text" disabled />
+              </div>
+            </div>
 
-        <div class="form-grid-2">
-          <div class="form-row">
-            <label class="required">Data lançamento</label>
-            <input id="field-dataLancamento" type="text" disabled />
-          </div>
-          <div class="form-row">
-            <label class="required">Departamento</label>
-            <select id="field-departamento">
-              <option value="">Selecione</option>
-              <option value="Açougue">Açougue</option>
-              <option value="Adega">Adega</option>
-              <option value="Bebidas">Bebidas</option>
-              <option value="Mercearia Alimentos">Mercearia Alimentos</option>
-              <option value="Mercearia Não Alimentos">Mercearia Não Alimentos</option>
-              <option value="Perecíveis Processados">Perecíveis Processados</option>
-            </select>
-          </div>
-        </div>
+            <div class="form-row">
+              <div class="field">
+                <label for="departamentoSelect">Departamento *</label>
+                <select id="departamentoSelect">
+                  <option value="">Selecione</option>
+                  <option>Açougue</option>
+                  <option>Adega</option>
+                  <option>Bebidas</option>
+                  <option>Mercearia Alimentos</option>
+                  <option>Mercearia Não Alimentos</option>
+                  <option>Perecíveis Processados</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="codigoBarras">Cód. barras (números, máx. 13) *</label>
+                <div class="input-with-icon">
+                  <input id="codigoBarras" type="text" maxlength="13" placeholder="789..." />
+                  <button type="button" id="btnScan">Scan</button>
+                </div>
+              </div>
+            </div>
 
-        <div class="form-row">
-          <label class="required">Cód. barras (números, máx. 13)</label>
-          <div class="input-inline">
-            <input id="field-codigoBarras" type="text" maxlength="13" placeholder="789..." />
-            <button id="btn-open-scanner" type="button" class="scan-btn" title="Ler código de barras">
-              <span>📷</span>
+            <div class="form-row">
+              <div class="field">
+                <label for="descricao">Descrição *</label>
+                <input id="descricao" type="text" />
+              </div>
+              <div class="field">
+                <label for="lote">Lote</label>
+                <input id="lote" type="text" />
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="field">
+                <label for="quantidade">Quantidade *</label>
+                <input id="quantidade" type="number" min="1" />
+              </div>
+              <div class="field">
+                <label for="validadeInput">Validade *</label>
+                <input id="validadeInput" type="date" />
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="observacao">Observação</label>
+              <textarea id="observacao" placeholder="Lote em oferta, ponto extra, etc."></textarea>
+            </div>
+
+            <button id="btnSalvarLancamento" class="btn-main" type="button">
+              💾 Salvar lançamento
             </button>
           </div>
         </div>
 
-        <div class="form-row">
-          <label class="required">Descrição</label>
-          <input id="field-descricao" type="text" placeholder="Descrição do produto" />
-        </div>
-
-        <div class="form-grid-2">
-          <div class="form-row">
-            <label>Lote</label>
-            <input id="field-lote" type="text" placeholder="Lote / fabricação" />
+        <!-- TABELA -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">
+              <span class="icon">📋</span>
+              <span>Itens cadastrados</span>
+            </div>
+            <button id="btnMarcarTodosOferta" class="btn-pill" type="button">
+              📢 Marcar todos como oferta
+            </button>
           </div>
-          <div class="form-row">
-            <label class="required">Quantidade</label>
-            <input id="field-quantidade" type="number" min="1" placeholder="Qtd" />
+          <div class="card-subtitle">
+            Filtros por status de vencimento e controle de oferta.
           </div>
-        </div>
 
-        <div class="form-row">
-          <label class="required">Validade</label>
-          <input id="field-validade" type="text" placeholder="dd/mm/aaaa" />
-        </div>
+          <div class="filters-row">
+            <div class="field" style="min-width: 180px;">
+              <label for="filtroStatus">Filtros</label>
+              <select id="filtroStatus">
+                <option value="todos">Todos</option>
+                <option value="7">Vence em 7 dias</option>
+                <option value="15">Vence em 15 dias</option>
+                <option value="30">Vence em 30 dias</option>
+                <option value="vencidos">Vencidos</option>
+              </select>
+            </div>
+            <div class="field" style="min-width: 190px;">
+              <label for="filtroDepartamento">Departamento</label>
+              <select id="filtroDepartamento">
+                <option value="todos">Todos departamentos</option>
+                <option>Açougue</option>
+                <option>Adega</option>
+                <option>Bebidas</option>
+                <option>Mercearia Alimentos</option>
+                <option>Mercearia Não Alimentos</option>
+                <option>Perecíveis Processados</option>
+              </select>
+            </div>
 
-        <div class="form-row">
-          <label>Observação</label>
-          <textarea id="field-observacao" placeholder="Lote em oferta, ponto extra, etc."></textarea>
-        </div>
+            <div style="margin-left:auto; display:flex; gap:8px; align-items:flex-end;">
+              <button id="btnExportExcel" class="btn-export" type="button">
+                📊 Excel
+              </button>
+              <button id="btnExportPdf" class="btn-export pdf" type="button">
+                📄 PDF
+              </button>
+            </div>
+          </div>
 
-        <div style="margin-top:10px; display:flex; justify-content:flex-end;">
-          <button id="btn-salvar-lancamento" class="primary-btn">
-            <span class="icon">💾</span> Salvar lançamento
-          </button>
+          <div class="table-wrapper">
+            <table>
+              <thead>
+              <tr>
+                <th>Loja</th>
+                <th>Data lançamento</th>
+                <th>Departamento</th>
+                <th>Cód. barras</th>
+                <th>Descrição</th>
+                <th>Qtd</th>
+                <th>Validade</th>
+                <th>Status</th>
+                <th>Oferta</th>
+                <th>Flag</th>
+                <th>Lote</th>
+                <th>Usuário</th>
+                <th>Lançado em</th>
+                <th>Obs.</th>
+                <th>Ações</th>
+              </tr>
+              </thead>
+              <tbody id="tbodyItens"></tbody>
+            </table>
+            <div class="table-footer" id="totalItensLabel">Total de itens: 0</div>
+          </div>
         </div>
       </section>
 
-      <!-- ITENS CADASTRADOS -->
-      <section class="card">
-        <div class="card-header">
-          <div>
+      <!-- SEÇÃO ADMIN USUÁRIOS -->
+      <section id="section-admin" class="hidden">
+        <div class="card">
+          <div class="card-header">
             <div class="card-title">
-              <div class="card-title-icon">📄</div>
-              <span>Itens cadastrados</span>
+              <span class="icon">🛡</span>
+              <span>Administração de usuários</span>
             </div>
-            <div class="card-subtitle">Filtros por status de vencimento e controle de oferta.</div>
-          </div>
-        </div>
-
-        <div class="items-header-row">
-          <div class="items-filters">
-            <label for="filtro-status">Filtros:</label>
-            <select id="filtro-status">
-              <option value="todos">Todos</option>
-              <option value="7">Vence em 7 dias</option>
-              <option value="15">Vence em 15 dias</option>
-              <option value="30">Vence em 30 dias</option>
-              <option value="vencido">Vencidos</option>
-            </select>
-
-            <select id="filtro-departamento">
-              <option value="todos">Todos departamentos</option>
-              <option value="Açougue">Açougue</option>
-              <option value="Adega">Adega</option>
-              <option value="Bebidas">Bebidas</option>
-              <option value="Mercearia Alimentos">Mercearia Alimentos</option>
-              <option value="Mercearia Não Alimentos">Mercearia Não Alimentos</option>
-              <option value="Perecíveis Processados">Perecíveis Processados</option>
-            </select>
-          </div>
-
-          <div class="items-actions">
-            <button id="btn-marcar-oferta" class="btn-ghost">
-              📣 Marcar todos como oferta
-            </button>
-            <button id="btn-export-excel" class="btn-ghost">
-              📊 Excel
-            </button>
-            <button id="btn-export-pdf" class="btn-ghost">
-              📄 PDF
+            <button id="btnRecarregarUsuarios" class="btn-outline" type="button">
+              🔄 Recarregar
             </button>
           </div>
-        </div>
+          <div class="card-subtitle">
+            Gerencie perfis (<b>admin</b>, <b>gerente</b>, <b>repositor</b>) e lojas vinculadas.
+          </div>
 
-        <div class="table-wrapper">
-          <table id="tabela-itens">
-            <thead>
-            <tr>
-              <th>LOJA</th>
-              <th>DATA LANÇAMENTO</th>
-              <th>DEPARTAMENTO</th>
-              <th>CÓD. BARRAS</th>
-              <th>DESCRIÇÃO</th>
-              <th>QTD</th>
-              <th>VALIDADE</th>
-              <th class="col-status">STATUS</th>
-              <th class="col-oferta">OFERTA</th>
-              <th>FLAG</th>
-              <th>LOTE</th>
-              <th>USUÁRIO</th>
-              <th>LANÇADO EM</th>
-              <th>OBS.</th>
-              <th>AÇÕES</th>
-            </tr>
-            </thead>
-            <tbody>
-            <!-- preenchido via JS -->
-            </tbody>
-          </table>
-        </div>
-        <div class="total-itens">
-          Total de itens: <span id="total-itens">0</span>
+          <div class="form-grid" style="margin-top:14px;">
+            <div class="form-row">
+              <div class="field">
+                <label for="novoUserNome">Nome</label>
+                <input id="novoUserNome" type="text" />
+              </div>
+              <div class="field">
+                <label for="novoUserEmail">E-mail</label>
+                <input id="novoUserEmail" type="email" />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="field">
+                <label for="novoUserTipo">Perfil</label>
+                <select id="novoUserTipo">
+                  <option value="repositor">Repositor</option>
+                  <option value="gerente">Gerente</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="novoUserLoja">Loja</label>
+                <select id="novoUserLoja">
+                  <option value="">Nenhuma</option>
+                  <option>Ponta Verde</option>
+                  <option>Farol</option>
+                  <option>Praia</option>
+                  <option>Riomar</option>
+                  <option>CD Farol</option>
+                </select>
+              </div>
+            </div>
+            <button id="btnSalvarUsuario" class="btn-main" type="button">💾 Salvar usuário</button>
+          </div>
+
+          <div class="users-table-wrapper table-wrapper" style="margin-top:16px;">
+            <table>
+              <thead>
+              <tr>
+                <th>Nome</th>
+                <th>E-mail</th>
+                <th>Perfil</th>
+                <th>Loja</th>
+                <th>Ações</th>
+              </tr>
+              </thead>
+              <tbody id="tbodyUsuarios"></tbody>
+            </table>
+          </div>
         </div>
       </section>
     </main>
-
-    <!-- ADMINISTRAÇÃO DE USUÁRIOS (só Admin) -->
-    <section id="admin-usuarios-card" class="card admin-card hidden">
-      <div class="card-header">
-        <div>
-          <div class="card-title">
-            <div class="card-title-icon">🛡</div>
-            <span>Administração de usuários</span>
-          </div>
-          <div class="card-subtitle">
-            Gerencie perfis (admin, gerente, repositor) e lojas vinculadas.
-          </div>
-        </div>
-        <button id="btn-recarregar-usuarios" class="btn-ghost">⟳ Recarregar</button>
-      </div>
-
-      <div class="form-grid-2">
-        <div class="form-row">
-          <label>Nome</label>
-          <input id="admin-nome" type="text" placeholder="Nome do usuário" />
-        </div>
-        <div class="form-row">
-          <label>E-mail</label>
-          <input id="admin-email" type="email" placeholder="email@palato.com.br" />
-        </div>
-      </div>
-
-      <div class="form-grid-2">
-        <div class="form-row">
-          <label>Perfil</label>
-          <select id="admin-perfil">
-            <option value="repositor">Repositor</option>
-            <option value="gerente">Gerente</option>
-            <option value="admin">Admin</option>
-          </select>
-        </div>
-        <div class="form-row">
-          <label>Loja</label>
-          <select id="admin-loja">
-            <option value="">Nenhuma</option>
-            <option value="Ponta Verde">Ponta Verde</option>
-            <option value="Farol">Farol</option>
-            <option value="Praia">Praia</option>
-            <option value="Riomar">Riomar</option>
-            <option value="CD">CD</option>
-          </select>
-        </div>
-      </div>
-
-      <div style="margin-top:8px; margin-bottom:10px;">
-        <button id="btn-salvar-usuario" class="primary-btn btn-small">
-          <span class="icon">➕</span> Salvar usuário
-        </button>
-      </div>
-
-      <div class="users-table-wrapper">
-        <table class="users-table" id="tabela-usuarios">
-          <thead>
-          <tr>
-            <th>Nome</th>
-            <th>E-mail</th>
-            <th>Perfil</th>
-            <th>Loja</th>
-            <th>Ações</th>
-          </tr>
-          </thead>
-          <tbody>
-          <!-- preenchido via JS -->
-          </tbody>
-        </table>
-      </div>
-    </section>
   </div>
 </div>
 
-<!-- Modal scanner -->
-<div id="scanner-modal">
-  <div id="scanner-box">
-    <h3>Leitor de código de barras</h3>
-    <div id="scanner-container"></div>
-    <div id="scanner-actions">
-      <button id="btn-fechar-scanner" class="btn-ghost btn-small">Fechar</button>
+<!-- MODAL SCANNER -->
+<div id="scannerModal" class="scanner-modal hidden">
+  <div class="scanner-box">
+    <div class="scanner-header">
+      <span>Leitor de código de barras</span>
+      <button class="scanner-close" id="btnFecharScanner">Fechar</button>
     </div>
+    <div id="reader"></div>
   </div>
 </div>
 
+<!-- LIB HTML5-QRCODE -->
+<script src="https://unpkg.com/html5-qrcode"></script>
+<!-- SheetJS para Excel -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<!-- jsPDF + autotable para PDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
+<!-- FIREBASE -->
 <script type="module">
-  import {
-    initializeApp
-  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
   import {
     getAuth,
-    onAuthStateChanged,
     signInWithEmailAndPassword,
     signInWithPopup,
     GoogleAuthProvider,
+    onAuthStateChanged,
     signOut
-  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
   import {
     getFirestore,
     collection,
-    addDoc,
     getDocs,
-    query,
-    where,
-    orderBy,
-    doc,
+    addDoc,
     updateDoc,
     deleteDoc,
+    doc,
+    query,
+    where,
     serverTimestamp
-  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
-  // === CONFIG FIREBASE (seu projeto) ===
+  // === CONFIG FIREBASE (O MESMO QUE VOCÊ COPIOU DO CONSOLE) ===
   const firebaseConfig = {
     apiKey: "AIzaSyDa1z9LwlSHxwSTC974ci9RMEYdEiA_wEg",
     authDomain: "controle-validade-fc108.firebaseapp.com",
@@ -1071,761 +1047,691 @@
   const db = getFirestore(app);
   const googleProvider = new GoogleAuthProvider();
 
-  // === ESTADO GLOBAL ===
-  let usuarioAtual = null;   // objeto do Firebase Auth
-  let perfilAtual = "repositor"; // admin | gerente | repositor
-  let lojaAtual = "";
-  let nomeAtual = "";
+  // === ELEMENTOS GERAIS ===
+  const loginView = document.getElementById('loginView');
+  const appView = document.getElementById('appView');
+  const headerUserName = document.getElementById('headerUserName');
+  const headerUserRole = document.getElementById('headerUserRole');
+  const btnLogout = document.getElementById('btnLogout');
 
-  let scannerInstance = null;
+  const navItems = document.querySelectorAll('.nav-item');
+  const sectionMain = document.getElementById('section-main');
+  const sectionAdmin = document.getElementById('section-admin');
+  const navAdmin = document.getElementById('nav-admin');
 
-  const loginScreen = document.getElementById("login-screen");
-  const appScreen = document.getElementById("app-screen");
+  // Login
+  const btnGoogle = document.getElementById('btnGoogle');
+  const btnLogin = document.getElementById('btnLogin');
+  const loginEmail = document.getElementById('loginEmail');
+  const loginPassword = document.getElementById('loginPassword');
 
-  const userNomeSpan = document.getElementById("user-nome");
-  const userPerfilSpan = document.getElementById("user-perfil");
+  // Form lançamento
+  const lojaSelect = document.getElementById('lojaSelect');
+  const dataLancamento = document.getElementById('dataLancamento');
+  const departamentoSelect = document.getElementById('departamentoSelect');
+  const codigoBarras = document.getElementById('codigoBarras');
+  const descricao = document.getElementById('descricao');
+  const lote = document.getElementById('lote');
+  const quantidade = document.getElementById('quantidade');
+  const validadeInput = document.getElementById('validadeInput');
+  const observacao = document.getElementById('observacao');
+  const btnSalvarLancamento = document.getElementById('btnSalvarLancamento');
+  const btnScan = document.getElementById('btnScan');
 
-  const tabelaItensBody = document.querySelector("#tabela-itens tbody");
-  const totalItensSpan = document.getElementById("total-itens");
+  // Tabela
+  const tbodyItens = document.getElementById('tbodyItens');
+  const totalItensLabel = document.getElementById('totalItensLabel');
+  const filtroStatus = document.getElementById('filtroStatus');
+  const filtroDepartamento = document.getElementById('filtroDepartamento');
+  const btnExportExcel = document.getElementById('btnExportExcel');
+  const btnExportPdf = document.getElementById('btnExportPdf');
+  const btnMarcarTodosOferta = document.getElementById('btnMarcarTodosOferta');
 
-  const adminCard = document.getElementById("admin-usuarios-card");
-  const tabelaUsuariosBody = document.querySelector("#tabela-usuarios tbody");
+  // Admin usuários
+  const tbodyUsuarios = document.getElementById('tbodyUsuarios');
+  const btnRecarregarUsuarios = document.getElementById('btnRecarregarUsuarios');
+  const btnSalvarUsuario = document.getElementById('btnSalvarUsuario');
+  const novoUserNome = document.getElementById('novoUserNome');
+  const novoUserEmail = document.getElementById('novoUserEmail');
+  const novoUserTipo = document.getElementById('novoUserTipo');
+  const novoUserLoja = document.getElementById('novoUserLoja');
 
-  // === UTIL ===
-  function formatarDataHora(timestamp) {
-    if (!timestamp) return "";
-    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-    const dia = String(date.getDate()).padStart(2, "0");
-    const mes = String(date.getMonth() + 1).padStart(2, "0");
-    const ano = date.getFullYear();
-    const hora = String(date.getHours()).padStart(2, "0");
-    const min = String(date.getMinutes()).padStart(2, "0");
-    return `${dia}/${mes}/${ano} ${hora}:${min}`;
+  // Scanner
+  const scannerModal = document.getElementById('scannerModal');
+  const btnFecharScanner = document.getElementById('btnFecharScanner');
+  let html5QrCode = null;
+
+  // Estado
+  let currentUser = null;
+  let currentProfile = null; // { email, tipo, loja, nome, docId }
+  let currentItens = [];     // array de docs de validade
+
+  // Utils
+
+  function formatDateTimeBR(date) {
+    const d = date instanceof Date ? date : new Date(date);
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
   }
 
-  function hojeFormatado() {
+  function formatDateBR(date) {
+    const d = date instanceof Date ? date : new Date(date);
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`;
+  }
+
+  function showAlert(msg) {
+    alert(msg);
+  }
+
+  function setTodayInForm() {
     const now = new Date();
-    const dia = String(now.getDate()).padStart(2, "0");
-    const mes = String(now.getMonth() + 1).padStart(2, "0");
-    const ano = now.getFullYear();
-    const hora = String(now.getHours()).padStart(2, "0");
-    const min = String(now.getMinutes()).padStart(2, "0");
-    return { dataSimples: `${dia}/${mes}/${ano}`, dataHora: `${dia}/${mes}/${ano} ${hora}:${min}` };
+    dataLancamento.value = formatDateTimeBR(now);
   }
 
-  function parseDataBr(str) {
-    if (!str) return null;
-    const [d, m, a] = str.split("/");
-    const date = new Date(Number(a), Number(m) - 1, Number(d), 0, 0, 0, 0);
-    if (isNaN(date.getTime())) return null;
-    return date;
+  function setActiveSection(sectionId) {
+    sectionMain.classList.add('hidden');
+    sectionAdmin.classList.add('hidden');
+    if (sectionId === 'section-main') sectionMain.classList.remove('hidden');
+    if (sectionId === 'section-admin') sectionAdmin.classList.remove('hidden');
+
+    navItems.forEach(li => li.classList.toggle('active', li.dataset.section === sectionId));
   }
 
-  function calcularStatus(validadeStr) {
-    const hoje = new Date();
-    const val = parseDataBr(validadeStr);
-    if (!val) {
-      return { label: "Sem data", categoria: "outro", classe: "" };
-    }
-    const diffMs = val.getTime() - hoje.setHours(0, 0, 0, 0);
-    const dias = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  navItems.forEach(li => {
+    li.addEventListener('click', () => {
+      const target = li.dataset.section;
+      if (target === 'section-admin' && currentProfile?.tipo !== 'admin') return;
+      setActiveSection(target);
+    });
+  });
 
-    if (dias < 0) {
-      return {
-        label: "Vencido",
-        categoria: "vencido",
-        classe: "badge-vencido"
-      };
-    }
-    if (dias <= 7) {
-      return {
-        label: `Vence em ${dias} dia(s)`,
-        categoria: "7",
-        classe: ""
-      };
-    }
-    if (dias <= 15) {
-      return {
-        label: `Vence em ${dias} dia(s)`,
-        categoria: "15",
-        classe: ""
-      };
-    }
-    if (dias <= 30) {
-      return {
-        label: `Vence em ${dias} dia(s)`,
-        categoria: "30",
-        classe: "badge-longo"
-      };
-    }
-    return {
-      label: `Vence em ${dias} dia(s)`,
-      categoria: "outro",
-      classe: "badge-longo"
-    };
-  }
+  // === PERFIL DE USUÁRIO (FIRESTORE /usuarios) ===
 
-  function atualizarDataLancamento() {
-    const { dataSimples, dataHora } = hojeFormatado();
-    document.getElementById("field-dataLancamento").value = dataHora;
-    return dataSimples;
-  }
-
-  // === USUÁRIOS: GARANTIR REGISTRO NO FIRESTORE ===
-  async function garantirUsuarioNoFirestore(user) {
-    if (!user || !user.email) return null;
-    const email = user.email.toLowerCase();
-
-    const usuariosRef = collection(db, "usuarios");
-    const q = query(usuariosRef, where("email", "==", email));
+  async function ensureUserProfile(user) {
+    const col = collection(db, 'usuarios');
+    const q = query(col, where('email', '==', user.email));
     const snap = await getDocs(q);
 
-    if (snap.empty) {
-      // cria como repositor padrão
-      const docRef = await addDoc(usuariosRef, {
-        email,
-        nome: user.displayName || "",
-        tipo: "repositor",
-        loja: "",
-        criadoEm: serverTimestamp()
-      });
-      return { id: docRef.id, email, nome: user.displayName || "", tipo: "repositor", loja: "" };
-    } else {
-      // pega o mais recente
-      let chosen = snap.docs[0];
-      snap.forEach(d => {
-        const atual = chosen.data().criadoEm;
-        const cand = d.data().criadoEm;
-        if (cand && (!atual || cand.toMillis() > atual.toMillis())) {
-          chosen = d;
-        }
-      });
-      return { id: chosen.id, ...chosen.data() };
-    }
-  }
-
-  // === CARREGAR LANÇAMENTOS ===
-  async function carregarLancamentos() {
-    tabelaItensBody.innerHTML = `<tr><td colspan="15">Carregando...</td></tr>`;
-    try {
-      const lancRef = collection(db, "lancamentos");
-      const snap = await getDocs(query(lancRef, orderBy("criadoEm", "desc")));
-
-      const filtroStatus = document.getElementById("filtro-status").value;
-      const filtroDep = document.getElementById("filtro-departamento").value;
-
-      const linhas = [];
-
-      snap.forEach(docSnap => {
-        const data = docSnap.data();
-
-        // regra de visibilidade
-        const emailCriador = (data.criadoPor || "").toLowerCase();
-        const lojaItem = data.loja || "";
-        if (perfilAtual === "repositor") {
-          if (usuarioAtual && emailCriador !== usuarioAtual.email.toLowerCase()) return;
-        } else if (perfilAtual === "gerente") {
-          if (lojaAtual && lojaItem !== lojaAtual) return;
-        }
-        // admin vê tudo
-
-        const statusInfo = calcularStatus(data.validade);
-
-        // filtro por status
-        if (filtroStatus !== "todos" && statusInfo.categoria !== filtroStatus) {
-          if (!(filtroStatus === "vencido" && statusInfo.categoria === "vencido")) {
-            return;
-          }
-        }
-
-        // filtro por departamento
-        if (filtroDep !== "todos" && data.departamento !== filtroDep) {
-          return;
-        }
-
-        linhas.push({ id: docSnap.id, ...data, statusInfo });
-      });
-
-      renderizarTabelaLancamentos(linhas);
-    } catch (err) {
-      console.error(err);
-      tabelaItensBody.innerHTML = `<tr><td colspan="15">Erro ao carregar itens.</td></tr>`;
-    }
-  }
-
-  function renderizarTabelaLancamentos(itens) {
-    tabelaItensBody.innerHTML = "";
-    if (!itens.length) {
-      tabelaItensBody.innerHTML = `<tr><td colspan="15">Nenhum item encontrado.</td></tr>`;
-      totalItensSpan.textContent = "0";
-      return;
+    if (!snap.empty) {
+      // se já tem, só retorna primeiro
+      const docSnap = snap.docs[0];
+      return {
+        docId: docSnap.id,
+        ...docSnap.data()
+      };
     }
 
-    itens.forEach(item => {
-      const tr = document.createElement("tr");
-
-      const statusClasse = `badge-status ${item.statusInfo.classe || ""}`;
-      const ofertaStatus = item.ofertaStatus || "Não Lançado";
-      const ofertaOn = ofertaStatus === "Lançado";
-
-      const flagChecked = item.ofertaFlag === true ? "checked" : "";
-
-      tr.innerHTML = `
-        <td>${item.loja || ""}</td>
-        <td>${item.dataLancamento || ""}</td>
-        <td>${item.departamento || ""}</td>
-        <td>${item.codigoBarras || ""}</td>
-        <td>${item.descricao || ""}</td>
-        <td>${item.quantidade || ""}</td>
-        <td>${item.validade || ""}</td>
-        <td class="col-status">
-          <span class="${statusClasse}">
-            ${item.statusInfo.label}
-          </span>
-        </td>
-        <td class="col-oferta">
-          <span class="badge-oferta ${ofertaOn ? "badge-oferta-on" : ""}">
-            ${ofertaStatus}
-          </span>
-        </td>
-        <td style="text-align:center;">
-          <input type="checkbox" class="checkbox-flag" data-id="${item.id}" ${flagChecked}>
-        </td>
-        <td>${item.lote || ""}</td>
-        <td>${item.usuarioNome || ""}</td>
-        <td>${formatarDataHora(item.criadoEm || null)}</td>
-        <td>${item.observacao || ""}</td>
-        <td class="actions-cell">
-          <span class="link-action" data-acao="editar" data-id="${item.id}">Editar</span>
-          ${
-            perfilAtual === "admin"
-              ? `<span class="link-action link-delete" data-acao="excluir" data-id="${item.id}">Excluir</span>`
-              : ""
-          }
-        </td>
-      `;
-
-      tabelaItensBody.appendChild(tr);
+    // se não tem, criar como repositor padrão, sem loja
+    const docRef = await addDoc(col, {
+      criadoEm: serverTimestamp(),
+      email: user.email,
+      nome: user.displayName || '',
+      loja: '',
+      tipo: 'repositor'
     });
-
-    totalItensSpan.textContent = String(itens.length);
-
-    // eventos nas flags
-    document.querySelectorAll(".checkbox-flag").forEach(chk => {
-      chk.addEventListener("change", async (e) => {
-        const id = e.target.getAttribute("data-id");
-        const checked = e.target.checked;
-        try {
-          await updateDoc(doc(db, "lancamentos", id), {
-            ofertaFlag: checked,
-            ofertaStatus: checked ? "Lançado" : "Não Lançado"
-          });
-          await carregarLancamentos();
-        } catch (err) {
-          console.error(err);
-          alert("Erro ao atualizar oferta.");
-        }
-      });
-    });
-
-    // ações editar / excluir
-    document.querySelectorAll(".actions-cell .link-action").forEach(elem => {
-      elem.addEventListener("click", (e) => {
-        const acao = e.target.getAttribute("data-acao");
-        const id = e.target.getAttribute("data-id");
-        if (acao === "excluir") {
-          excluirLancamento(id);
-        } else if (acao === "editar") {
-          editarLancamento(id);
-        }
-      });
-    });
-  }
-
-  async function excluirLancamento(id) {
-    if (!confirm("Tem certeza que deseja excluir este lançamento?")) return;
-    try {
-      await deleteDoc(doc(db, "lancamentos", id));
-      await carregarLancamentos();
-    } catch (err) {
-      console.error(err);
-      alert("Erro ao excluir.");
-    }
-  }
-
-  async function editarLancamento(id) {
-    // carrega o doc e joga nos campos
-    try {
-      const lancRef = collection(db, "lancamentos");
-      const snap = await getDocs(query(lancRef, where("__name__", "==", id)));
-      if (snap.empty) return;
-      const data = snap.docs[0].data();
-
-      document.getElementById("field-loja").value = data.loja || "";
-      document.getElementById("field-departamento").value = data.departamento || "";
-      document.getElementById("field-codigoBarras").value = data.codigoBarras || "";
-      document.getElementById("field-descricao").value = data.descricao || "";
-      document.getElementById("field-lote").value = data.lote || "";
-      document.getElementById("field-quantidade").value = data.quantidade || "";
-      document.getElementById("field-validade").value = data.validade || "";
-      document.getElementById("field-observacao").value = data.observacao || "";
-
-      document.getElementById("btn-salvar-lancamento").dataset.editId = id;
-      document.getElementById("btn-salvar-lancamento").textContent = "Salvar edição";
-    } catch (err) {
-      console.error(err);
-      alert("Erro ao carregar para edição.");
-    }
-  }
-
-  // === SALVAR LANÇAMENTO ===
-  document.getElementById("btn-salvar-lancamento").addEventListener("click", async () => {
-    const loja = document.getElementById("field-loja").value;
-    const departamento = document.getElementById("field-departamento").value;
-    const codigoBarras = document.getElementById("field-codigoBarras").value.trim();
-    const descricao = document.getElementById("field-descricao").value.trim();
-    const lote = document.getElementById("field-lote").value.trim();
-    const quantidade = document.getElementById("field-quantidade").value;
-    const validade = document.getElementById("field-validade").value.trim();
-    const observacao = document.getElementById("field-observacao").value.trim();
-
-    if (!loja || !departamento || !codigoBarras || !descricao || !quantidade || !validade) {
-      alert("Preencha todos os campos obrigatórios.");
-      return;
-    }
-
-    if (!/^[0-9]{1,13}$/.test(codigoBarras)) {
-      alert("Código de barras deve conter apenas números (máx. 13).");
-      return;
-    }
-
-    const { dataSimples, dataHora } = hojeFormatado();
-
-    const payload = {
-      loja,
-      departamento,
-      codigoBarras,
-      descricao,
-      lote,
-      quantidade: Number(quantidade),
-      validade,
-      dataLancamento: dataSimples,
-      observacao,
-      ofertaStatus: "Não Lançado",
-      ofertaFlag: false,
-      usuarioNome: nomeAtual || (usuarioAtual && usuarioAtual.displayName) || "",
-      criadoPor: usuarioAtual ? usuarioAtual.email.toLowerCase() : "",
-      criadoEm: serverTimestamp()
+    return {
+      docId: docRef.id,
+      email: user.email,
+      nome: user.displayName || '',
+      loja: '',
+      tipo: 'repositor'
     };
-
-    const editId = document.getElementById("btn-salvar-lancamento").dataset.editId;
-
-    try {
-      if (editId) {
-        await updateDoc(doc(db, "lancamentos", editId), payload);
-        document.getElementById("btn-salvar-lancamento").dataset.editId = "";
-        document.getElementById("btn-salvar-lancamento").textContent = "Salvar lançamento";
-      } else {
-        await addDoc(collection(db, "lancamentos"), payload);
-      }
-
-      // limpa alguns campos
-      document.getElementById("field-codigoBarras").value = "";
-      document.getElementById("field-descricao").value = "";
-      document.getElementById("field-lote").value = "";
-      document.getElementById("field-quantidade").value = "";
-      document.getElementById("field-validade").value = "";
-      document.getElementById("field-observacao").value = "";
-
-      atualizarDataLancamento();
-      await carregarLancamentos();
-    } catch (err) {
-      console.error(err);
-      alert("Erro ao salvar lançamento.");
-    }
-  });
-
-  // === FILTROS ===
-  document.getElementById("filtro-status").addEventListener("change", carregarLancamentos);
-  document.getElementById("filtro-departamento").addEventListener("change", carregarLancamentos);
-
-  // === MARCAR TODOS COMO OFERTA ===
-  document.getElementById("btn-marcar-oferta").addEventListener("click", async () => {
-    if (!confirm("Marcar todos os itens listados como 'Lançado' em oferta?")) return;
-    try {
-      const checkboxes = document.querySelectorAll(".checkbox-flag");
-      const promises = [];
-      checkboxes.forEach(chk => {
-        const id = chk.getAttribute("data-id");
-        promises.push(
-          updateDoc(doc(db, "lancamentos", id), {
-            ofertaFlag: true,
-            ofertaStatus: "Lançado"
-          })
-        );
-      });
-      await Promise.all(promises);
-      await carregarLancamentos();
-    } catch (err) {
-      console.error(err);
-      alert("Erro ao atualizar ofertas.");
-    }
-  });
-
-  // === EXPORTAR EXCEL ===
-  document.getElementById("btn-export-excel").addEventListener("click", () => {
-    const wb = XLSX.utils.book_new();
-    const data = [];
-    const header = [
-      "Loja",
-      "Data lançamento",
-      "Departamento",
-      "Cód. barras",
-      "Descrição",
-      "Qtd",
-      "Validade",
-      "Status",
-      "Oferta",
-      "Lote",
-      "Usuário",
-      "Lançado em",
-      "Observação"
-    ];
-    data.push(header);
-
-    document.querySelectorAll("#tabela-itens tbody tr").forEach(tr => {
-      const cols = tr.querySelectorAll("td");
-      if (cols.length < 15) return; // ignora linha de "Nenhum item"
-
-      const row = [
-        cols[0].innerText,
-        cols[1].innerText,
-        cols[2].innerText,
-        cols[3].innerText,
-        cols[4].innerText,
-        cols[5].innerText,
-        cols[6].innerText,
-        cols[7].innerText,
-        cols[8].innerText,
-        cols[10].innerText,
-        cols[11].innerText,
-        cols[12].innerText,
-        cols[13].innerText
-      ];
-      data.push(row);
-    });
-
-    const ws = XLSX.utils.aoa_to_sheet(data);
-    XLSX.utils.book_append_sheet(wb, ws, "Validades");
-    XLSX.writeFile(wb, "controle-validade-palato.xlsx");
-  });
-
-  // === EXPORTAR PDF ===
-  document.getElementById("btn-export-pdf").addEventListener("click", () => {
-    const { jsPDF } = window.jspdf;
-    const docPdf = new jsPDF("l", "pt", "a4");
-
-    docPdf.setFontSize(12);
-    docPdf.text("Palato - Controle de Validade", 40, 40);
-    docPdf.setFontSize(9);
-    docPdf.text(`Gerado em: ${hojeFormatado().dataHora}`, 40, 55);
-
-    const body = [];
-    document.querySelectorAll("#tabela-itens tbody tr").forEach(tr => {
-      const cols = tr.querySelectorAll("td");
-      if (cols.length < 15) return;
-      body.push([
-        cols[0].innerText,
-        cols[1].innerText,
-        cols[2].innerText,
-        cols[3].innerText,
-        cols[4].innerText,
-        cols[5].innerText,
-        cols[6].innerText,
-        cols[7].innerText,
-        cols[8].innerText,
-        cols[10].innerText,
-        cols[11].innerText,
-        cols[12].innerText
-      ]);
-    });
-
-    docPdf.autoTable({
-      startY: 70,
-      head: [[
-        "Loja",
-        "Data lanç.",
-        "Depto",
-        "Cód. barras",
-        "Descrição",
-        "Qtd",
-        "Validade",
-        "Status",
-        "Oferta",
-        "Lote",
-        "Usuário",
-        "Lançado em"
-      ]],
-      body,
-      styles: {
-        fontSize: 7,
-        cellPadding: 3
-      },
-      headStyles: {
-        fillColor: [0, 0, 0],
-        textColor: [255, 255, 255]
-      },
-      alternateRowStyles: {
-        fillColor: [245, 245, 245]
-      }
-    });
-
-    docPdf.save("controle-validade-palato.pdf");
-  });
-
-  // === ADMINISTRAÇÃO DE USUÁRIOS ===
-  async function carregarUsuarios() {
-    tabelaUsuariosBody.innerHTML = "<tr><td colspan='5'>Carregando...</td></tr>";
-    try {
-      const snap = await getDocs(collection(db, "usuarios"));
-      tabelaUsuariosBody.innerHTML = "";
-
-      if (snap.empty) {
-        tabelaUsuariosBody.innerHTML = "<tr><td colspan='5'>Nenhum usuário cadastrado.</td></tr>";
-        return;
-      }
-
-      snap.forEach(docSnap => {
-        const u = docSnap.data();
-
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${u.nome || ""}</td>
-          <td>${u.email || ""}</td>
-          <td>
-            <select data-id="${docSnap.id}" data-campo="tipo">
-              <option value="repositor" ${u.tipo === "repositor" ? "selected" : ""}>Repositor</option>
-              <option value="gerente" ${u.tipo === "gerente" ? "selected" : ""}>Gerente</option>
-              <option value="admin" ${u.tipo === "admin" ? "selected" : ""}>Admin</option>
-            </select>
-          </td>
-          <td>
-            <select data-id="${docSnap.id}" data-campo="loja">
-              <option value="" ${!u.loja ? "selected" : ""}>Nenhuma</option>
-              <option value="Ponta Verde" ${u.loja === "Ponta Verde" ? "selected" : ""}>Ponta Verde</option>
-              <option value="Farol" ${u.loja === "Farol" ? "selected" : ""}>Farol</option>
-              <option value="Praia" ${u.loja === "Praia" ? "selected" : ""}>Praia</option>
-              <option value="Riomar" ${u.loja === "Riomar" ? "selected" : ""}>Riomar</option>
-              <option value="CD" ${u.loja === "CD" ? "selected" : ""}>CD</option>
-            </select>
-          </td>
-          <td class="users-actions-cell">
-            <span class="link-action" data-acao="salvar" data-id="${docSnap.id}">Salvar</span>
-            <span class="link-action link-delete" data-acao="excluir" data-id="${docSnap.id}">Excluir</span>
-          </td>
-        `;
-        tabelaUsuariosBody.appendChild(tr);
-      });
-
-      // handlers
-      tabelaUsuariosBody.querySelectorAll("span[data-acao]").forEach(el => {
-        el.addEventListener("click", async e => {
-          const id = e.target.getAttribute("data-id");
-          const acao = e.target.getAttribute("data-acao");
-          if (acao === "excluir") {
-            if (!confirm("Excluir este usuário da tabela de controle (não exclui do login)?")) return;
-            await deleteDoc(doc(db, "usuarios", id));
-            await carregarUsuarios();
-          } else if (acao === "salvar") {
-            const tipoSel = tabelaUsuariosBody.querySelector(`select[data-id="${id}"][data-campo="tipo"]`);
-            const lojaSel = tabelaUsuariosBody.querySelector(`select[data-id="${id}"][data-campo="loja"]`);
-            await updateDoc(doc(db, "usuarios", id), {
-              tipo: tipoSel.value,
-              loja: lojaSel.value
-            });
-            await carregarUsuarios();
-          }
-        });
-      });
-    } catch (err) {
-      console.error(err);
-      tabelaUsuariosBody.innerHTML = "<tr><td colspan='5'>Erro ao carregar usuários.</td></tr>";
-    }
   }
 
-  document.getElementById("btn-salvar-usuario").addEventListener("click", async () => {
-    const nome = document.getElementById("admin-nome").value.trim();
-    const email = document.getElementById("admin-email").value.trim().toLowerCase();
-    const tipo = document.getElementById("admin-perfil").value;
-    const loja = document.getElementById("admin-loja").value;
+  async function loadCurrentProfile(user) {
+    const profile = await ensureUserProfile(user);
+    currentProfile = profile;
+    headerUserName.textContent = profile.nome || (user.email ?? 'Usuário');
+    headerUserRole.textContent = `Perfil: ${profile.tipo}${profile.loja ? ' · ' + profile.loja : ''}`;
 
-    if (!email) {
-      alert("Informe ao menos o e-mail.");
-      return;
+    // Admin enxerga menu de usuários; outros não
+    if (profile.tipo === 'admin') {
+      navAdmin.classList.remove('hidden');
+    } else {
+      navAdmin.classList.add('hidden');
     }
-
-    try {
-      await addDoc(collection(db, "usuarios"), {
-        nome,
-        email,
-        tipo,
-        loja,
-        criadoEm: serverTimestamp()
-      });
-      document.getElementById("admin-nome").value = "";
-      document.getElementById("admin-email").value = "";
-      await carregarUsuarios();
-    } catch (err) {
-      console.error(err);
-      alert("Erro ao salvar usuário.");
-    }
-  });
-
-  document.getElementById("btn-recarregar-usuarios").addEventListener("click", carregarUsuarios);
+  }
 
   // === LOGIN ===
-  document.getElementById("btn-login-email").addEventListener("click", async () => {
-    const email = document.getElementById("login-email").value;
-    const senha = document.getElementById("login-password").value;
+
+  async function handleLoginEmail() {
+    const email = loginEmail.value.trim();
+    const senha = loginPassword.value;
     if (!email || !senha) {
-      alert("Informe e-mail e senha.");
+      showAlert('Informe e-mail e senha.');
       return;
     }
     try {
       const cred = await signInWithEmailAndPassword(auth, email, senha);
-      await garantirUsuarioNoFirestore(cred.user);
-    } catch (err) {
-      console.error(err);
-      alert("Erro no login: " + err.message);
+      currentUser = cred.user;
+      await loadCurrentProfile(currentUser);
+      await loadItens();
+      await loadUsuariosIfAdmin();
+      loginView.classList.add('hidden');
+      appView.classList.remove('hidden');
+      setActiveSection('section-main');
+    } catch (e) {
+      console.error(e);
+      showAlert('Erro no login: ' + (e.message || e.code || 'verifique usuário/senha.'));
     }
-  });
+  }
 
-  document.getElementById("btn-login-google").addEventListener("click", async () => {
+  async function handleLoginGoogle() {
     try {
-      const cred = await signInWithPopup(auth, googleProvider);
-      await garantirUsuarioNoFirestore(cred.user);
-    } catch (err) {
-      console.error(err);
-      alert("Erro no login com Google.");
+      const result = await signInWithPopup(auth, googleProvider);
+      currentUser = result.user;
+      await loadCurrentProfile(currentUser);
+      await loadItens();
+      await loadUsuariosIfAdmin();
+      loginView.classList.add('hidden');
+      appView.classList.remove('hidden');
+      setActiveSection('section-main');
+    } catch (e) {
+      console.error(e);
+      showAlert('Erro no login com Google: ' + (e.message || e.code || 'verifique configuração de domínio no Firebase.'));
     }
-  });
+  }
 
-  document.getElementById("btn-logout").addEventListener("click", async () => {
+  btnLogin.addEventListener('click', handleLoginEmail);
+  btnGoogle.addEventListener('click', handleLoginGoogle);
+
+  btnLogout.addEventListener('click', async () => {
     await signOut(auth);
+    currentUser = null;
+    currentProfile = null;
+    loginView.classList.remove('hidden');
+    appView.classList.add('hidden');
   });
 
-  // === AUTH STATE ===
   onAuthStateChanged(auth, async (user) => {
     if (!user) {
-      usuarioAtual = null;
-      loginScreen.classList.remove("hidden");
-      appScreen.classList.add("hidden");
+      loginView.classList.remove('hidden');
+      appView.classList.add('hidden');
+      return;
+    }
+    try {
+      currentUser = user;
+      await loadCurrentProfile(user);
+      await loadItens();
+      await loadUsuariosIfAdmin();
+      loginView.classList.add('hidden');
+      appView.classList.remove('hidden');
+      setActiveSection('section-main');
+    } catch (e) {
+      console.error('Erro carregando perfil após onAuthStateChanged', e);
+    }
+  });
+
+  // === Lançamentos (coleção "lancamentos") ===
+
+  async function salvarLancamento() {
+    if (!currentUser || !currentProfile) {
+      showAlert('Faça login novamente.');
       return;
     }
 
-    usuarioAtual = user;
+    const loja = lojaSelect.value.trim();
+    const departamento = departamentoSelect.value.trim();
+    const cod = codigoBarras.value.trim();
+    const desc = descricao.value.trim();
+    const qtde = Number(quantidade.value);
+    const validade = validadeInput.value;
 
-    const registro = await garantirUsuarioNoFirestore(user);
-    perfilAtual = (registro && registro.tipo) || "repositor";
-    lojaAtual = (registro && registro.loja) || "";
-    nomeAtual = (registro && registro.nome) || (user.displayName || user.email);
-
-    userNomeSpan.textContent = nomeAtual || user.email;
-    userPerfilSpan.textContent = `Perfil: ${perfilAtual}`;
-
-    loginScreen.classList.add("hidden");
-    appScreen.classList.remove("hidden");
-
-    atualizarDataLancamento();
-    await carregarLancamentos();
-
-    if (perfilAtual === "admin") {
-      adminCard.classList.remove("hidden");
-      await carregarUsuarios();
-    } else {
-      adminCard.classList.add("hidden");
-    }
-  });
-
-  // === SCANNER ===
-  const scannerModal = document.getElementById("scanner-modal");
-  const scannerContainer = document.getElementById("scanner-container");
-
-  document.getElementById("btn-open-scanner").addEventListener("click", () => {
-    abrirScanner();
-  });
-
-  document.getElementById("btn-fechar-scanner").addEventListener("click", () => {
-    fecharScanner();
-  });
-
-  async function abrirScanner() {
-    scannerModal.style.display = "flex";
-    scannerContainer.innerHTML = "";
-
-    if (!window.Html5Qrcode) {
-      alert("Biblioteca do leitor não carregou corretamente.");
+    if (!loja || !departamento || !cod || !desc || !qtde || !validade) {
+      showAlert('Preencha todos os campos obrigatórios (*).');
       return;
     }
 
-    scannerInstance = new Html5Qrcode("scanner-container");
+    if (!/^\d{1,13}$/.test(cod)) {
+      showAlert('Código de barras deve ter até 13 dígitos numéricos.');
+      return;
+    }
+
+    const lanc = {
+      loja,
+      departamento,
+      codigoBarras: cod,
+      descricao: desc,
+      lote: lote.value.trim(),
+      quantidade: qtde,
+      validade, // ISO yyyy-mm-dd
+      observacao: observacao.value.trim(),
+      usuarioNome: currentProfile.nome || currentUser.email,
+      usuarioEmail: currentUser.email,
+      criadoPorEmail: currentUser.email,
+      oferta: false,
+      criadoEm: serverTimestamp(),
+      dataLancamentoTexto: dataLancamento.value // para visual
+    };
 
     try {
-      const cameras = await Html5Qrcode.getCameras();
-      if (!cameras || cameras.length === 0) {
-        alert("Nenhuma câmera encontrada.");
-        fecharScanner();
-        return;
-      }
-
-      // tenta achar traseira
-      let cameraId = cameras[0].id;
-      const traseira = cameras.find(c => /back|rear|environment/i.test(c.label));
-      if (traseira) cameraId = traseira.id;
-
-      await scannerInstance.start(
-        cameraId,
-        {
-          fps: 10,
-          qrbox: 220
-        },
-        (decodedText /*, decodedResult*/) => {
-          // preenche campo
-          const apenasNumeros = decodedText.replace(/\D/g, "").slice(0, 13);
-          const inputCod = document.getElementById("field-codigoBarras");
-          inputCod.value = apenasNumeros;
-          fecharScanner();
-        },
-        (errorMessage) => {
-          console.warn(errorMessage);
-        }
-      );
-    } catch (err) {
-      console.error(err);
-      alert("Leitor de código de barras não carregou corretamente.");
-      fecharScanner();
+      await addDoc(collection(db, 'lancamentos'), lanc);
+      showAlert('Lançamento salvo com sucesso.');
+      // limpa alguns campos
+      descricao.value = '';
+      quantidade.value = '';
+      lote.value = '';
+      observacao.value = '';
+      validadeInput.value = '';
+      codigoBarras.value = '';
+      setTodayInForm();
+      await loadItens();
+    } catch (e) {
+      console.error(e);
+      showAlert('Erro ao salvar lançamento: ' + (e.message || e.code));
     }
   }
 
-  async function fecharScanner() {
-    scannerModal.style.display = "none";
-    if (scannerInstance) {
+  btnSalvarLancamento.addEventListener('click', salvarLancamento);
+
+  function calcularStatus(validadeIso) {
+    if (!validadeIso) return { label: '-', classe: '' };
+    const hoje = new Date();
+    const v = new Date(validadeIso + 'T00:00:00');
+    const diffMs = v.getTime() - hoje.setHours(0, 0, 0, 0);
+    const dias = Math.floor(diffMs / 86400000);
+
+    if (dias < 0) return { label: 'Vencido', classe: 'vencido' };
+    if (dias <= 7) return { label: `Vence em ${dias} dia(s)`, classe: 'curto' };
+    if (dias <= 15) return { label: `Vence em ${dias} dia(s)`, classe: 'curto' };
+    if (dias <= 30) return { label: `Vence em ${dias} dia(s)`, classe: 'medio' };
+    return { label: `Vence em ${dias} dia(s)`, classe: 'longo' };
+  }
+
+  async function loadItens() {
+    if (!currentUser || !currentProfile) return;
+
+    try {
+      const snap = await getDocs(collection(db, 'lancamentos'));
+      let itens = snap.docs.map(d => ({
+        id: d.id,
+        ...d.data()
+      }));
+
+      // Permissões:
+      if (currentProfile.tipo === 'gerente') {
+        itens = itens.filter(i => i.loja === currentProfile.loja);
+      } else if (currentProfile.tipo === 'repositor') {
+        itens = itens.filter(i => i.criadoPorEmail === currentUser.email);
+      }
+      // Admin enxerga tudo.
+
+      currentItens = itens.sort((a, b) => {
+        const aDate = a.criadoEm?.toDate ? a.criadoEm.toDate().getTime() : 0;
+        const bDate = b.criadoEm?.toDate ? b.criadoEm.toDate().getTime() : 0;
+        return bDate - aDate;
+      });
+
+      renderTabelaItens();
+    } catch (e) {
+      console.error(e);
+      showAlert('Erro ao carregar itens: ' + (e.message || e.code));
+    }
+  }
+
+  function aplicaFiltroStatus(item) {
+    const filtro = filtroStatus.value;
+    if (filtro === 'todos') return true;
+
+    const hoje = new Date();
+    const v = new Date(item.validade + 'T00:00:00');
+    const diffMs = v.getTime() - hoje.setHours(0, 0, 0, 0);
+    const dias = Math.floor(diffMs / 86400000);
+
+    if (filtro === 'vencidos') return dias < 0;
+    const limite = Number(filtro);
+    return dias >= 0 && dias <= limite;
+  }
+
+  function aplicaFiltroDepartamento(item) {
+    const dep = filtroDepartamento.value;
+    if (dep === 'todos') return true;
+    return item.departamento === dep;
+  }
+
+  function renderTabelaItens() {
+    tbodyItens.innerHTML = '';
+    let filtrados = currentItens.filter(i => aplicaFiltroStatus(i) && aplicaFiltroDepartamento(i));
+
+    filtrados.forEach(item => {
+      const tr = document.createElement('tr');
+
+      const statusInfo = calcularStatus(item.validade);
+      const ofertaLabel = item.oferta ? 'Lançado' : 'Não lançado';
+
+      const dataLancTxt = item.dataLancamentoTexto || (item.criadoEm?.toDate ? formatDateTimeBR(item.criadoEm.toDate()) : '');
+      const validadeBR = item.validade ? formatDateBR(new Date(item.validade)) : '';
+
+      tr.innerHTML = `
+        <td>${item.loja || ''}</td>
+        <td>${dataLancTxt}</td>
+        <td>${item.departamento || ''}</td>
+        <td>${item.codigoBarras || ''}</td>
+        <td>${item.descricao || ''}</td>
+        <td>${item.quantidade || ''}</td>
+        <td>${validadeBR}</td>
+        <td><span class="badge-status ${statusInfo.classe}">${statusInfo.label}</span></td>
+        <td><span class="badge-oferta ${item.oferta ? 'lancado' : ''}" data-id="${item.id}" data-oferta="${item.oferta ? '1' : '0'}">${ofertaLabel}</span></td>
+        <td style="text-align:center;"><input type="checkbox" data-flag-id="${item.id}" ${item.flag ? 'checked' : ''}></td>
+        <td>${item.lote || ''}</td>
+        <td>${item.usuarioNome || ''}</td>
+        <td>${item.criadoEm?.toDate ? formatDateTimeBR(item.criadoEm.toDate()) : ''}</td>
+        <td>${item.observacao || ''}</td>
+        <td class="table-actions">
+          <a href="#" data-edit-id="${item.id}">Editar</a>
+          ${currentProfile.tipo === 'admin' ? '<a href="#" class="delete" data-del-id="' + item.id + '">Excluir</a>' : ''}
+        </td>
+      `;
+
+      tbodyItens.appendChild(tr);
+    });
+
+    totalItensLabel.textContent = `Total de itens: ${filtrados.length}`;
+  }
+
+  filtroStatus.addEventListener('change', renderTabelaItens);
+  filtroDepartamento.addEventListener('change', renderTabelaItens);
+
+  tbodyItens.addEventListener('click', async (ev) => {
+    const ofertaSpan = ev.target.closest('.badge-oferta');
+    const delLink = ev.target.closest('[data-del-id]');
+
+    if (ofertaSpan) {
+      const id = ofertaSpan.dataset.id;
+      const atual = ofertaSpan.dataset.oferta === '1';
       try {
-        await scannerInstance.stop();
-        await scannerInstance.clear();
-      } catch (err) {
-        console.error(err);
+        await updateDoc(doc(db, 'lancamentos', id), { oferta: !atual });
+        await loadItens();
+      } catch (e) {
+        console.error(e);
+        showAlert('Erro ao atualizar oferta.');
       }
-      scannerInstance = null;
+      ev.preventDefault();
+      return;
     }
-  }
 
-  // fecha modal clicando fora
-  scannerModal.addEventListener("click", (e) => {
-    if (e.target === scannerModal) {
-      fecharScanner();
+    if (delLink) {
+      ev.preventDefault();
+      if (currentProfile.tipo !== 'admin') return;
+      if (!confirm('Deseja realmente excluir este lançamento?')) return;
+      try {
+        await deleteDoc(doc(db, 'lancamentos', delLink.dataset.delId));
+        await loadItens();
+      } catch (e) {
+        console.error(e);
+        showAlert('Erro ao excluir.');
+      }
+      return;
     }
   });
+
+  btnMarcarTodosOferta.addEventListener('click', async () => {
+    const filtrados = currentItens.filter(i => aplicaFiltroStatus(i) && aplicaFiltroDepartamento(i));
+    if (!filtrados.length) {
+      showAlert('Nenhum item filtrado para marcar.');
+      return;
+    }
+    if (!confirm(`Marcar ${filtrados.length} item(ns) como "Lançado"?`)) return;
+    try {
+      for (const item of filtrados) {
+        await updateDoc(doc(db, 'lancamentos', item.id), { oferta: true });
+      }
+      await loadItens();
+    } catch (e) {
+      console.error(e);
+      showAlert('Erro ao marcar itens como oferta.');
+    }
+  });
+
+  // === EXPORTAÇÕES ===
+
+  btnExportExcel.addEventListener('click', () => {
+    const dados = currentItens.filter(i => aplicaFiltroStatus(i) && aplicaFiltroDepartamento(i));
+    if (!dados.length) {
+      showAlert('Nenhum dado para exportar.');
+      return;
+    }
+    const rows = [
+      ['Loja', 'Data lançamento', 'Departamento', 'Cód. barras', 'Descrição', 'Qtd', 'Validade', 'Status', 'Oferta', 'Lote', 'Usuário', 'Lançado em', 'Obs.']
+    ];
+
+    dados.forEach(i => {
+      const statusInfo = calcularStatus(i.validade);
+      rows.push([
+        i.loja || '',
+        i.dataLancamentoTexto || (i.criadoEm?.toDate ? formatDateTimeBR(i.criadoEm.toDate()) : ''),
+        i.departamento || '',
+        i.codigoBarras || '',
+        i.descricao || '',
+        i.quantidade || '',
+        i.validade ? formatDateBR(new Date(i.validade)) : '',
+        statusInfo.label,
+        i.oferta ? 'Lançado' : 'Não lançado',
+        i.lote || '',
+        i.usuarioNome || '',
+        i.criadoEm?.toDate ? formatDateTimeBR(i.criadoEm.toDate()) : '',
+        i.observacao || ''
+      ]);
+    });
+
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    XLSX.utils.book_append_sheet(wb, ws, 'Validades');
+    XLSX.writeFile(wb, 'controle_validade_palato.xlsx');
+  });
+
+  btnExportPdf.addEventListener('click', () => {
+    const dados = currentItens.filter(i => aplicaFiltroStatus(i) && aplicaFiltroDepartamento(i));
+    if (!dados.length) {
+      showAlert('Nenhum dado para exportar.');
+      return;
+    }
+    const { jsPDF } = window.jspdf;
+    const docPdf = new jsPDF('l', 'pt', 'a4');
+
+    const columns = ['Loja', 'Data lançamento', 'Departamento', 'Cód. barras', 'Descrição', 'Qtd', 'Validade', 'Status', 'Oferta', 'Lote', 'Usuário', 'Lançado em', 'Obs.'];
+    const rows = dados.map(i => {
+      const statusInfo = calcularStatus(i.validade);
+      return [
+        i.loja || '',
+        i.dataLancamentoTexto || (i.criadoEm?.toDate ? formatDateTimeBR(i.criadoEm.toDate()) : ''),
+        i.departamento || '',
+        i.codigoBarras || '',
+        i.descricao || '',
+        i.quantidade || '',
+        i.validade ? formatDateBR(new Date(i.validade)) : '',
+        statusInfo.label,
+        i.oferta ? 'Lançado' : 'Não lançado',
+        i.lote || '',
+        i.usuarioNome || '',
+        i.criadoEm?.toDate ? formatDateTimeBR(i.criadoEm.toDate()) : '',
+        i.observacao || ''
+      ];
+    });
+
+    docPdf.setFontSize(14);
+    docPdf.text('Controle de Validade - Palato', 40, 40);
+    docPdf.setFontSize(10);
+
+    docPdf.autoTable({
+      startY: 60,
+      head: [columns],
+      body: rows,
+      styles: { fontSize: 7 },
+      headStyles: { fillColor: [0, 0, 0], textColor: 255 },
+      alternateRowStyles: { fillColor: [245, 245, 245] }
+    });
+
+    docPdf.save('controle_validade_palato.pdf');
+  });
+
+  // === ADMIN USUÁRIOS ===
+
+  async function loadUsuariosIfAdmin() {
+    if (!currentProfile || currentProfile.tipo !== 'admin') {
+      tbodyUsuarios.innerHTML = '';
+      return;
+    }
+    try {
+      const snap = await getDocs(collection(db, 'usuarios'));
+      const users = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderUsuarios(users);
+    } catch (e) {
+      console.error(e);
+      showAlert('Erro ao carregar usuários.');
+    }
+  }
+
+  function renderUsuarios(users) {
+    tbodyUsuarios.innerHTML = '';
+    users.forEach(u => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${u.nome || ''}</td>
+        <td>${u.email || ''}</td>
+        <td>
+          <select data-user-id="${u.id}" data-field="tipo">
+            <option value="repositor" ${u.tipo === 'repositor' ? 'selected' : ''}>Repositor</option>
+            <option value="gerente" ${u.tipo === 'gerente' ? 'selected' : ''}>Gerente</option>
+            <option value="admin" ${u.tipo === 'admin' ? 'selected' : ''}>Admin</option>
+          </select>
+        </td>
+        <td>
+          <select data-user-id="${u.id}" data-field="loja">
+            <option value="" ${!u.loja ? 'selected' : ''}>Nenhuma</option>
+            <option value="Ponta Verde" ${u.loja === 'Ponta Verde' ? 'selected' : ''}>Ponta Verde</option>
+            <option value="Farol" ${u.loja === 'Farol' ? 'selected' : ''}>Farol</option>
+            <option value="Praia" ${u.loja === 'Praia' ? 'selected' : ''}>Praia</option>
+            <option value="Riomar" ${u.loja === 'Riomar' ? 'selected' : ''}>Riomar</option>
+            <option value="CD Farol" ${u.loja === 'CD Farol' ? 'selected' : ''}>CD Farol</option>
+          </select>
+        </td>
+        <td class="table-actions">
+          <a href="#" data-save-user="${u.id}">Salvar</a>
+          <a href="#" class="delete" data-del-user="${u.id}">Excluir</a>
+        </td>
+      `;
+      tbodyUsuarios.appendChild(tr);
+    });
+  }
+
+  btnRecarregarUsuarios.addEventListener('click', loadUsuariosIfAdmin);
+
+  btnSalvarUsuario.addEventListener('click', async () => {
+    const nome = novoUserNome.value.trim();
+    const email = novoUserEmail.value.trim();
+    const tipo = novoUserTipo.value;
+    const loja = novoUserLoja.value;
+
+    if (!email) {
+      showAlert('Informe ao menos o e-mail do usuário.');
+      return;
+    }
+    try {
+      await addDoc(collection(db, 'usuarios'), {
+        criadoEm: serverTimestamp(),
+        nome,
+        email,
+        tipo,
+        loja
+      });
+      novoUserNome.value = '';
+      novoUserEmail.value = '';
+      novoUserLoja.value = '';
+      novoUserTipo.value = 'repositor';
+      await loadUsuariosIfAdmin();
+      showAlert('Usuário salvo/atualizado.');
+    } catch (e) {
+      console.error(e);
+      showAlert('Erro ao salvar usuário.');
+    }
+  });
+
+  tbodyUsuarios.addEventListener('click', async (ev) => {
+    const saveBtn = ev.target.closest('[data-save-user]');
+    const delBtn = ev.target.closest('[data-del-user]');
+    if (saveBtn) {
+      ev.preventDefault();
+      const id = saveBtn.dataset.saveUser;
+      const tipoSel = tbodyUsuarios.querySelector(`select[data-user-id="${id}"][data-field="tipo"]`);
+      const lojaSel = tbodyUsuarios.querySelector(`select[data-user-id="${id}"][data-field="loja"]`);
+      try {
+        await updateDoc(doc(db, 'usuarios', id), {
+          tipo: tipoSel.value,
+          loja: lojaSel.value
+        });
+        showAlert('Usuário atualizado.');
+        await loadUsuariosIfAdmin();
+        if (currentProfile && currentUser && currentProfile.email === currentUser.email) {
+          await loadCurrentProfile(currentUser); // atualiza header se alterou o próprio perfil
+        }
+      } catch (e) {
+        console.error(e);
+        showAlert('Erro ao atualizar usuário.');
+      }
+    }
+    if (delBtn) {
+      ev.preventDefault();
+      const id = delBtn.dataset.delUser;
+      if (!confirm('Excluir este usuário da tabela (não exclui do Auth)?')) return;
+      try {
+        await deleteDoc(doc(db, 'usuarios', id));
+        await loadUsuariosIfAdmin();
+      } catch (e) {
+        console.error(e);
+        showAlert('Erro ao excluir usuário.');
+      }
+    }
+  });
+
+  // === SCANNER CÓDIGO DE BARRAS ===
+
+  btnScan.addEventListener('click', () => {
+    scannerModal.classList.remove('hidden');
+    startScanner();
+  });
+
+  btnFecharScanner.addEventListener('click', () => {
+    stopScanner();
+    scannerModal.classList.add('hidden');
+  });
+
+  async function startScanner() {
+    try {
+      if (!html5QrCode) {
+        html5QrCode = new Html5Qrcode("reader");
+      }
+      await html5QrCode.start(
+        { facingMode: { exact: "environment" } }, // tenta câmera traseira
+        {
+          fps: 10,
+          qrbox: { width: 250, height: 150 }
+        },
+        (decodedText) => {
+          codigoBarras.value = decodedText.replace(/\D/g, '').slice(0, 13);
+          stopScanner();
+          scannerModal.classList.add('hidden');
+        },
+        (errorMessage) => {
+          // erros de leitura podem ser ignorados
+        }
+      );
+    } catch (e) {
+      console.error(e);
+      showAlert('Leitor de código de barras não carregou corretamente.');
+    }
+  }
+
+  async function stopScanner() {
+    if (html5QrCode && html5QrCode.isScanning) {
+      await html5QrCode.stop();
+    }
+  }
+
+  // Inicial
+  setTodayInForm();
 </script>
+
 </body>
 </html>
