@@ -678,58 +678,101 @@
     }
 
     /* Responsivo */
-    @media (max-width: 960px) {
-      .side-menu {
-        position: fixed;
-        left: -280px;
-        top: 56px;
-        bottom: 0;
-        width: 260px;
-        padding: 20px 16px;
-        transition: left 0.2s ease;
-      }
-      .side-menu.open {
-        left: 0;
-      }
-      .header-menu-toggle {
-        display: flex;
-      }
-      .app-main {
-        flex-direction: column;
-      }
-      .app-content {
-        padding: 16px;
-      }
+   @media (max-width: 960px) {
+  .side-menu {
+    position: fixed;
+    left: -280px;
+    top: 56px;
+    bottom: 0;
+    width: 260px;
+    padding: 20px 16px;
+    transition: left 0.2s ease;
+  }
 
-      .card-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 8px;
-      }
+  .side-menu.open {
+    left: 0;
+  }
 
-      .card-header > div:last-child {
-        align-self: stretch;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 6px;
-        justify-content: flex-start;
-      }
+  .header-menu-toggle {
+    display: flex;
+  }
 
-      .btn-ghost,
-      .btn-export {
-        width: auto;
-        font-size: 12px;
-        padding: 5px 10px;
-      }
+  .app-main {
+    flex-direction: column;
+  }
 
-      .items-table-wrapper table {
-        font-size: 12px;
-      }
+  .app-content {
+    padding: 16px;
+  }
 
-      .items-table-wrapper {
-        border-radius: 12px;
-      }
-    }
+  /* HEADER DO CARD MAIS FLEXÍVEL */
+  .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .card-header > div:last-child {
+    align-self: stretch;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: flex-start;
+  }
+
+  .btn-ghost,
+  .btn-export {
+    width: auto;
+    font-size: 12px;
+    padding: 5px 10px;
+  }
+
+  .items-table-wrapper table {
+    font-size: 12px;
+  }
+
+  .items-table-wrapper {
+    border-radius: 12px;
+  }
+
+  /* 🔻 AJUSTES FORTES PARA MOBILE 🔻 */
+
+  /* Em telas menores, tudo em UMA coluna */
+  .grid-two-columns {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .grid-two,
+  .grid-three,
+  .grid-three-tight {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  /* Botão de salvar ocupando a linha toda */
+  .grid-three-tight .form-group:last-child {
+    grid-column: 1 / -1;
+  }
+
+  .btn-save {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Um pouco mais de respiro nos campos */
+  .card {
+    padding: 16px 14px 16px;
+  }
+
+  .form-group {
+    margin-bottom: 8px;
+  }
+
+  textarea {
+    min-height: 80px;
+  }
+}
   </style>
 </head>
 <body>
@@ -2116,6 +2159,7 @@
   </script>
 </body>
 </html>
+
 
 
 
