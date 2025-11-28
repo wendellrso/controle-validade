@@ -2023,13 +2023,9 @@
     });
 
     // ===== SCANNER (usa script global, camera traseira quando possível) =====
-     // ===== SCANNER (usa script global, camera traseira quando possível) =====
-    function scannerDisponivel() {
-      // Garante que estamos olhando para o objeto global correto
-      return (
-        typeof window !== "undefined" &&
-        typeof window.Html5Qrcode === "function"
-      );
+     function scannerDisponivel() {
+      // Usa globalThis para garantir acesso ao escopo global dentro de <script type="module">
+      return typeof globalThis !== "undefined" && !!globalThis.Html5Qrcode;
     }
 
     async function abrirScanner() {
@@ -2038,55 +2034,45 @@
         return;
       }
 
+      // Mostra o modal
       scannerModal.classList.add("show");
 
-      // Se já está criado, não recria
-      if (html5QrCode) return;
-
-      // Usa explicitamente o objeto global
-      html5QrCode = new window.Html5Qrcode("qr-reader");
-
       try {
-        const devices = await window.Html5Qrcode.getCameras();
-        if (!devices || devices.length === 0) {
-          showAlert("Nenhuma câmera encontrada.");
-          fecharScanner();
-          return;
+        // Cria a instância apenas uma vez
+        if (!html5QrCode) {
+          html5QrCode = new globalThis.Html5Qrcode("qr-reader");
         }
 
-        let cameraId = devices[0].id;
-        const traseira = devices.find((d) =>
-          d.label.toLowerCase().includes("back") ||
-          d.label.toLowerCase().includes("traseira")
-        );
-        if (traseira) cameraId = traseira.id;
-        else if (devices.length > 1) cameraId = devices[devices.length - 1].id;
+        // Se já estiver rodando, não tenta iniciar de novo
+        if (scannerAtivo) return;
 
         const config = {
           fps: 10,
           qrbox: 250
         };
 
-        // Limita para EAN-13 se o objeto global existir
+        // Limita para EAN-13, se o objeto global existir
         if (
-          window.Html5QrcodeSupportedFormats &&
-          window.Html5QrcodeSupportedFormats.EAN_13
+          globalThis.Html5QrcodeSupportedFormats &&
+          globalThis.Html5QrcodeSupportedFormats.EAN_13
         ) {
-          config.formatsToSupport = [window.Html5QrcodeSupportedFormats.EAN_13];
+          config.formatsToSupport = [globalThis.Html5QrcodeSupportedFormats.EAN_13];
         }
 
+        // Em vez de escolher cameraId manualmente, usamos facingMode: "environment"
         await html5QrCode.start(
-          cameraId,
+          { facingMode: "environment" },  // câmera traseira quando possível
           config,
           (decodedText) => {
-            // só aceita código numérico de 8 a 13 dígitos
+            // Aceita só códigos numéricos de 8 a 13 dígitos
             if (/^[0-9]{8,13}$/.test(decodedText)) {
               codigoBarras.value = decodedText;
               fecharScanner();
             }
           },
-          () => {
-            // callback de erro de leitura – pode ficar vazio
+          (errorMessage) => {
+            // erros de leitura por frame (normal ficar em branco)
+            // console.log("Scan error:", errorMessage);
           }
         );
 
@@ -2100,8 +2086,8 @@
 
     async function fecharScanner() {
       scannerModal.classList.remove("show");
+
       if (html5QrCode && scannerAtivo) {
-        scannerAtivo = false;
         try {
           await html5QrCode.stop();
         } catch (err) {
@@ -2112,7 +2098,7 @@
         } catch (err) {
           console.error(err);
         }
-        html5QrCode = null;
+        scannerAtivo = false;
       }
     }
 
@@ -2130,4 +2116,5 @@
   </script>
 </body>
 </html>
+
 
