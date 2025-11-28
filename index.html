@@ -12,8 +12,6 @@
   <!-- jsPDF para PDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
-  <!-- Html5 QRCode (scanner) -->
-  <script src="https://unpkg.com/html5-qrcode@2.3.10/html5-qrcode.min.js"></script>
 
   <style>
     :root {
@@ -41,7 +39,6 @@
     }
 
     /* ===== LOGIN ===== */
-
     #loginView {
       min-height: 100vh;
       display: flex;
@@ -157,7 +154,6 @@
     }
 
     /* ===== APP MAIN ===== */
-
     #appView {
       display: none;
       min-height: 100vh;
@@ -320,7 +316,6 @@
     }
 
     /* CARDS */
-
     .card {
       background: radial-gradient(circle at top left, #111827 0, #050509 45%, #000 100%);
       border-radius: 18px;
@@ -363,7 +358,6 @@
     }
 
     /* FORM NOVO LANÇAMENTO */
-
     .grid-two-columns {
       display: grid;
       grid-template-columns: 1.2fr 0.8fr;
@@ -440,7 +434,6 @@
     }
 
     /* TABELA ITENS */
-
     .filters-row {
       display: flex;
       flex-wrap: wrap;
@@ -572,7 +565,6 @@
     }
 
     /* ADMIN USUÁRIOS */
-
     .users-table-wrapper {
       border-radius: 12px;
       border: 1px solid #1f2933;
@@ -587,7 +579,6 @@
     }
 
     /* MODAL SCANNER */
-
     .modal-backdrop {
       position: fixed;
       inset: 0;
@@ -684,7 +675,7 @@
       }
 
       .grid-two-columns {
-        grid-template-columns: 1fr;   /* novo lançamento em uma coluna no celular */
+        grid-template-columns: 1fr; /* NOVO LANÇAMENTO em uma coluna no celular */
       }
 
       .grid-two,
@@ -1146,6 +1137,7 @@
     const btnCloseScanner = document.getElementById("btnCloseScanner");
     let html5QrCode = null;
     let scannerAtivo = false;
+    let Html5QrcodeClass = null;
 
     // ===== ESTADO =====
     let usuarioAtual = null;
@@ -1554,9 +1546,6 @@
       const filtroStatusVal = filtroStatus.value;
       const filtroDepVal = filtroDepartamento.value;
       const filtroOfertaVal = filtroOferta.value;
-
-      const hoje = new Date();
-      hoje.setHours(0, 0, 0, 0);
 
       filtrados = filtrados.filter((item) => {
         // vencimento
@@ -1983,16 +1972,32 @@
       }
     });
 
+    // ===== CARREGAR BIBLIOTECA DO LEITOR (MÓDULO) =====
+    async function ensureScannerLib() {
+      if (Html5QrcodeClass) return Html5QrcodeClass;
+      try {
+        const lib = await import("https://unpkg.com/html5-qrcode@2.3.10?module");
+        Html5QrcodeClass = lib.Html5Qrcode;
+        return Html5QrcodeClass;
+      } catch (err) {
+        console.error("Erro carregando Html5Qrcode", err);
+        throw err;
+      }
+    }
+
     // ===== SCANNER (câmera traseira) =====
     async function abrirScanner() {
       scannerModal.classList.add("show");
 
-      if (!window.Html5Qrcode) {
+      let Html5Qrcode;
+      try {
+        Html5Qrcode = await ensureScannerLib();
+      } catch (err) {
         showAlert(
           "Leitor de código de barras não carregou corretamente.\n\n" +
-          "Verifique a internet e tente atualizar a página."
+          "Verifique sua conexão e tente novamente."
         );
-        fecharScanner();
+        scannerModal.classList.remove("show");
         return;
       }
 
@@ -2003,7 +2008,7 @@
 
       try {
         await html5QrCode.start(
-          { facingMode: "environment" }, // traseira
+          { facingMode: "environment" }, // câmera traseira
           { fps: 10, qrbox: 250 },
           (decodedText) => {
             if (/^[0-9]{8,13}$/.test(decodedText)) {
