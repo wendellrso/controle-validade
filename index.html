@@ -2023,8 +2023,13 @@
     });
 
     // ===== SCANNER (usa script global, camera traseira quando possível) =====
+     // ===== SCANNER (usa script global, camera traseira quando possível) =====
     function scannerDisponivel() {
-      return typeof Html5Qrcode !== "undefined";
+      // Garante que estamos olhando para o objeto global correto
+      return (
+        typeof window !== "undefined" &&
+        typeof window.Html5Qrcode === "function"
+      );
     }
 
     async function abrirScanner() {
@@ -2035,12 +2040,14 @@
 
       scannerModal.classList.add("show");
 
+      // Se já está criado, não recria
       if (html5QrCode) return;
 
-      html5QrCode = new Html5Qrcode("qr-reader");
+      // Usa explicitamente o objeto global
+      html5QrCode = new window.Html5Qrcode("qr-reader");
 
       try {
-        const devices = await Html5Qrcode.getCameras();
+        const devices = await window.Html5Qrcode.getCameras();
         if (!devices || devices.length === 0) {
           showAlert("Nenhuma câmera encontrada.");
           fecharScanner();
@@ -2060,6 +2067,7 @@
           qrbox: 250
         };
 
+        // Limita para EAN-13 se o objeto global existir
         if (
           window.Html5QrcodeSupportedFormats &&
           window.Html5QrcodeSupportedFormats.EAN_13
@@ -2071,12 +2079,15 @@
           cameraId,
           config,
           (decodedText) => {
+            // só aceita código numérico de 8 a 13 dígitos
             if (/^[0-9]{8,13}$/.test(decodedText)) {
               codigoBarras.value = decodedText;
               fecharScanner();
             }
           },
-          () => {}
+          () => {
+            // callback de erro de leitura – pode ficar vazio
+          }
         );
 
         scannerAtivo = true;
@@ -2119,3 +2130,4 @@
   </script>
 </body>
 </html>
+
