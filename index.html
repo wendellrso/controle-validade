@@ -5,11 +5,15 @@
   <title>Controle de Validade • Palato</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
+  <!-- Favicon / logo -->
   <link rel="icon" href="palato-logo.png" />
 
+  <!-- SheetJS para Excel -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <!-- jsPDF para PDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+  <!-- Html5Qrcode (global) -->
   <script src="https://unpkg.com/html5-qrcode@2.3.10/minified/html5-qrcode.min.js"></script>
 
   <style>
@@ -710,6 +714,7 @@
   </style>
 </head>
 <body>
+  <!-- ===== LOGIN ===== -->
   <div id="loginView">
     <div class="login-card">
       <div class="login-logo">
@@ -737,6 +742,7 @@
     </div>
   </div>
 
+  <!-- ===== APP ===== -->
   <div id="appView">
     <header class="app-header">
       <div class="app-header-left">
@@ -770,6 +776,7 @@
       </nav>
 
       <section class="app-content">
+        <!-- NOVO LANÇAMENTO -->
         <div id="view-novo" class="app-view app-view-active">
           <div class="card">
             <div class="card-header">
@@ -875,11 +882,12 @@
                 </div>
               </div>
 
-              <div></div>
+              <div><!-- coluna direita vazia por enquanto --></div>
             </div>
           </div>
         </div>
 
+        <!-- ITENS CADASTRADOS -->
         <div id="view-itens" class="app-view">
           <div class="card">
             <div class="card-header">
@@ -963,6 +971,7 @@
           </div>
         </div>
 
+        <!-- GERENCIAR USUÁRIOS (ADMIN) -->
         <div id="view-usuarios" class="app-view">
           <div class="card">
             <div class="card-header">
@@ -1035,6 +1044,7 @@
     </main>
   </div>
 
+  <!-- MODAL SCANNER -->
   <div id="scannerModal" class="modal-backdrop">
     <div class="modal">
       <div class="modal-header">
@@ -1048,6 +1058,7 @@
     </div>
   </div>
 
+  <!-- FIREBASE + APP -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
     import {
@@ -1147,75 +1158,939 @@
     // Scanner modal
     const scannerModal = document.getElementById("scannerModal");
     const btnCloseScanner = document.getElementById("btnCloseScanner");
-    
-    // CORREÇÃO: Inicialize a variável html5Qr com a instância de Html5Qrcode
-    let html5QrCode; // Declara a variável aqui
+    let html5QrCode = null;
+    let scannerAtivo = false;
 
-    // Inicialização (exemplo simplificado, você precisará adaptá-lo ao seu código)
-    document.addEventListener('DOMContentLoaded', () => {
-        // Inicializa o Html5Qrcode depois que o DOM estiver carregado
-        html5QrCode = new Html5Qrcode("qr-reader");
+    // ===== ESTADO =====
+    let usuarioAtual = null;
+    let perfilAtual = null; // admin / gerente / repositor
+    let perfilLojaAtual = null;
 
-        // ... outras inicializações ...
-        
-        // Adiciona o listener de clique ao botão de scan
-        btnScan.addEventListener('click', handleScanButtonClick);
-        btnCloseScanner.addEventListener('click', closeScannerModal);
-        // ...
+    let lancamentosCache = []; // para filtros/export
+
+    // ===== HELPERS =====
+    function showAlert(msg) {
+      alert(msg);
+    }
+
+    function formatarDataHora(date) {
+      const d = new Date(date);
+      const pad = (n) => (n < 10 ? "0" + n : "" + n);
+      return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(
+        d.getHours()
+      )}:${pad(d.getMinutes())}`;
+    }
+
+    function formatarSomenteData(date) {
+      const d = new Date(date);
+      const pad = (n) => (n < 10 ? "0" + n : "" + n);
+      return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`;
+    }
+
+    function diasEntreHoje(eData) {
+      const hoje = new Date();
+      hoje.setHours(0, 0, 0, 0);
+      const dt = new Date(eData);
+      dt.setHours(0, 0, 0, 0);
+      const diffMs = dt - hoje;
+      return Math.round(diffMs / (1000 * 60 * 60 * 24));
+    }
+
+    // Status em faixas 7/15/30/vencido
+    function calcularStatus(validadeStr) {
+      if (!validadeStr) {
+        return { label: "Sem data", tipo: "neutro" };
+      }
+      const [ano, mes, dia] = validadeStr.split("-");
+      const dt = new Date(Number(ano), Number(mes) - 1, Number(dia));
+      const dias = diasEntreHoje(dt);
+
+      if (dias < 0) return { label: "Vencido", tipo: "danger" };
+      if (dias <= 7) return { label: "Vence em 7 dias", tipo: "danger" };
+      if (dias <= 15) return { label: "Vence em 15 dias", tipo: "warning" };
+      if (dias <= 30) return { label: "Vence em 30 dias", tipo: "ok" };
+      return { label: "Dentro da validade", tipo: "ok" };
+    }
+
+    function aplicarBadgeStatus(element, statusInfo) {
+      element.className = "badge-status";
+      if (statusInfo.tipo === "danger") element.classList.add("badge-status-danger");
+      else if (statusInfo.tipo === "warning") element.classList.add("badge-status-warning");
+      else if (statusInfo.tipo === "ok") element.classList.add("badge-status-ok");
+      element.textContent = statusInfo.label;
+    }
+
+    function setView(viewId) {
+      [viewNovo, viewItens, viewUsuarios].forEach((v) => v.classList.remove("app-view-active"));
+      if (viewId === "novo") viewNovo.classList.add("app-view-active");
+      if (viewId === "itens") viewItens.classList.add("app-view-active");
+      if (viewId === "usuarios") viewUsuarios.classList.add("app-view-active");
+
+      [menuNovo, menuItens, menuUsuarios].forEach((m) => m.classList.remove("menu-item-active"));
+      if (viewId === "novo") menuNovo.classList.add("menu-item-active");
+      if (viewId === "itens") menuItens.classList.add("menu-item-active");
+      if (viewId === "usuarios") menuUsuarios.classList.add("menu-item-active");
+    }
+
+    function limparFormularioLancamento() {
+      if (perfilAtual === "repositor" && perfilLojaAtual) {
+        novaLoja.value = perfilLojaAtual;
+      } else {
+        novaLoja.value = "";
+      }
+      departamento.value = "";
+      codigoBarras.value = "";
+      descricao.value = "";
+      lote.value = "";
+      quantidade.value = "";
+      validade.value = "";
+      observacao.value = "";
+      const agora = new Date();
+      dataLancamento.value = formatarDataHora(agora);
+    }
+
+    function atualizarUserBox() {
+      if (!usuarioAtual) {
+        userBox.innerHTML = "";
+        return;
+      }
+      const nome = usuarioAtual.displayName || usuarioAtual.email || "";
+      const perfilLabel =
+        perfilAtual === "admin"
+          ? "Perfil: admin"
+          : perfilAtual === "gerente"
+          ? `Perfil: gerente${perfilLojaAtual ? " (" + perfilLojaAtual + ")" : ""}`
+          : `Perfil: repositor${perfilLojaAtual ? " (" + perfilLojaAtual + ")" : ""}`;
+
+      userBox.innerHTML = `
+        <strong>${nome}</strong>
+        <span class="user-profile-label">${perfilLabel}</span>
+        <a id="btnLogout">Sair</a>
+      `;
+      const btnLogout = document.getElementById("btnLogout");
+      btnLogout.addEventListener("click", async () => {
+        await signOut(auth);
+      });
+    }
+
+    // ===== PERFIL / USUÁRIO FIRESTORE =====
+    async function carregarOuCriarPerfilUsuario(user) {
+      const ref = doc(db, "usuarios", user.uid);
+      const snap = await getDoc(ref);
+
+      if (snap.exists()) {
+        const data = snap.data();
+        perfilAtual = data.tipo || "repositor";
+        perfilLojaAtual = data.loja || "";
+      } else {
+        await setDoc(ref, {
+          email: user.email,
+          nome: user.displayName || "",
+          tipo: "repositor",
+          loja: "",
+          criadoEm: serverTimestamp()
+        });
+        perfilAtual = "repositor";
+        perfilLojaAtual = "";
+      }
+
+      if (perfilAtual === "admin") {
+        menuUsuarios.style.display = "flex";
+      } else {
+        menuUsuarios.style.display = "none";
+        if (viewUsuarios.classList.contains("app-view-active")) {
+          setView("novo");
+        }
+      }
+    }
+
+    // Repositor precisa ter loja definida
+    async function garantirLojaDefinidaSeRepositor() {
+      if (perfilAtual !== "repositor" || perfilLojaAtual) return;
+
+      const mapa = {
+        "ponta verde": "Ponta Verde",
+        "farol": "Farol",
+        "praia": "Praia",
+        "riomar": "Riomar",
+        "cd": "CD"
+      };
+
+      while (!perfilLojaAtual) {
+        let resposta = prompt(
+          "Informe a loja onde você trabalha (Ponta Verde, Farol, Praia, Riomar ou CD):"
+        );
+        if (resposta === null) {
+          showAlert("É obrigatório informar uma loja para usar o sistema.");
+          break;
+        }
+        resposta = resposta.trim().toLowerCase();
+        if (!resposta) continue;
+
+        const lojaNormalizada = mapa[resposta];
+        if (!lojaNormalizada) {
+          showAlert("Loja inválida. Digite exatamente: Ponta Verde, Farol, Praia, Riomar ou CD.");
+          continue;
+        }
+
+        perfilLojaAtual = lojaNormalizada;
+        const ref = doc(db, "usuarios", usuarioAtual.uid);
+        await updateDoc(ref, { loja: perfilLojaAtual });
+        showAlert(`Loja vinculada: ${perfilLojaAtual}.`);
+      }
+    }
+
+    // ===== LOGIN =====
+    btnLoginEmail.addEventListener("click", async () => {
+      const email = loginEmail.value.trim();
+      const senha = loginSenha.value;
+
+      if (!email || !senha) {
+        showAlert("Informe e-mail e senha.");
+        return;
+      }
+
+      try {
+        await signInWithEmailAndPassword(auth, email, senha);
+      } catch (err) {
+        console.error(err);
+        showAlert("Erro no login: " + (err.message || "verifique usuário e senha."));
+      }
     });
 
-    // Função que lida com o clique no botão de scan
-    function handleScanButtonClick() {
-        scannerModal.classList.add('show');
-        startScanner();
+    btnLoginGoogle.addEventListener("click", async () => {
+      try {
+        await signInWithPopup(auth, googleProvider);
+      } catch (err) {
+        console.error(err);
+        showAlert("Erro no login com Google.");
+      }
+    });
+
+    onAuthStateChanged(auth, async (user) => {
+      usuarioAtual = user;
+      if (!user) {
+        appView.style.display = "none";
+        loginView.style.display = "flex";
+        return;
+      }
+
+      await carregarOuCriarPerfilUsuario(user);
+      await garantirLojaDefinidaSeRepositor();
+      atualizarUserBox();
+      limparFormularioLancamento();
+
+      loginView.style.display = "none";
+      appView.style.display = "flex";
+
+      await carregarLancamentos();
+      if (perfilAtual === "admin") {
+        await carregarUsuarios();
+      }
+    });
+
+    // ===== MENU LATERAL / MOBILE =====
+    function abrirMenu() {
+      sideMenu.classList.add("open");
+      menuOverlay.classList.add("show");
+    }
+    function fecharMenu() {
+      sideMenu.classList.remove("open");
+      menuOverlay.classList.remove("show");
     }
 
-    // Função para fechar o modal e parar o scanner
-    function closeScannerModal() {
-        scannerModal.classList.remove('show');
-        if (html5QrCode) {
-            html5QrCode.stop().catch(err => {
-                console.error("Erro ao parar o scanner:", err);
-            });
+    btnToggleMenu.addEventListener("click", () => {
+      if (sideMenu.classList.contains("open")) fecharMenu();
+      else abrirMenu();
+    });
+    menuOverlay.addEventListener("click", fecharMenu);
+
+    menuNovo.addEventListener("click", () => {
+      setView("novo");
+      limparFormularioLancamento();
+      fecharMenu();
+    });
+    menuItens.addEventListener("click", async () => {
+      setView("itens");
+      fecharMenu();
+      await carregarLancamentos();
+    });
+    menuUsuarios.addEventListener("click", async () => {
+      if (perfilAtual !== "admin") return;
+      setView("usuarios");
+      fecharMenu();
+      await carregarUsuarios();
+    });
+
+    // ===== NOVO LANÇAMENTO =====
+    btnSalvarLancamento.addEventListener("click", async () => {
+      if (!usuarioAtual) {
+        showAlert("Faça login novamente.");
+        return;
+      }
+
+      const loja = novaLoja.value;
+      const dep = departamento.value;
+      let cod = codigoBarras.value.trim();
+      const desc = descricao.value.trim();
+      const loteVal = lote.value.trim();
+      const qtd = Number(quantidade.value);
+      const val = validade.value;
+      const obs = observacao.value.trim();
+
+      if (!loja || !dep || !cod || !desc || !qtd || !val) {
+        showAlert("Preencha todos os campos obrigatórios.");
+        return;
+      }
+
+      if (!/^[0-9]+$/.test(cod)) {
+        showAlert("Código de barras deve ter apenas números.");
+        return;
+      }
+
+      if (cod.length > 13) {
+        showAlert("Código de barras deve ter no máximo 13 dígitos.");
+        return;
+      }
+
+      // Repositor só pode lançar na própria loja
+      if (perfilAtual === "repositor") {
+        if (!perfilLojaAtual) {
+          showAlert("Defina sua loja antes de cadastrar. Saia e entre novamente.");
+          return;
         }
+        if (loja !== perfilLojaAtual) {
+          showAlert(`Você só pode cadastrar itens na loja ${perfilLojaAtual}.`);
+          novaLoja.value = perfilLojaAtual;
+          return;
+        }
+      }
+
+      try {
+        await addDoc(collection(db, "lancamentos"), {
+          loja,
+          departamento: dep,
+          codigoBarras: cod,
+          descricao: desc,
+          lote: loteVal,
+          quantidade: qtd,
+          validade: val,
+          observacao: obs,
+          oferta: "nao_lancado",
+          usuarioNome: usuarioAtual.displayName || "",
+          usuarioEmail: usuarioAtual.email || "",
+          usuarioUid: usuarioAtual.uid,
+          dataLancamentoTexto: dataLancamento.value,
+          criadoEm: serverTimestamp()
+        });
+
+        showAlert("Lançamento salvo com sucesso.");
+        limparFormularioLancamento();
+        await carregarLancamentos();
+      } catch (err) {
+        console.error(err);
+        showAlert("Erro ao salvar lançamento.");
+      }
+    });
+
+    // ===== CARREGAR LANÇAMENTOS =====
+    async function carregarLancamentos() {
+      if (!usuarioAtual) return;
+      const colRef = collection(db, "lancamentos");
+      const q = query(colRef, orderBy("criadoEm", "desc"));
+
+      const snap = await getDocs(q);
+      tabelaItensBody.innerHTML = "";
+      lancamentosCache = [];
+
+      snap.forEach((docSnap) => {
+        const item = docSnap.data();
+        const id = docSnap.id;
+
+        let visivel = false;
+        if (perfilAtual === "admin") {
+          visivel = true;
+        } else if (perfilAtual === "gerente") {
+          if (!perfilLojaAtual || item.loja === perfilLojaAtual) visivel = true;
+        } else {
+          const uid = item.usuarioUid;
+          const email = item.usuarioEmail;
+          if (uid === usuarioAtual.uid || email === usuarioAtual.email) visivel = true;
+        }
+        if (!visivel) return;
+
+        lancamentosCache.push({ id, ...item });
+      });
+
+      aplicarFiltrosETabela();
     }
 
-    // Função que inicia o scanner
-    function startScanner() {
-        const qrCodeSuccessCallback = (decodedText, decodedResult) => {
-            // Lógica para quando um código é lido com sucesso
-            codigoBarras.value = decodedText;
-            closeScannerModal();
-            console.log(`Código lido: ${decodedText}`);
-        };
+    function aplicarFiltrosETabela() {
+      tabelaItensBody.innerHTML = "";
+      let filtrados = [...lancamentosCache];
+
+      const filtroStatusVal = filtroStatus.value;
+      const filtroDepVal = filtroDepartamento.value;
+      const filtroOfertaVal = filtroOferta.value;
+
+      const hoje = new Date();
+      hoje.setHours(0, 0, 0, 0);
+
+      filtrados = filtrados.filter((item) => {
+        // filtro por status
+        if (item.validade) {
+          const dt = new Date(item.validade);
+          dt.setHours(0, 0, 0, 0);
+          const dias = Math.round((dt - hoje) / (1000 * 60 * 60 * 24));
+
+          // 7 dias: 0 a 7
+          if (filtroStatusVal === "7" && !(dias >= 0 && dias <= 7)) return false;
+
+          // 15 dias: 8 a 15
+          if (filtroStatusVal === "15" && !(dias >= 8 && dias <= 15)) return false;
+
+          // 30 dias: 16 a 30
+          if (filtroStatusVal === "30" && !(dias >= 16 && dias <= 30)) return false;
+
+          // vencidos: < 0
+          if (filtroStatusVal === "vencidos" && !(dias < 0)) return false;
+        } else if (filtroStatusVal !== "todos") {
+          return false;
+        }
+
+        // filtro departamento
+        if (filtroDepVal !== "todos" && item.departamento !== filtroDepVal) return false;
+
+        // filtro oferta
+        const ofertaAtual = item.oferta || "nao_lancado";
+        if (filtroOfertaVal !== "todos" && ofertaAtual !== filtroOfertaVal) return false;
+
+        return true;
+      });
+
+      filtrados.forEach((item) => adicionarLinhaNaTabela(item));
+      totalItensSpan.textContent = filtrados.length;
+    }
+
+    function adicionarLinhaNaTabela(item) {
+      const tr = document.createElement("tr");
+
+      const dataLanc =
+        item.dataLancamentoTexto ||
+        (item.criadoEm && item.criadoEm.toDate ? formatarDataHora(item.criadoEm.toDate()) : "");
+      const valStr = item.validade || "";
+
+      const statusInfo = calcularStatus(valStr);
+
+      const tdData = document.createElement("td");
+      tdData.textContent = dataLanc;
+
+      const tdLoja = document.createElement("td");
+      tdLoja.textContent = item.loja || "";
+
+      const tdCod = document.createElement("td");
+      tdCod.textContent = item.codigoBarras || "";
+
+      const tdDesc = document.createElement("td");
+      tdDesc.textContent = item.descricao || "";
+
+      const tdLote = document.createElement("td");
+      tdLote.textContent = item.lote || "";
+
+      const tdQtd = document.createElement("td");
+      tdQtd.textContent = item.quantidade || "";
+
+      const tdVal = document.createElement("td");
+      tdVal.textContent = valStr ? formatarSomenteData(valStr) : "";
+
+      const tdObs = document.createElement("td");
+      tdObs.textContent = item.observacao || "";
+
+      const tdOferta = document.createElement("td");
+      const spanOferta = document.createElement("span");
+      spanOferta.className = "badge-oferta";
+      if (item.oferta === "lancado") {
+        spanOferta.classList.add("badge-oferta-lancado");
+        spanOferta.textContent = "Lançado";
+      } else {
+        spanOferta.textContent = "Não Lançado";
+      }
+      spanOferta.addEventListener("click", async () => {
+        const novoValor = item.oferta === "lancado" ? "nao_lancado" : "lancado";
+        try {
+          await updateDoc(doc(db, "lancamentos", item.id), {
+            oferta: novoValor
+          });
+          item.oferta = novoValor;
+          aplicarFiltrosETabela();
+        } catch (err) {
+          console.error(err);
+          showAlert("Erro ao atualizar oferta.");
+        }
+      });
+      tdOferta.appendChild(spanOferta);
+
+      const tdDep = document.createElement("td");
+      tdDep.textContent = item.departamento || "";
+
+      const tdStatus = document.createElement("td");
+      const spanStatus = document.createElement("span");
+      aplicarBadgeStatus(spanStatus, statusInfo);
+      tdStatus.appendChild(spanStatus);
+
+      const tdUsuario = document.createElement("td");
+      tdUsuario.textContent = item.usuarioNome || item.usuarioEmail || "";
+
+      const tdLancadoEm = document.createElement("td");
+      tdLancadoEm.textContent = dataLanc;
+
+      const tdAcoes = document.createElement("td");
+      tdAcoes.className = "actions-cell";
+
+      const btnEditar = document.createElement("button");
+      btnEditar.textContent = "Editar";
+
+      const btnExcluir = document.createElement("button");
+      btnExcluir.textContent = "Excluir";
+      btnExcluir.classList.add("btn-delete");
+
+      const ehAdmin = perfilAtual === "admin";
+      const ehDono =
+        item.usuarioUid === usuarioAtual.uid || item.usuarioEmail === usuarioAtual.email;
+
+      const criadoEmDate =
+        item.criadoEm && item.criadoEm.toDate ? item.criadoEm.toDate() : null;
+      let podeEditar = false;
+      if (ehAdmin) {
+        podeEditar = true;
+      } else if (perfilAtual === "repositor" && ehDono && criadoEmDate) {
+        const diff = (new Date() - criadoEmDate) / (1000 * 60 * 60 * 24);
+        if (diff <= 1) podeEditar = true;
+      }
+
+      if (podeEditar) {
+        btnEditar.addEventListener("click", () => {
+          setView("novo");
+          novaLoja.value = item.loja || "";
+          departamento.value = item.departamento || "";
+          codigoBarras.value = item.codigoBarras || "";
+          descricao.value = item.descricao || "";
+          lote.value = item.lote || "";
+          quantidade.value = item.quantidade || "";
+          validade.value = item.validade || "";
+          observacao.value = item.observacao || "";
+          dataLancamento.value = dataLanc;
+
+          showAlert("Edição rápida: altere os campos e depois salve como novo lançamento.");
+        });
+      } else {
+        btnEditar.disabled = true;
+        btnEditar.style.opacity = "0.4";
+        btnEditar.style.cursor = "default";
+      }
+
+      if (ehAdmin) {
+        btnExcluir.addEventListener("click", async () => {
+          if (!confirm("Deseja realmente excluir este lançamento?")) return;
+          try {
+            await deleteDoc(doc(db, "lancamentos", item.id));
+            lancamentosCache = lancamentosCache.filter((x) => x.id !== item.id);
+            aplicarFiltrosETabela();
+          } catch (err) {
+            console.error(err);
+            showAlert("Erro ao excluir.");
+          }
+        });
+      } else {
+        btnExcluir.disabled = true;
+        btnExcluir.style.opacity = "0.4";
+        btnExcluir.style.cursor = "default";
+      }
+
+      tdAcoes.appendChild(btnEditar);
+      tdAcoes.appendChild(btnExcluir);
+
+      [
+        tdData,
+        tdLoja,
+        tdCod,
+        tdDesc,
+        tdLote,
+        tdQtd,
+        tdVal,
+        tdObs,
+        tdOferta,
+        tdDep,
+        tdStatus,
+        tdUsuario,
+        tdLancadoEm,
+        tdAcoes
+      ].forEach((td) => tr.appendChild(td));
+
+      tabelaItensBody.appendChild(tr);
+    }
+
+    filtroStatus.addEventListener("change", aplicarFiltrosETabela);
+    filtroDepartamento.addEventListener("change", aplicarFiltrosETabela);
+    filtroOferta.addEventListener("change", aplicarFiltrosETabela);
+
+    // ===== EXPORTAR EXCEL / PDF =====
+    btnExportExcel.addEventListener("click", () => {
+      if (!window.XLSX) {
+        showAlert("Biblioteca de Excel não carregou.");
+        return;
+      }
+
+      const dados = [
+        [
+          "Data lançamento",
+          "Loja",
+          "Cód. barras",
+          "Descrição",
+          "Lote",
+          "Qtd",
+          "Validade",
+          "Obs.",
+          "Status",
+          "Oferta",
+          "Departamento",
+          "Usuário",
+          "Lançado em"
+        ]
+      ];
+
+      lancamentosCache.forEach((item) => {
+        const valStr = item.validade || "";
+        const statusInfo = calcularStatus(valStr);
+        dados.push([
+          item.dataLancamentoTexto ||
+            (item.criadoEm && item.criadoEm.toDate ? formatarDataHora(item.criadoEm.toDate()) : ""),
+          item.loja || "",
+          item.codigoBarras || "",
+          item.descricao || "",
+          item.lote || "",
+          item.quantidade || "",
+          valStr ? formatarSomenteData(valStr) : "",
+          item.observacao || "",
+          statusInfo.label,
+          item.oferta === "lancado" ? "Lançado" : "Não Lançado",
+          item.departamento || "",
+          item.usuarioNome || item.usuarioEmail || "",
+          item.dataLancamentoTexto ||
+            (item.criadoEm && item.criadoEm.toDate ? formatarDataHora(item.criadoEm.toDate()) : "")
+        ]);
+      });
+
+      const ws = XLSX.utils.aoa_to_sheet(dados);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Validades");
+      XLSX.writeFile(wb, "controle-validade.xlsx");
+    });
+
+    btnExportPDF.addEventListener("click", () => {
+      const { jsPDF } = window.jspdf || {};
+      if (!jsPDF || !window.jspdf || !window.jspdf.jsPDF) {
+        showAlert("Biblioteca de PDF não carregou.");
+        return;
+      }
+
+      const docPdf = new window.jspdf.jsPDF("l", "pt", "a4");
+
+      const colunas = [
+        "Data lançamento",
+        "Loja",
+        "Cód. barras",
+        "Descrição",
+        "Lote",
+        "Qtd",
+        "Validade",
+        "Obs.",
+        "Status",
+        "Oferta",
+        "Departamento",
+        "Usuário",
+        "Lançado em"
+      ];
+
+      const linhas = lancamentosCache.map((item) => {
+        const valStr = item.validade || "";
+        const statusInfo = calcularStatus(valStr);
+        const dataLanc =
+          item.dataLancamentoTexto ||
+          (item.criadoEm && item.criadoEm.toDate ? formatarDataHora(item.criadoEm.toDate()) : "");
+        return [
+          dataLanc,
+          item.loja || "",
+          item.codigoBarras || "",
+          item.descricao || "",
+          item.lote || "",
+          item.quantidade || "",
+          valStr ? formatarSomenteData(valStr) : "",
+          item.observacao || "",
+          statusInfo.label,
+          item.oferta === "lancado" ? "Lançado" : "Não Lançado",
+          item.departamento || "",
+          item.usuarioNome || item.usuarioEmail || "",
+          dataLanc
+        ];
+      });
+
+      docPdf.setFontSize(14);
+      docPdf.text("Controle de Validade - Palato", 40, 40);
+      docPdf.setFontSize(10);
+      docPdf.text("Relatório de itens cadastrados", 40, 56);
+
+      docPdf.autoTable({
+        startY: 70,
+        head: [colunas],
+        body: linhas,
+        styles: {
+          fontSize: 7,
+          cellPadding: 3
+        },
+        headStyles: {
+          fillColor: [227, 6, 19],
+          textColor: 255
+        },
+        alternateRowStyles: {
+          fillColor: [15, 23, 42]
+        }
+      });
+
+      docPdf.save("controle-validade.pdf");
+    });
+
+    // ===== MARCAR TODOS COMO OFERTA =====
+    btnMarcarTodosOferta.addEventListener("click", async () => {
+      if (!confirm("Marcar todos os itens filtrados como 'Lançado'?")) return;
+
+      const filtrados = [...lancamentosCache];
+      const promises = filtrados.map((item) =>
+        updateDoc(doc(db, "lancamentos", item.id), { oferta: "lancado" })
+      );
+      try {
+        await Promise.all(promises);
+        lancamentosCache.forEach((item) => (item.oferta = "lancado"));
+        aplicarFiltrosETabela();
+      } catch (err) {
+        console.error(err);
+        showAlert("Erro ao marcar ofertas.");
+      }
+    });
+
+    // ===== ADMIN USUÁRIOS =====
+    async function carregarUsuarios() {
+      if (perfilAtual !== "admin") return;
+      const snap = await getDocs(collection(db, "usuarios"));
+      usuariosBody.innerHTML = "";
+      snap.forEach((docSnap) => {
+        const item = docSnap.data();
+        const id = docSnap.id;
+
+        const tr = document.createElement("tr");
+        const tdNome = document.createElement("td");
+        tdNome.textContent = item.nome || "";
+
+        const tdEmail = document.createElement("td");
+        tdEmail.textContent = item.email || "";
+
+        const tdPerfil = document.createElement("td");
+        const selPerfil = document.createElement("select");
+        ["admin", "gerente", "repositor"].forEach((optVal) => {
+          const opt = document.createElement("option");
+          opt.value = optVal;
+          opt.textContent = optVal;
+          if ((item.tipo || "repositor") === optVal) opt.selected = true;
+          selPerfil.appendChild(opt);
+        });
+        tdPerfil.appendChild(selPerfil);
+
+        const tdLoja = document.createElement("td");
+        const selLoja = document.createElement("select");
+        [
+          { v: "", t: "Nenhuma" },
+          { v: "Ponta Verde", t: "Ponta Verde" },
+          { v: "Farol", t: "Farol" },
+          { v: "Praia", t: "Praia" },
+          { v: "Riomar", t: "Riomar" },
+          { v: "CD", t: "CD" }
+        ].forEach((o) => {
+          const opt = document.createElement("option");
+          opt.value = o.v;
+          opt.textContent = o.t;
+          if ((item.loja || "") === o.v) opt.selected = true;
+          selLoja.appendChild(opt);
+        });
+        tdLoja.appendChild(selLoja);
+
+        const tdAcoes = document.createElement("td");
+        const btnSalvar = document.createElement("button");
+        btnSalvar.textContent = "Salvar";
+        btnSalvar.style.color = "#22c55e";
+        btnSalvar.style.background = "transparent";
+        btnSalvar.style.border = "none";
+        btnSalvar.style.cursor = "pointer";
+        btnSalvar.style.marginRight = "8px";
+
+        const btnExcluir = document.createElement("button");
+        btnExcluir.textContent = "Excluir";
+        btnExcluir.style.color = "#fb7185";
+        btnExcluir.style.background = "transparent";
+        btnExcluir.style.border = "none";
+        btnExcluir.style.cursor = "pointer";
+
+        btnSalvar.addEventListener("click", async () => {
+          try {
+            await updateDoc(doc(db, "usuarios", id), {
+              tipo: selPerfil.value,
+              loja: selLoja.value
+            });
+            showAlert("Usuário atualizado.");
+          } catch (err) {
+            console.error(err);
+            showAlert("Erro ao salvar usuário.");
+          }
+        });
+
+        btnExcluir.addEventListener("click", async () => {
+          if (!confirm("Excluir usuário do controle (não apaga do Auth)?")) return;
+          try {
+            await deleteDoc(doc(db, "usuarios", id));
+            await carregarUsuarios();
+          } catch (err) {
+            console.error(err);
+            showAlert("Erro ao excluir usuário.");
+          }
+        });
+
+        tdAcoes.appendChild(btnSalvar);
+        tdAcoes.appendChild(btnExcluir);
+
+        [tdNome, tdEmail, tdPerfil, tdLoja, tdAcoes].forEach((td) => tr.appendChild(td));
+        usuariosBody.appendChild(tr);
+      });
+    }
+
+    btnReloadUsuarios.addEventListener("click", carregarUsuarios);
+
+    btnSalvarUsuario.addEventListener("click", async () => {
+      const nome = novoUsuarioNome.value.trim();
+      const email = novoUsuarioEmail.value.trim();
+      const tipo = novoUsuarioPerfil.value;
+      const loja = novoUsuarioLoja.value;
+
+      if (!email) {
+        showAlert("Informe o e-mail do usuário.");
+        return;
+      }
+
+      try {
+        await addDoc(collection(db, "usuarios"), {
+          nome,
+          email,
+          tipo,
+          loja,
+          criadoEm: serverTimestamp()
+        });
+        showAlert("Usuário salvo. Lembre de vincular o mesmo e-mail na conta de login.");
+        novoUsuarioNome.value = "";
+        novoUsuarioEmail.value = "";
+        novoUsuarioLoja.value = "";
+        novoUsuarioPerfil.value = "repositor";
+        await carregarUsuarios();
+      } catch (err) {
+        console.error(err);
+        showAlert("Erro ao salvar usuário.");
+      }
+    });
+
+    // ===== SCANNER (usando Html5Qrcode global, câmera traseira) =====
+    async function abrirScanner() {
+      if (!window.Html5Qrcode || !window.Html5QrcodeSupportedFormats) {
+        showAlert(
+          "Leitor de código de barras não carregou corretamente.\nVerifique sua conexão e tente novamente."
+        );
+        return;
+      }
+
+      scannerModal.classList.add("show");
+
+      if (html5QrCode) {
+        return;
+      }
+
+      html5QrCode = new Html5Qrcode("qr-reader");
+      scannerAtivo = true;
+
+      try {
+        const devices = await Html5Qrcode.getCameras();
+        if (!devices || devices.length === 0) {
+          showAlert("Nenhuma câmera encontrada.");
+          fecharScanner();
+          return;
+        }
+
+        let cameraId = devices[0].id;
+        const traseira = devices.find((d) =>
+          d.label.toLowerCase().includes("back") ||
+          d.label.toLowerCase().includes("traseira")
+        );
+        if (traseira) cameraId = traseira.id;
+        else if (devices.length > 1) cameraId = devices[devices.length - 1].id;
 
         const config = {
-            fps: 10,
-            qrbox: { width: 250, height: 100 },
-            // Preferir a câmera traseira se disponível
-            facingMode: "environment" 
+          fps: 10,
+          qrbox: 250,
+          formatsToSupport: [Html5QrcodeSupportedFormats.EAN_13]
         };
 
-        if (html5QrCode && !html5QrCode.isScanning) {
-            html5QrCode.start(
-                { facingMode: "environment" }, 
-                config, 
-                qrCodeSuccessCallback,
-                (errorMessage) => {
-                    // Lidar com erros de leitura em tempo real (opcional)
-                    console.error("Erro de leitura: ", errorMessage);
-                }
-            ).catch(err => {
-                console.error("Erro ao iniciar o scanner:", err);
-                alert("Não foi possível iniciar a câmera. Verifique as permissões.");
-            });
-        }
+        await html5QrCode.start(
+          cameraId,
+          config,
+          (decodedText) => {
+            if (/^[0-9]{8,13}$/.test(decodedText)) {
+              codigoBarras.value = decodedText;
+              fecharScanner();
+            }
+          },
+          () => {}
+        );
+      } catch (err) {
+        console.error(err);
+        showAlert("Erro ao iniciar câmera.");
+        fecharScanner();
+      }
     }
 
-    // O restante do seu código JavaScript aqui...
-    // ...
+    async function fecharScanner() {
+      scannerModal.classList.remove("show");
+      if (html5QrCode && scannerAtivo) {
+        scannerAtivo = false;
+        try {
+          await html5QrCode.stop();
+        } catch (err) {
+          console.error(err);
+        }
+        try {
+          await html5QrCode.clear();
+        } catch (err) {
+          console.error(err);
+        }
+        html5QrCode = null;
+      }
+    }
 
-    // O código original terminava abruptamente aqui, vou completar com o fechamento do script:
+    btnScan.addEventListener("click", abrirScanner);
+    btnCloseScanner.addEventListener("click", fecharScanner);
+    scannerModal.addEventListener("click", (e) => {
+      if (e.target === scannerModal) fecharScanner();
+    });
+
+    // ===== INICIAL =====
+    (function initDataLancamento() {
+      const agora = new Date();
+      dataLancamento.value = formatarDataHora(agora);
+    })();
   </script>
 </body>
 </html>
