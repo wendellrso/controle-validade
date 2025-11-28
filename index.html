@@ -2042,30 +2042,21 @@
       scannerAtivo = true;
 
       try {
-        const config = {
-          fps: 10,
-          qrbox: 250
-        };
-
-        if (window.Html5QrcodeSupportedFormats && window.Html5QrcodeSupportedFormats.EAN_13) {
-          config.formatsToSupport = [Html5QrcodeSupportedFormats.EAN_13];
-        }
-
         await html5QrCode.start(
-          { facingMode: { exact: "environment" } },
-          config,
+          { facingMode: "environment" },
+          { fps: 10, qrbox: 250 },
           (decodedText) => {
             let text = decodedText.trim();
 
-            // Garante apenas números
+            // Apenas números
             if (!/^[0-9]+$/.test(text)) return;
 
-            // Se vier com 12 dígitos (UPC-A), completa com zero à esquerda (EAN-13)
+            // Se vier com 12 dígitos (UPC-A), completa com um zero à esquerda
             if (text.length === 12) {
               text = "0" + text;
             }
 
-            // Aceita entre 8 e 13 dígitos
+            // Aceita de 8 a 13 dígitos
             if (text.length >= 8 && text.length <= 13) {
               codigoBarras.value = text;
               fecharScanner();
