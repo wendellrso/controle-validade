@@ -1148,11 +1148,11 @@
     const scannerModal = document.getElementById("scannerModal");
     const btnCloseScanner = document.getElementById("btnCloseScanner");
     
-    // CORREÇÃO CRÍTICA V2: Instância do Html5Qrcode
+    // VARIÁVEL PARA INSTÂNCIA DO SCANNER
     let html5QrCode = null; 
 
     // ===================================
-    // FUNÇÕES DO SCANNER CORRIGIDAS 📷
+    // FUNÇÕES DO SCANNER (CORRIGIDAS) 📷
     // ===================================
 
     function handleScanButtonClick() {
@@ -1174,7 +1174,6 @@
         
         // 4. Se o scanner existe e está escaneando, ele deve ser parado
         if (html5QrCode) {
-            // Verifica se o escaneamento está ativo
             if (html5QrCode.isScanning) {
                 html5QrCode.stop().then(ignore => {
                     console.log("Scanner parado com sucesso.");
@@ -1209,7 +1208,7 @@
                 config, 
                 qrCodeSuccessCallback,
                 (errorMessage) => {
-                    // Lidar com erros de leitura em tempo real (opcional)
+                    // Opcional: callback para erro de leitura
                 }
             ).catch(err => {
                 console.error("Erro ao iniciar a câmera:", err);
@@ -1219,15 +1218,79 @@
         }
     }
 
+    // ===================================
+    // LÓGICA DE AUTENTICAÇÃO E UI (RESTAURADA) 🔑
+    // ===================================
+
+    const logout = () => {
+        signOut(auth).then(() => {
+            console.log("Usuário deslogado.");
+            // onAuthStateChanged irá lidar com a troca de tela
+        }).catch((error) => {
+            console.error("Erro ao deslogar:", error);
+        });
+    };
+
+    const login = async (email, password) => {
+        try {
+            await signInWithEmailAndPassword(auth, email, password);
+            // onAuthStateChanged irá lidar com a troca de tela
+        } catch (error) {
+            alert(`Erro no Login: ${error.message}`);
+            console.error(error);
+        }
+    };
+
+    const loginGoogle = async () => {
+        try {
+            await signInWithPopup(auth, googleProvider);
+            // onAuthStateChanged irá lidar com a troca de tela
+        } catch (error) {
+            alert(`Erro no Login com Google: ${error.message}`);
+            console.error(error);
+        }
+    };
+
+    // Função principal para gerenciar o estado do usuário (troca de tela)
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            // Usuário logado: Mostra o app, esconde o login
+            loginView.style.display = 'none';
+            appView.style.display = 'flex';
+            
+            // Atualiza a caixa de usuário
+            userBox.innerHTML = `
+                <strong>${user.displayName || user.email}</strong>
+                <span class="user-profile-label">Perfil a carregar...</span>
+                <a onclick="logout()">Sair</a>
+            `;
+            console.log("Usuário logado:", user.email);
+
+        } else {
+            // Usuário deslogado: Mostra o login, esconde o app
+            loginView.style.display = 'flex';
+            appView.style.display = 'none';
+        }
+    });
+
+    // Vincula a função de logout ao escopo global (para o onclick no HTML)
+    window.logout = logout;
+
 
     // ===================================
     // EVENT LISTENERS E INICIALIZAÇÕES
     // ===================================
 
-    // Adiciona event listeners para o scanner
+    // Listeners de Autenticação
+    btnLoginEmail.addEventListener('click', () => {
+        login(loginEmail.value, loginSenha.value);
+    });
+
+    btnLoginGoogle.addEventListener('click', loginGoogle);
+    
+    // Listeners do Scanner
     btnScan.addEventListener('click', handleScanButtonClick);
     btnCloseScanner.addEventListener('click', closeScannerModal);
-
 
     // Funções de formatação e utilidade
     const formatarData = (date) => {
@@ -1239,7 +1302,6 @@
     const getStatusVencimento = (validadeStr) => {
         // Implementação da lógica de status (Vencido, 7 dias, etc.)
         const hoje = new Date();
-        // Ajuste para evitar problemas de fuso horário, garantindo que a data seja 00:00:00
         const validade = new Date(validadeStr + 'T00:00:00'); 
         const diffTime = validade.getTime() - hoje.getTime();
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -1256,6 +1318,7 @@
         return { label: 'OK', class: 'ok' };
     };
 
+
     // Funções de navegação e UI
     const switchView = (viewId) => {
         document.querySelectorAll('.app-view').forEach(view => {
@@ -1268,7 +1331,6 @@
         });
         document.getElementById(`menu-${viewId.replace('view-', '')}`).classList.add('menu-item-active');
 
-        // Fecha menu lateral em mobile
         if (sideMenu.classList.contains('open')) {
             sideMenu.classList.remove('open');
             menuOverlay.classList.remove('show');
@@ -1278,11 +1340,11 @@
     menuNovo.addEventListener('click', () => switchView('view-novo'));
     menuItens.addEventListener('click', () => {
         switchView('view-itens');
-        // loadItens();
+        // loadItens(); // Descomentar quando a função estiver completa
     });
     menuUsuarios.addEventListener('click', () => {
         switchView('view-usuarios');
-        // loadUsuarios();
+        // loadUsuarios(); // Descomentar quando a função estiver completa
     });
 
     btnToggleMenu.addEventListener('click', () => {
@@ -1295,17 +1357,13 @@
         menuOverlay.classList.remove('show');
     });
 
-    // Função de preenchimento inicial
+    // Inicialização da data
     window.onload = () => {
-        // Define a data de lançamento como a data atual (formato YYYY-MM-DD para ISO)
         const hoje = new Date().toISOString().substring(0, 10);
-        // Exibe a data no formato PT-BR para o usuário
         dataLancamento.value = new Date().toLocaleDateString('pt-BR'); 
-
-        // Restante da lógica de inicialização (como verificação de login, etc.)
     };
 
-    // Resto das funções de CRUD e autenticação (omitidas)
+    // Resto das funções de CRUD (a serem implementadas)
     // ...
 
   </script>
