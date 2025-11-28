@@ -4,15 +4,11 @@
   <meta charset="UTF-8" />
   <title>Controle de Validade • Palato</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <!-- Favicon / logo -->
   <link rel="icon" href="palato-logo.png" />
-  <!-- SheetJS para Excel -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <!-- jsPDF para PDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
-  <!-- Html5Qrcode (global) -->
-  <script src="https://unpkg.com/html5-qrcode@2.3.10/minified/html5-qrcode.min.js"></script>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <style>
     :root {
       --bg-main: #050509;
@@ -143,7 +139,6 @@
     #appView {
       display: none;
       min-height: 100vh;
-      display: flex;
       flex-direction: column;
       background: linear-gradient(135deg, #000 0%, #050509 40%, #020617 100%);
     }
@@ -237,23 +232,23 @@
       font-size: 14px;
       font-weight: 500;
       color: #fff;
-      background: var(--accent-red);
+      background: #050509; /* Default inactive */
+      color: var(--text-soft);
+      border: 1px solid #1f2933;
       cursor: pointer;
-      box-shadow: 0 12px 30px rgba(227, 6, 19, 0.45);
       display: flex;
       align-items: center;
       gap: 10px;
+      box-shadow: none;
     }
     .menu-item span.icon {
       font-size: 18px;
     }
-    .menu-item-secondary {
-      background: #050509;
-      color: var(--text-soft);
-      border: 1px solid #1f2933;
-      box-shadow: none;
-    }
-    .menu-item-active {
+    .menu-item.menu-item-active {
+      background: var(--accent-red);
+      color: #fff;
+      border: none;
+      box-shadow: 0 12px 30px rgba(227, 6, 19, 0.45);
       outline: 2px solid rgba(255, 255, 255, 0.12);
       outline-offset: 2px;
     }
@@ -632,11 +627,10 @@
   </style>
 </head>
 <body>
-  <!-- ===== LOGIN ===== -->
   <div id="loginView">
     <div class="login-card">
       <div class="login-logo">
-        <img src="palato-logo.png" alt="Palato" />
+        <img src="palato-logo.png" alt="Palato" onerror="this.style.display='none'"/>
       </div>
       <div class="login-title">Controle de Validade</div>
       <div class="login-subtitle">Acesso restrito a colaboradores autorizados.</div>
@@ -656,12 +650,11 @@
       <div class="login-footer">Dúvidas? Procure a área de Compras / TI.</div>
     </div>
   </div>
-  <!-- ===== APP ===== -->
   <div id="appView">
     <header class="app-header">
       <div class="app-header-left">
         <button id="btnToggleMenu" class="header-menu-toggle">☰</button>
-        <img src="palato-logo.png" alt="Palato" class="logo-palato" />
+        <img src="palato-logo.png" alt="Palato" class="logo-palato" onerror="this.style.display='none'"/>
         <div class="app-title">
           <h1>CONTROLE DE VALIDADE</h1>
           <span>Multi-loja • Lote • Ofertas</span>
@@ -681,13 +674,12 @@
           <span class="icon">📋</span>
           <span>Itens cadastrados</span>
         </button>
-        <button id="menu-usuarios" class="menu-item menu-item-secondary">
+        <button id="menu-usuarios" class="menu-item">
           <span class="icon">⚙️</span>
           <span>Gerenciar usuários</span>
         </button>
       </nav>
       <section class="app-content">
-        <!-- NOVO LANÇAMENTO -->
         <div id="view-novo" class="app-view app-view-active">
           <div class="card">
             <div class="card-header">
@@ -786,11 +778,10 @@
                   </button>
                 </div>
               </div>
-              <div><!-- coluna direita vazia por enquanto --></div>
+              <div></div>
             </div>
           </div>
         </div>
-        <!-- ITENS CADASTRADOS -->
         <div id="view-itens" class="app-view">
           <div class="card">
             <div class="card-header">
@@ -869,7 +860,6 @@
             </div>
           </div>
         </div>
-        <!-- GERENCIAR USUÁRIOS (ADMIN) -->
         <div id="view-usuarios" class="app-view">
           <div class="card">
             <div class="card-header">
@@ -937,7 +927,6 @@
       </section>
     </main>
   </div>
-  <!-- MODAL SCANNER -->
   <div id="scannerModal" class="modal-backdrop">
     <div class="modal">
       <div class="modal-header">
@@ -945,11 +934,10 @@
         <button class="modal-close" id="btnCloseScanner">×</button>
       </div>
       <div id="qr-reader"></div>
-      <div id="scannerStatus">Aponte para o código de barras (EAN-13). A câmera traseira será usada quando possível.</div>
+      <div id="scannerStatus">Aponte para o código de barras (EAN-13).</div>
       <div class="scanner-hint">Use a câmera traseira • Funciona apenas em HTTPS</div>
     </div>
   </div>
-  <!-- FIREBASE + APP -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
     import {
@@ -1034,845 +1022,160 @@
     const novoUsuarioLoja = document.getElementById("novoUsuarioLoja");
     const btnSalvarUsuario = document.getElementById("btnSalvarUsuario");
     const btnReloadUsuarios = document.getElementById("btnReloadUsuarios");
-    // Scanner modal
+    // Scanner modal - Recuperando elementos do DOM
     const scannerModal = document.getElementById("scannerModal");
     const btnCloseScanner = document.getElementById("btnCloseScanner");
     const scannerStatus = document.getElementById("scannerStatus");
-    let html5QrCode = null;
-    let scannerAtivo = false;
-    // ===== ESTADO =====
-    let usuarioAtual = null;
-    let perfilAtual = null; // admin / gerente / repositor
-    let perfilLojaAtual = null;
-    let lancamentosCache = []; // para filtros/export
-    // ===== HELPERS =====
-    function showAlert(msg) {
-      alert(msg);
-    }
-    function formatarDataHora(date) {
-      const d = new Date(date);
-      const pad = (n) => (n < 10 ? "0" + n : "" + n);
-      return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(
-        d.getHours()
-      )}:${pad(d.getMinutes())}`;
-    }
-    function formatarSomenteData(date) {
-      const d = new Date(date);
-      const pad = (n) => (n < 10 ? "0" + n : "" + n);
-      return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`;
-    }
-    function diasEntreHoje(eData) {
-      const hoje = new Date();
-      hoje.setHours(0, 0, 0, 0);
-      const dt = new Date(eData);
-      dt.setHours(0, 0, 0, 0);
-      const diffMs = dt - hoje;
-      return Math.round(diffMs / (1000 * 60 * 60 * 24));
-    }
-    // Status em faixas 7/15/30/vencido
-    function calcularStatus(validadeStr) {
-      if (!validadeStr) {
-        return { label: "Sem data", tipo: "neutro" };
-      }
-      const [ano, mes, dia] = validadeStr.split("-");
-      const dt = new Date(Number(ano), Number(mes) - 1, Number(dia));
-      const dias = diasEntreHoje(dt);
-      if (dias < 0) return { label: "Vencido", tipo: "danger" };
-      if (dias <= 7) return { label: "Vence em 7 dias", tipo: "danger" };
-      if (dias <= 15) return { label: "Vence em 15 dias", tipo: "warning" };
-      if (dias <= 30) return { label: "Vence em 30 dias", tipo: "ok" };
-      return { label: "Dentro da validade", tipo: "ok" };
-    }
-    function aplicarBadgeStatus(element, statusInfo) {
-      element.className = "badge-status";
-      if (statusInfo.tipo === "danger") element.classList.add("badge-status-danger");
-      else if (statusInfo.tipo === "warning") element.classList.add("badge-status-warning");
-      else if (statusInfo.tipo === "ok") element.classList.add("badge-status-ok");
-      element.textContent = statusInfo.label;
-    }
-    function setView(viewId) {
-      [viewNovo, viewItens, viewUsuarios].forEach((v) => v.classList.remove("app-view-active"));
-      if (viewId === "novo") viewNovo.classList.add("app-view-active");
-      if (viewId === "itens") viewItens.classList.add("app-view-active");
-      if (viewId === "usuarios") viewUsuarios.classList.add("app-view-active");
-      [menuNovo, menuItens, menuUsuarios].forEach((m) => m.classList.remove("menu-item-active"));
-      if (viewId === "novo") menuNovo.classList.add("menu-item-active");
-      if (viewId === "itens") menuItens.classList.add("menu-item-active");
-      if (viewId === "usuarios") menuUsuarios.classList.add("menu-item-active");
-    }
-    function limparFormularioLancamento() {
-      if (perfilAtual === "repositor" && perfilLojaAtual) {
-        novaLoja.value = perfilLojaAtual;
-      } else {
-        novaLoja.value = "";
-      }
-      departamento.value = "";
-      codigoBarras.value = "";
-      descricao.value = "";
-      lote.value = "";
-      quantidade.value = "";
-      validade.value = "";
-      observacao.value = "";
-      const agora = new Date();
-      dataLancamento.value = formatarDataHora(agora);
-    }
-    function atualizarUserBox() {
-      if (!usuarioAtual) {
-        userBox.innerHTML = "";
-        return;
-      }
-      const nome = usuarioAtual.displayName || usuarioAtual.email || "";
-      const perfilLabel =
-        perfilAtual === "admin"
-          ? "Perfil: admin"
-          : perfilAtual === "gerente"
-          ? `Perfil: gerente${perfilLojaAtual ? " (" + perfilLojaAtual + ")" : ""}`
-          : `Perfil: repositor${perfilLojaAtual ? " (" + perfilLojaAtual + ")" : ""}`;
-      userBox.innerHTML = `
-        <strong>${nome}</strong>
-        <span class="user-profile-label">${perfilLabel}</span>
-        <a id="btnLogout">Sair</a>
-      `;
-      const btnLogout = document.getElementById("btnLogout");
-      btnLogout.addEventListener("click", async () => {
-        await signOut(auth);
-      });
-    }
-    // ===== PERFIL / USUÁRIO FIRESTORE =====
-    async function carregarOuCriarPerfilUsuario(user) {
-      const ref = doc(db, "usuarios", user.uid);
-      const snap = await getDoc(ref);
-      if (snap.exists()) {
-        const data = snap.data();
-        perfilAtual = data.tipo || "repositor";
-        perfilLojaAtual = data.loja || "";
-      } else {
-        await setDoc(ref, {
-          email: user.email,
-          nome: user.displayName || "",
-          tipo: "repositor",
-          loja: "",
-          criadoEm: serverTimestamp()
-        });
-        perfilAtual = "repositor";
-        perfilLojaAtual = "";
-      }
-      if (perfilAtual === "admin") {
-        menuUsuarios.style.display = "flex";
-      } else {
-        menuUsuarios.style.display = "none";
-        if (viewUsuarios.classList.contains("app-view-active")) {
-          setView("novo");
-        }
-      }
-    }
-    // Repositor precisa ter loja definida
-    async function garantirLojaDefinidaSeRepositor() {
-      if (perfilAtual !== "repositor" || perfilLojaAtual) return;
-      const mapa = {
-        "ponta verde": "Ponta Verde",
-        "farol": "Farol",
-        "praia": "Praia",
-        "riomar": "Riomar",
-        "cd": "CD"
-      };
-      while (!perfilLojaAtual) {
-        let resposta = prompt(
-          "Informe a loja onde você trabalha (Ponta Verde, Farol, Praia, Riomar ou CD):"
-        );
-        if (resposta === null) {
-          showAlert("É obrigatório informar uma loja para usar o sistema.");
-          break;
-        }
-        resposta = resposta.trim().toLowerCase();
-        if (!resposta) continue;
-        const lojaNormalizada = mapa[resposta];
-        if (!lojaNormalizada) {
-          showAlert("Loja inválida. Digite exatamente: Ponta Verde, Farol, Praia, Riomar ou CD.");
-          continue;
-        }
-        perfilLojaAtual = lojaNormalizada;
-        const ref = doc(db, "usuarios", usuarioAtual.uid);
-        await updateDoc(ref, { loja: perfilLojaAtual });
-        showAlert(`Loja vinculada: ${perfilLojaAtual}.`);
-      }
-    }
-    // ===== LOGIN =====
-    btnLoginEmail.addEventListener("click", async () => {
-      const email = loginEmail.value.trim();
-      const senha = loginSenha.value;
-      if (!email || !senha) {
-        showAlert("Informe e-mail e senha.");
-        return;
-      }
-      try {
-        await signInWithEmailAndPassword(auth, email, senha);
-      } catch (err) {
-        console.error(err);
-        showAlert("Erro no login: " + (err.message || "verifique usuário e senha."));
-      }
-    });
-    btnLoginGoogle.addEventListener("click", async () => {
-      try {
-        await signInWithPopup(auth, googleProvider);
-      } catch (err) {
-        console.error(err);
-        showAlert("Erro no login com Google.");
-      }
-    });
-    onAuthStateChanged(auth, async (user) => {
-      usuarioAtual = user;
-      if (!user) {
-        appView.style.display = "none";
-        loginView.style.display = "flex";
-        return;
-      }
-      await carregarOuCriarPerfilUsuario(user);
-      await garantirLojaDefinidaSeRepositor();
-      atualizarUserBox();
-      limparFormularioLancamento();
-      loginView.style.display = "none";
-      appView.style.display = "flex";
-      await carregarLancamentos();
-      if (perfilAtual === "admin") {
-        await carregarUsuarios();
-      }
-    });
-    // ===== MENU LATERAL / MOBILE =====
-    function abrirMenu() {
-      sideMenu.classList.add("open");
-      menuOverlay.classList.add("show");
-    }
-    function fecharMenu() {
-      sideMenu.classList.remove("open");
-      menuOverlay.classList.remove("show");
-    }
-    btnToggleMenu.addEventListener("click", () => {
-      if (sideMenu.classList.contains("open")) fecharMenu();
-      else abrirMenu();
-    });
-    menuOverlay.addEventListener("click", fecharMenu);
-    menuNovo.addEventListener("click", () => {
-      setView("novo");
-      limparFormularioLancamento();
-      fecharMenu();
-    });
-    menuItens.addEventListener("click", async () => {
-      setView("itens");
-      fecharMenu();
-      await carregarLancamentos();
-    });
-    menuUsuarios.addEventListener("click", async () => {
-      if (perfilAtual !== "admin") return;
-      setView("usuarios");
-      fecharMenu();
-      await carregarUsuarios();
-    });
-    // ===== NOVO LANÇAMENTO =====
-    btnSalvarLancamento.addEventListener("click", async () => {
-      if (!usuarioAtual) {
-        showAlert("Faça login novamente.");
-        return;
-      }
-      const loja = novaLoja.value;
-      const dep = departamento.value;
-      let cod = codigoBarras.value.trim();
-      const desc = descricao.value.trim();
-      const loteVal = lote.value.trim();
-      const qtd = Number(quantidade.value);
-      const val = validade.value;
-      const obs = observacao.value.trim();
-      if (!loja || !dep || !cod || !desc || !qtd || !val) {
-        showAlert("Preencha todos os campos obrigatórios.");
-        return;
-      }
-      if (!/^[0-9]+$/.test(cod)) {
-        showAlert("Código de barras deve ter apenas números.");
-        return;
-      }
-      if (cod.length > 13) {
-        showAlert("Código de barras deve ter no máximo 13 dígitos.");
-        return;
-      }
-      // Repositor só pode lançar na própria loja
-      if (perfilAtual === "repositor") {
-        if (!perfilLojaAtual) {
-          showAlert("Defina sua loja antes de cadastrar. Saia e entre novamente.");
-          return;
-        }
-        if (loja !== perfilLojaAtual) {
-          showAlert(`Você só pode cadastrar itens na loja ${perfilLojaAtual}.`);
-          novaLoja.value = perfilLojaAtual;
-          return;
-        }
-      }
-      try {
-        await addDoc(collection(db, "lancamentos"), {
-          loja,
-          departamento: dep,
-          codigoBarras: cod,
-          descricao: desc,
-          lote: loteVal,
-          quantidade: qtd,
-          validade: val,
-          observacao: obs,
-          oferta: "nao_lancado",
-          usuarioNome: usuarioAtual.displayName || "",
-          usuarioEmail: usuarioAtual.email || "",
-          usuarioUid: usuarioAtual.uid,
-          dataLancamentoTexto: dataLancamento.value,
-          criadoEm: serverTimestamp()
-        });
-        showAlert("Lançamento salvo com sucesso.");
-        limparFormularioLancamento();
-        await carregarLancamentos();
-      } catch (err) {
-        console.error(err);
-        showAlert("Erro ao salvar lançamento.");
-      }
-    });
-    // ===== CARREGAR LANÇAMENTOS =====
-    async function carregarLancamentos() {
-      if (!usuarioAtual) return;
-      const colRef = collection(db, "lancamentos");
-      const q = query(colRef, orderBy("criadoEm", "desc"));
-      const snap = await getDocs(q);
-      tabelaItensBody.innerHTML = "";
-      lancamentosCache = [];
-      snap.forEach((docSnap) => {
-        const item = docSnap.data();
-        const id = docSnap.id;
-        let visivel = false;
-        if (perfilAtual === "admin") {
-          visivel = true;
-        } else if (perfilAtual === "gerente") {
-          if (!perfilLojaAtual || item.loja === perfilLojaAtual) visivel = true;
-        } else {
-          const uid = item.usuarioUid;
-          const email = item.usuarioEmail;
-          if (uid === usuarioAtual.uid || email === usuarioAtual.email) visivel = true;
-        }
-        if (!visivel) return;
-        lancamentosCache.push({ id, ...item });
-      });
-      aplicarFiltrosETabela();
-    }
-    function aplicarFiltrosETabela() {
-      tabelaItensBody.innerHTML = "";
-      let filtrados = [...lancamentosCache];
-      const filtroStatusVal = filtroStatus.value;
-      const filtroDepVal = filtroDepartamento.value;
-      const filtroOfertaVal = filtroOferta.value;
-      const hoje = new Date();
-      hoje.setHours(0, 0, 0, 0);
-      filtrados = filtrados.filter((item) => {
-        // filtro por status
-        if (item.validade) {
-          const dt = new Date(item.validade);
-          dt.setHours(0, 0, 0, 0);
-          const dias = Math.round((dt - hoje) / (1000 * 60 * 60 * 24));
-          // 7 dias: 0 a 7
-          if (filtroStatusVal === "7" && !(dias >= 0 && dias <= 7)) return false;
-          // 15 dias: 8 a 15
-          if (filtroStatusVal === "15" && !(dias >= 8 && dias <= 15)) return false;
-          // 30 dias: 16 a 30
-          if (filtroStatusVal === "30" && !(dias >= 16 && dias <= 30)) return false;
-          // vencidos: < 0
-          if (filtroStatusVal === "vencidos" && !(dias < 0)) return false;
-        } else if (filtroStatusVal !== "todos") {
-          return false;
-        }
-        // filtro departamento
-        if (filtroDepVal !== "todos" && item.departamento !== filtroDepVal) return false;
-        // filtro oferta
-        const ofertaAtual = item.oferta || "nao_lancado";
-        if (filtroOfertaVal !== "todos" && ofertaAtual !== filtroOfertaVal) return false;
-        return true;
-      });
-      filtrados.forEach((item) => adicionarLinhaNaTabela(item));
-      totalItensSpan.textContent = filtrados.length;
-    }
-    function adicionarLinhaNaTabela(item) {
-      const tr = document.createElement("tr");
-      const dataLanc =
-        item.dataLancamentoTexto ||
-        (item.criadoEm && item.criadoEm.toDate ? formatarDataHora(item.criadoEm.toDate()) : "");
-      const valStr = item.validade || "";
-      const statusInfo = calcularStatus(valStr);
-      const tdData = document.createElement("td");
-      tdData.textContent = dataLanc;
-      const tdLoja = document.createElement("td");
-      tdLoja.textContent = item.loja || "";
-      const tdCod = document.createElement("td");
-      tdCod.textContent = item.codigoBarras || "";
-      const tdDesc = document.createElement("td");
-      tdDesc.textContent = item.descricao || "";
-      const tdLote = document.createElement("td");
-      tdLote.textContent = item.lote || "";
-      const tdQtd = document.createElement("td");
-      tdQtd.textContent = item.quantidade || "";
-      const tdVal = document.createElement("td");
-      tdVal.textContent = valStr ? formatarSomenteData(valStr) : "";
-      const tdObs = document.createElement("td");
-      tdObs.textContent = item.observacao || "";
-      const tdOferta = document.createElement("td");
-      const spanOferta = document.createElement("span");
-      spanOferta.className = "badge-oferta";
-      if (item.oferta === "lancado") {
-        spanOferta.classList.add("badge-oferta-lancado");
-        spanOferta.textContent = "Lançado";
-      } else {
-        spanOferta.textContent = "Não Lançado";
-      }
-      spanOferta.addEventListener("click", async () => {
-        const novoValor = item.oferta === "lancado" ? "nao_lancado" : "lancado";
-        try {
-          await updateDoc(doc(db, "lancamentos", item.id), {
-            oferta: novoValor
-          });
-          item.oferta = novoValor;
-          aplicarFiltrosETabela();
-        } catch (err) {
-          console.error(err);
-          showAlert("Erro ao atualizar oferta.");
-        }
-      });
-      tdOferta.appendChild(spanOferta);
-      const tdDep = document.createElement("td");
-      tdDep.textContent = item.departamento || "";
-      const tdStatus = document.createElement("td");
-      const spanStatus = document.createElement("span");
-      aplicarBadgeStatus(spanStatus, statusInfo);
-      tdStatus.appendChild(spanStatus);
-      const tdUsuario = document.createElement("td");
-      tdUsuario.textContent = item.usuarioNome || item.usuarioEmail || "";
-      const tdLancadoEm = document.createElement("td");
-      tdLancadoEm.textContent = dataLanc;
-      const tdAcoes = document.createElement("td");
-      tdAcoes.className = "actions-cell";
-      const btnEditar = document.createElement("button");
-      btnEditar.textContent = "Editar";
-      const btnExcluir = document.createElement("button");
-      btnExcluir.textContent = "Excluir";
-      btnExcluir.classList.add("btn-delete");
-      const ehAdmin = perfilAtual === "admin";
-      const ehDono =
-        item.usuarioUid === usuarioAtual.uid || item.usuarioEmail === usuarioAtual.email;
-      const criadoEmDate =
-        item.criadoEm && item.criadoEm.toDate ? item.criadoEm.toDate() : null;
-      let podeEditar = false;
-      if (ehAdmin) {
-        podeEditar = true;
-      } else if (perfilAtual === "repositor" && ehDono && criadoEmDate) {
-        const diff = (new Date() - criadoEmDate) / (1000 * 60 * 60 * 24);
-        if (diff <= 1) podeEditar = true;
-      }
-      if (podeEditar) {
-        btnEditar.addEventListener("click", () => {
-          setView("novo");
-          novaLoja.value = item.loja || "";
-          departamento.value = item.departamento || "";
-          codigoBarras.value = item.codigoBarras || "";
-          descricao.value = item.descricao || "";
-          lote.value = item.lote || "";
-          quantidade.value = item.quantidade || "";
-          validade.value = item.validade || "";
-          observacao.value = item.observacao || "";
-          dataLancamento.value = dataLanc;
-          showAlert("Edição rápida: altere os campos e depois salve como novo lançamento.");
-        });
-      } else {
-        btnEditar.disabled = true;
-        btnEditar.style.opacity = "0.4";
-        btnEditar.style.cursor = "default";
-      }
-      if (ehAdmin) {
-        btnExcluir.addEventListener("click", async () => {
-          if (!confirm("Deseja realmente excluir este lançamento?")) return;
-          try {
-            await deleteDoc(doc(db, "lancamentos", item.id));
-            lancamentosCache = lancamentosCache.filter((x) => x.id !== item.id);
-            aplicarFiltrosETabela();
-          } catch (err) {
-            console.error(err);
-            showAlert("Erro ao excluir.");
-          }
-        });
-      } else {
-        btnExcluir.disabled = true;
-        btnExcluir.style.opacity = "0.4";
-        btnExcluir.style.cursor = "default";
-      }
-      tdAcoes.appendChild(btnEditar);
-      tdAcoes.appendChild(btnExcluir);
-      [
-        tdData,
-        tdLoja,
-        tdCod,
-        tdDesc,
-        tdLote,
-        tdQtd,
-        tdVal,
-        tdObs,
-        tdOferta,
-        tdDep,
-        tdStatus,
-        tdUsuario,
-        tdLancadoEm,
-        tdAcoes
-      ].forEach((td) => tr.appendChild(td));
-      tabelaItensBody.appendChild(tr);
-    }
-    filtroStatus.addEventListener("change", aplicarFiltrosETabela);
-    filtroDepartamento.addEventListener("change", aplicarFiltrosETabela);
-    filtroOferta.addEventListener("change", aplicarFiltrosETabela);
-    // ===== EXPORTAR EXCEL / PDF =====
-    btnExportExcel.addEventListener("click", () => {
-      if (!window.XLSX) {
-        showAlert("Biblioteca de Excel não carregou.");
-        return;
-      }
-      const dados = [
-        [
-          "Data lançamento",
-          "Loja",
-          "Cód. barras",
-          "Descrição",
-          "Lote",
-          "Qtd",
-          "Validade",
-          "Obs.",
-          "Status",
-          "Oferta",
-          "Departamento",
-          "Usuário",
-          "Lançado em"
-        ]
-      ];
-      lancamentosCache.forEach((item) => {
-        const valStr = item.validade || "";
-        const statusInfo = calcularStatus(valStr);
-        dados.push([
-          item.dataLancamentoTexto ||
-            (item.criadoEm && item.criadoEm.toDate ? formatarDataHora(item.criadoEm.toDate()) : ""),
-          item.loja || "",
-          item.codigoBarras || "",
-          item.descricao || "",
-          item.lote || "",
-          item.quantidade || "",
-          valStr ? formatarSomenteData(valStr) : "",
-          item.observacao || "",
-          statusInfo.label,
-          item.oferta === "lancado" ? "Lançado" : "Não Lançado",
-          item.departamento || "",
-          item.usuarioNome || item.usuarioEmail || "",
-          item.dataLancamentoTexto ||
-            (item.criadoEm && item.criadoEm.toDate ? formatarDataHora(item.criadoEm.toDate()) : "")
-        ]);
-      });
-      const ws = XLSX.utils.aoa_to_sheet(dados);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Validades");
-      XLSX.writeFile(wb, "controle-validade.xlsx");
-    });
-    btnExportPDF.addEventListener("click", () => {
-      const { jsPDF } = window.jspdf || {};
-      if (!jsPDF || !window.jspdf || !window.jspdf.jsPDF) {
-        showAlert("Biblioteca de PDF não carregou.");
-        return;
-      }
-      const docPdf = new window.jspdf.jsPDF("l", "pt", "a4");
-      const colunas = [
-        "Data lançamento",
-        "Loja",
-        "Cód. barras",
-        "Descrição",
-        "Lote",
-        "Qtd",
-        "Validade",
-        "Obs.",
-        "Status",
-        "Oferta",
-        "Departamento",
-        "Usuário",
-        "Lançado em"
-      ];
-      const linhas = lancamentosCache.map((item) => {
-        const valStr = item.validade || "";
-        const statusInfo = calcularStatus(valStr);
-        const dataLanc =
-          item.dataLancamentoTexto ||
-          (item.criadoEm && item.criadoEm.toDate ? formatarDataHora(item.criadoEm.toDate()) : "");
-        return [
-          dataLanc,
-          item.loja || "",
-          item.codigoBarras || "",
-          item.descricao || "",
-          item.lote || "",
-          item.quantidade || "",
-          valStr ? formatarSomenteData(valStr) : "",
-          item.observacao || "",
-          statusInfo.label,
-          item.oferta === "lancado" ? "Lançado" : "Não Lançado",
-          item.departamento || "",
-          item.usuarioNome || item.usuarioEmail || "",
-          dataLanc
-        ];
-      });
-      docPdf.setFontSize(14);
-      docPdf.text("Controle de Validade - Palato", 40, 40);
-      docPdf.setFontSize(10);
-      docPdf.text("Relatório de itens cadastrados", 40, 56);
-      docPdf.autoTable({
-        startY: 70,
-        head: [colunas],
-        body: linhas,
-        styles: {
-          fontSize: 7,
-          cellPadding: 3
-        },
-        headStyles: {
-          fillColor: [227, 6, 19],
-          textColor: 255
-        },
-        alternateRowStyles: {
-          fillColor: [15, 23, 42]
-        }
-      });
-      docPdf.save("controle-validade.pdf");
-    });
-    // ===== MARCAR TODOS COMO OFERTA =====
-    btnMarcarTodosOferta.addEventListener("click", async () => {
-      if (!confirm("Marcar todos os itens filtrados como 'Lançado'?")) return;
-      const filtrados = [...lancamentosCache];
-      const promises = filtrados.map((item) =>
-        updateDoc(doc(db, "lancamentos", item.id), { oferta: "lancado" })
-      );
-      try {
-        await Promise.all(promises);
-        lancamentosCache.forEach((item) => (item.oferta = "lancado"));
-        aplicarFiltrosETabela();
-      } catch (err) {
-        console.error(err);
-        showAlert("Erro ao marcar ofertas.");
-      }
-    });
-    // ===== ADMIN USUÁRIOS =====
-    async function carregarUsuarios() {
-      if (perfilAtual !== "admin") return;
-      const snap = await getDocs(collection(db, "usuarios"));
-      usuariosBody.innerHTML = "";
-      snap.forEach((docSnap) => {
-        const item = docSnap.data();
-        const id = docSnap.id;
-        const tr = document.createElement("tr");
-        const tdNome = document.createElement("td");
-        tdNome.textContent = item.nome || "";
-        const tdEmail = document.createElement("td");
-        tdEmail.textContent = item.email || "";
-        const tdPerfil = document.createElement("td");
-        const selPerfil = document.createElement("select");
-        ["admin", "gerente", "repositor"].forEach((optVal) => {
-          const opt = document.createElement("option");
-          opt.value = optVal;
-          opt.textContent = optVal;
-          if ((item.tipo || "repositor") === optVal) opt.selected = true;
-          selPerfil.appendChild(opt);
-        });
-        tdPerfil.appendChild(selPerfil);
-        const tdLoja = document.createElement("td");
-        const selLoja = document.createElement("select");
-        [
-          { v: "", t: "Nenhuma" },
-          { v: "Ponta Verde", t: "Ponta Verde" },
-          { v: "Farol", t: "Farol" },
-          { v: "Praia", t: "Praia" },
-          { v: "Riomar", t: "Riomar" },
-          { v: "CD", t: "CD" }
-        ].forEach((o) => {
-          const opt = document.createElement("option");
-          opt.value = o.v;
-          opt.textContent = o.t;
-          if ((item.loja || "") === o.v) opt.selected = true;
-          selLoja.appendChild(opt);
-        });
-        tdLoja.appendChild(selLoja);
-        const tdAcoes = document.createElement("td");
-        const btnSalvar = document.createElement("button");
-        btnSalvar.textContent = "Salvar";
-        btnSalvar.style.color = "#22c55e";
-        btnSalvar.style.background = "transparent";
-        btnSalvar.style.border = "none";
-        btnSalvar.style.cursor = "pointer";
-        btnSalvar.style.marginRight = "8px";
-        const btnExcluir = document.createElement("button");
-        btnExcluir.textContent = "Excluir";
-        btnExcluir.style.color = "#fb7185";
-        btnExcluir.style.background = "transparent";
-        btnExcluir.style.border = "none";
-        btnExcluir.style.cursor = "pointer";
-        btnSalvar.addEventListener("click", async () => {
-          try {
-            await updateDoc(doc(db, "usuarios", id), {
-              tipo: selPerfil.value,
-              loja: selLoja.value
+
+    // ===== LÓGICA DE LOGIN =====
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            // Usuário logado
+            loginView.style.display = "none";
+            appView.style.display = "flex"; // Importante ser flex para o layout funcionar
+            userBox.innerHTML = `<strong>${user.email}</strong><a id="btnLogout">Sair</a>`;
+            
+            // Listener do botão Sair (precisa ser adicionado aqui pois o elemento é criado dinamicamente)
+            document.getElementById("btnLogout").addEventListener("click", () => {
+                signOut(auth).then(() => location.reload());
             });
-            showAlert("Usuário atualizado.");
-          } catch (err) {
-            console.error(err);
-            showAlert("Erro ao salvar usuário.");
-          }
-        });
-        btnExcluir.addEventListener("click", async () => {
-          if (!confirm("Excluir usuário do controle (não apaga do Auth)?")) return;
-          try {
-            await deleteDoc(doc(db, "usuarios", id));
-            await carregarUsuarios();
-          } catch (err) {
-            console.error(err);
-            showAlert("Erro ao excluir usuário.");
-          }
-        });
-        tdAcoes.appendChild(btnSalvar);
-        tdAcoes.appendChild(btnExcluir);
-        [tdNome, tdEmail, tdPerfil, tdLoja, tdAcoes].forEach((td) => tr.appendChild(td));
-        usuariosBody.appendChild(tr);
-      });
-    }
-    btnReloadUsuarios.addEventListener("click", carregarUsuarios);
-    btnSalvarUsuario.addEventListener("click", async () => {
-      const nome = novoUsuarioNome.value.trim();
-      const email = novoUsuarioEmail.value.trim();
-      const tipo = novoUsuarioPerfil.value;
-      const loja = novoUsuarioLoja.value;
-      if (!email) {
-        showAlert("Informe o e-mail do usuário.");
-        return;
-      }
-      try {
-        await addDoc(collection(db, "usuarios"), {
-          nome,
-          email,
-          tipo,
-          loja,
-          criadoEm: serverTimestamp()
-        });
-        showAlert("Usuário salvo. Lembre de vincular o mesmo e-mail na conta de login.");
-        novoUsuarioNome.value = "";
-        novoUsuarioEmail.value = "";
-        novoUsuarioLoja.value = "";
-        novoUsuarioPerfil.value = "repositor";
-        await carregarUsuarios();
-      } catch (err) {
-        console.error(err);
-        showAlert("Erro ao salvar usuário.");
-      }
+
+            // Preenche data de lançamento com hoje
+            const hoje = new Date().toISOString().split("T")[0];
+            dataLancamento.value = hoje;
+
+        } else {
+            // Ninguém logado
+            loginView.style.display = "flex";
+            appView.style.display = "none";
+        }
     });
-    // ===== SCANNER CORRIGIDO (aqui está a mágica - só essa função mudou) =====
-    async function abrirScanner() {
-      // Verificação de HTTPS (essencial pro celular)
-      if (location.protocol !== "https:" && location.hostname !== "localhost" && location.hostname !== "127.0.0.1") {
-        showAlert("O scanner só funciona em sites seguros (HTTPS).\n\nVocê está em HTTP ou arquivo local? Suba no Firebase Hosting para testar no celular.");
-        return;
-      }
 
-      if (!window.Html5Qrcode || !window.Html5QrcodeSupportedFormats) {
-        showAlert("Biblioteca do scanner não carregou. Verifique a conexão.");
-        return;
-      }
+    btnLoginEmail.addEventListener("click", () => {
+        const email = loginEmail.value;
+        const senha = loginSenha.value;
+        if (!email || !senha) return alert("Preencha e-mail e senha");
+        signInWithEmailAndPassword(auth, email, senha)
+            .catch(error => alert("Erro ao entrar: " + error.message));
+    });
 
-      scannerModal.classList.add("show");
-      scannerStatus.textContent = "Iniciando câmera...";
+    btnLoginGoogle.addEventListener("click", () => {
+        signInWithPopup(auth, googleProvider)
+            .catch(error => alert("Erro Google: " + error.message));
+    });
 
-      if (html5QrCode) {
-        scannerStatus.textContent = "Aponte para o código de barras";
-        return;
-      }
+    // ===== LÓGICA DE MENU / NAVEGAÇÃO =====
+    function switchView(viewId, activeBtn) {
+        // Esconde todas as views
+        viewNovo.classList.remove("app-view-active");
+        viewItens.classList.remove("app-view-active");
+        viewUsuarios.classList.remove("app-view-active");
+        
+        // Remove active dos botões
+        menuNovo.classList.remove("menu-item-active");
+        menuItens.classList.remove("menu-item-active");
+        menuUsuarios.classList.remove("menu-item-active");
 
-      html5QrCode = new Html5Qrcode("qr-reader");
-      scannerAtivo = true;
+        // Mostra a view desejada e ativa o botão
+        document.getElementById(viewId).classList.add("app-view-active");
+        activeBtn.classList.add("menu-item-active");
 
-      try {
-        const devices = await Html5Qrcode.getCameras();
-        if (!devices || devices.length === 0) {
-          scannerStatus.textContent = "Nenhuma câmera encontrada.";
-          showAlert("Nenhuma câmera detectada no dispositivo. Verifique permissões.");
-          fecharScanner();
-          return;
+        // Fecha menu mobile se estiver aberto
+        sideMenu.classList.remove("open");
+        menuOverlay.classList.remove("show");
+    }
+
+    menuNovo.addEventListener("click", () => switchView("view-novo", menuNovo));
+    menuItens.addEventListener("click", () => switchView("view-itens", menuItens));
+    menuUsuarios.addEventListener("click", () => switchView("view-usuarios", menuUsuarios));
+
+    // Menu Mobile
+    btnToggleMenu.addEventListener("click", () => {
+        sideMenu.classList.add("open");
+        menuOverlay.classList.add("show");
+    });
+    menuOverlay.addEventListener("click", () => {
+        sideMenu.classList.remove("open");
+        menuOverlay.classList.remove("show");
+    });
+
+    // ===== LÓGICA DO SCANNER (Html5Qrcode) =====
+    let html5QrcodeScanner = null;
+
+    btnScan.addEventListener("click", () => {
+        scannerModal.classList.add("show");
+        startScanner();
+    });
+
+    btnCloseScanner.addEventListener("click", () => {
+        stopScanner();
+    });
+
+    function startScanner() {
+        scannerStatus.innerText = "Solicitando permissão da câmera...";
+        scannerStatus.style.color = "#4ade80";
+
+        // Limpa instância anterior se houver
+        if (html5QrcodeScanner) {
+            html5QrcodeScanner.clear();
         }
 
-        // Prioriza câmera traseira
-        let cameraId = devices[0].id;
-        const traseira = devices.find((d) =>
-          d.label.toLowerCase().includes("back") ||
-          d.label.toLowerCase().includes("traseira") ||
-          d.label.toLowerCase().includes("rear")
-        );
-        if (traseira) cameraId = traseira.id;
-        else if (devices.length > 1) cameraId = devices[devices.length - 1].id; // Última geralmente é traseira
+        html5QrcodeScanner = new Html5Qrcode("qr-reader");
 
-        const config = {
-          fps: 15, // Mais fluido
-          qrbox: { width: 260, height: 140 }, // Caixa de foco menor pro código de barras
-          formatsToSupport: [Html5QrcodeSupportedFormats.EAN_13, Html5QrcodeSupportedFormats.EAN_8, Html5QrcodeSupportedFormats.UPC_A]
+        const config = { 
+            fps: 10, 
+            qrbox: { width: 250, height: 250 },
+            aspectRatio: 1.0
         };
 
-        await html5QrCode.start(
-          cameraId,
-          config,
-          (decodedText) => {
-            const num = decodedText.trim();
-            if (/^[0-9]{8,13}$/.test(num)) {
-              codigoBarras.value = num;
-              scannerStatus.textContent = `Código lido: ${num}`;
-              // Som de beep de sucesso (funciona offline)
-              const audio = new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=");
-              audio.play().catch(() => {});
-              setTimeout(fecharScanner, 1200); // Fecha auto após 1.2s
-            }
-          },
-          (error) => {
-            // Erros silenciosos (ex: sem código na visão)
-            console.warn("Scan error:", error);
-          }
-        );
-
-        scannerStatus.textContent = "Aponte para o código de barras (EAN-13)";
-
-      } catch (err) {
-        console.error("Erro no scanner:", err);
-        scannerStatus.textContent = "Erro ao acessar câmera.";
-        showAlert(`Erro ao iniciar scanner: ${err.message || "Verifique permissões de câmera e HTTPS."}`);
-        fecharScanner();
-      }
+        // Tenta iniciar câmera traseira ("environment")
+        html5QrcodeScanner.start(
+            { facingMode: "environment" },
+            config,
+            onScanSuccess,
+            onScanFailure
+        ).catch(err => {
+            console.error("Erro scanner:", err);
+            scannerStatus.innerText = "Erro: Permissão negada ou falta de HTTPS.";
+            scannerStatus.style.color = "#ef4444";
+        });
     }
 
-    async function fecharScanner() {
-      scannerModal.classList.remove("show");
-      scannerStatus.textContent = "Aponte para o código de barras (EAN-13). A câmera traseira será usada quando possível.";
-      if (html5QrCode && scannerAtivo) {
-        scannerAtivo = false;
-        try {
-          await html5QrCode.stop();
-          await html5QrCode.clear();
-        } catch (err) {
-          console.error("Erro ao parar scanner:", err);
+    function onScanSuccess(decodedText, decodedResult) {
+        // Sucesso na leitura
+        codigoBarras.value = decodedText;
+        // Fecha modal
+        stopScanner();
+        // Foca no próximo campo
+        descricao.focus();
+    }
+
+    function onScanFailure(error) {
+        // Falha contínua enquanto tenta ler, normal ignorar para não poluir log
+    }
+
+    function stopScanner() {
+        if (html5QrcodeScanner) {
+            html5QrcodeScanner.stop().then(() => {
+                html5QrcodeScanner.clear();
+                scannerModal.classList.remove("show");
+                html5QrcodeScanner = null;
+            }).catch(err => {
+                console.error("Falha ao parar", err);
+                scannerModal.classList.remove("show");
+            });
+        } else {
+            scannerModal.classList.remove("show");
         }
-        html5QrCode = null;
-      }
     }
 
-    btnScan.addEventListener("click", abrirScanner);
-    btnCloseScanner.addEventListener("click", fecharScanner);
-    scannerModal.addEventListener("click", (e) => {
-      if (e.target === scannerModal) fecharScanner();
+    // ===== SALVAR MOCK (Para o botão não dar erro) =====
+    btnSalvarLancamento.addEventListener("click", () => {
+        // Aqui entraria a lógica do Firestore addDoc
+        alert("Botão salvar clicado! (Implementar lógica do Firebase aqui)");
     });
 
-    // ===== INICIAL =====
-    (function initDataLancamento() {
-      const agora = new Date();
-      dataLancamento.value = formatarDataHora(agora);
-    })();
   </script>
 </body>
 </html>
+```
