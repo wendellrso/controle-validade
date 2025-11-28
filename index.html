@@ -12,8 +12,8 @@
   <!-- jsPDF para PDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
-  <!-- html5-qrcode (scanner) – arquivo local -->
-  <script src="html5-qrcode.min.js"></script>
+  <!-- html5-qrcode (scanner) -->
+  <script src="https://unpkg.com/html5-qrcode@2.3.10/html5-qrcode.min.js"></script>
 
   <style>
     :root {
@@ -437,14 +437,10 @@
     }
 
     .btn-save {
-      margin-top: 0;
+      margin-top: 12px;
       background: #16a34a;
       color: #fff;
       box-shadow: 0 12px 30px rgba(22, 163, 74, 0.55);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: auto;
     }
 
     /* TABELA ITENS */
@@ -681,7 +677,7 @@
       background: #000;
     }
 
-    /* ===== RESPONSIVO ===== */
+    /* Responsivo */
     @media (max-width: 960px) {
       .side-menu {
         position: fixed;
@@ -692,19 +688,15 @@
         padding: 20px 16px;
         transition: left 0.2s ease;
       }
-
       .side-menu.open {
         left: 0;
       }
-
       .header-menu-toggle {
         display: flex;
       }
-
       .app-main {
         flex-direction: column;
       }
-
       .app-content {
         padding: 16px;
       }
@@ -738,38 +730,16 @@
         border-radius: 12px;
       }
 
-      /* Formularios em uma coluna */
+      /* formulários em 1 coluna no mobile */
       .grid-two-columns {
         grid-template-columns: 1fr;
-        gap: 12px;
       }
-
-      .grid-two,
+      .grid-two {
+        grid-template-columns: 1fr;
+      }
       .grid-three,
       .grid-three-tight {
         grid-template-columns: 1fr;
-        gap: 10px;
-      }
-
-      .grid-three-tight .form-group:last-child {
-        grid-column: 1 / -1;
-      }
-
-      .btn-save {
-        width: 100%;
-        justify-content: center;
-      }
-
-      .card {
-        padding: 16px 14px 16px;
-      }
-
-      .form-group {
-        margin-bottom: 8px;
-      }
-
-      textarea {
-        min-height: 80px;
       }
     }
   </style>
@@ -856,7 +826,7 @@
             </div>
 
             <div class="grid-two-columns">
-              <!-- Coluna única (desktop e mobile) -->
+              <!-- Coluna principal -->
               <div>
                 <div class="grid-two">
                   <div class="form-group">
@@ -928,18 +898,19 @@
                     <input id="validade" type="date" />
                   </div>
                   <div class="form-group">
-                    <label for="observacao">Observação</label>
-                    <textarea
-                      id="observacao"
-                      placeholder="Lote em oferta, ponto extra, etc."
-                    ></textarea>
-                  </div>
-                  <div class="form-group">
                     <label>&nbsp;</label>
                     <button id="btnSalvarLancamento" class="btn btn-save">
                       💾 Salvar lançamento
                     </button>
                   </div>
+                </div>
+
+                <div class="form-group">
+                  <label for="observacao">Observação</label>
+                  <textarea
+                    id="observacao"
+                    placeholder="Lote em oferta, ponto extra, etc."
+                  ></textarea>
                 </div>
               </div>
             </div>
@@ -959,7 +930,7 @@
                   Filtros por status de vencimento e controle de oferta.
                 </div>
               </div>
-              <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+              <div style="display:flex; gap:8px; align-items:center;">
                 <button id="btnMarcarTodosOferta" class="btn-ghost">
                   📣 Marcar todos como oferta
                 </button>
@@ -1608,19 +1579,11 @@
           dt.setHours(0, 0, 0, 0);
           const dias = Math.round((dt - hoje) / (1000 * 60 * 60 * 24));
 
-          // 7 dias: 0 a 7
           if (filtroStatusVal === "7" && !(dias >= 0 && dias <= 7)) return false;
-
-          // 15 dias: 8 a 15
           if (filtroStatusVal === "15" && !(dias >= 8 && dias <= 15)) return false;
-
-          // 30 dias: 16 a 30
           if (filtroStatusVal === "30" && !(dias >= 16 && dias <= 30)) return false;
-
-          // vencidos: < 0
           if (filtroStatusVal === "vencidos" && !(dias < 0)) return false;
         } else if (filtroStatusVal !== "todos") {
-          // se não tem validade e o filtro não é "todos", ignora
           return false;
         }
 
@@ -2060,7 +2023,7 @@
       }
     });
 
-    // ===== SCANNER (usa html5-qrcode local e câmera traseira) =====
+    // ===== SCANNER =====
     function scannerDisponivel() {
       return typeof Html5Qrcode !== "undefined";
     }
@@ -2078,35 +2041,45 @@
       html5QrCode = new Html5Qrcode("qr-reader");
       scannerAtivo = true;
 
-      const config = {
-        fps: 10,
-        qrbox: 250,
-        formatsToSupport: [Html5QrcodeSupportedFormats.EAN_13]
-      };
-
       try {
-    await html5QrCode.start(
-  { facingMode: { exact: "environment" } },
-  config,
-  (decodedText) => {
-    let text = decodedText.trim();
+        const config = {
+          fps: 10,
+          qrbox: 250
+        };
 
-    // Garante que é só número
-    if (!/^[0-9]+$/.test(text)) return;
+        if (window.Html5QrcodeSupportedFormats && window.Html5QrcodeSupportedFormats.EAN_13) {
+          config.formatsToSupport = [Html5QrcodeSupportedFormats.EAN_13];
+        }
 
-    // Se vier com 12 dígitos (UPC-A), completa com zero na frente (vira EAN-13)
-    if (text.length === 12) {
-      text = "0" + text;
+        await html5QrCode.start(
+          { facingMode: { exact: "environment" } },
+          config,
+          (decodedText) => {
+            let text = decodedText.trim();
+
+            // Garante apenas números
+            if (!/^[0-9]+$/.test(text)) return;
+
+            // Se vier com 12 dígitos (UPC-A), completa com zero à esquerda (EAN-13)
+            if (text.length === 12) {
+              text = "0" + text;
+            }
+
+            // Aceita entre 8 e 13 dígitos
+            if (text.length >= 8 && text.length <= 13) {
+              codigoBarras.value = text;
+              fecharScanner();
+            }
+          },
+          () => {}
+        );
+      } catch (err) {
+        console.error(err);
+        showAlert("Erro ao iniciar câmera.");
+        fecharScanner();
+      }
     }
 
-    // Aceita entre 8 e 13 dígitos, mas agora preservando o zero
-    if (text.length >= 8 && text.length <= 13) {
-      codigoBarras.value = text;
-      fecharScanner();
-    }
-  },
-  () => {}
-);
     async function fecharScanner() {
       scannerModal.classList.remove("show");
       if (html5QrCode && scannerAtivo) {
@@ -2139,4 +2112,3 @@
   </script>
 </body>
 </html>
-
