@@ -12,8 +12,8 @@
   <!-- jsPDF para PDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
-  <!-- html5-qrcode (scanner) – arquivo local -->
-  <script src="html5-qrcode.min.js"></script>
+  <!-- html5-qrcode (scanner) -->
+  <script src="https://unpkg.com/html5-qrcode@2.3.10/html5-qrcode.min.js"></script>
 
   <style>
     :root {
@@ -367,6 +367,38 @@
       color: var(--text-soft);
     }
 
+    /* DASHBOARD */
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .kpi-card {
+      background: #020617;
+      border-radius: 14px;
+      border: 1px solid #1f2933;
+      padding: 12px 14px;
+    }
+
+    .kpi-label {
+      font-size: 12px;
+      color: var(--text-soft);
+      margin-bottom: 6px;
+    }
+
+    .kpi-value {
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    .kpi-tag {
+      font-size: 11px;
+      color: #9ca3af;
+      margin-top: 4px;
+    }
+
     /* FORM NOVO LANÇAMENTO */
 
     .grid-two-columns {
@@ -391,6 +423,7 @@
       display: grid;
       grid-template-columns: 1.2fr 1.5fr 1fr;
       gap: 10px;
+      align-items: end;
     }
 
     select,
@@ -437,14 +470,10 @@
     }
 
     .btn-save {
-      margin-top: 0;
+      margin-top: 12px;
       background: #16a34a;
       color: #fff;
       box-shadow: 0 12px 30px rgba(22, 163, 74, 0.55);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: auto;
     }
 
     /* TABELA ITENS */
@@ -465,7 +494,13 @@
 
     .filters-row select {
       width: auto;
-      min-width: 150px;
+      min-width: 140px;
+      padding: 6px 10px;
+      font-size: 13px;
+    }
+
+    .filters-row input[type="text"] {
+      width: 160px;
       padding: 6px 10px;
       font-size: 13px;
     }
@@ -503,6 +538,7 @@
       overflow-x: auto;
       overflow-y: hidden;
       background: #020617;
+      max-height: 60vh;
     }
 
     table {
@@ -609,7 +645,33 @@
       margin-top: 8px;
       font-size: 12px;
       color: #9ca3af;
-      text-align: right;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .pagination {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+    }
+
+    .pagination button {
+      background: #020617;
+      border: 1px solid #374151;
+      border-radius: 999px;
+      padding: 4px 8px;
+      color: #e5e7eb;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .pagination button:disabled {
+      opacity: 0.4;
+      cursor: default;
     }
 
     /* ADMIN USUÁRIOS */
@@ -681,7 +743,7 @@
       background: #000;
     }
 
-    /* ===== RESPONSIVO ===== */
+    /* Responsivo */
     @media (max-width: 960px) {
       .side-menu {
         position: fixed;
@@ -692,19 +754,15 @@
         padding: 20px 16px;
         transition: left 0.2s ease;
       }
-
       .side-menu.open {
         left: 0;
       }
-
       .header-menu-toggle {
         display: flex;
       }
-
       .app-main {
         flex-direction: column;
       }
-
       .app-content {
         padding: 16px;
       }
@@ -736,40 +794,29 @@
 
       .items-table-wrapper {
         border-radius: 12px;
+        max-height: 65vh;
       }
 
-      /* Formularios em uma coluna */
       .grid-two-columns {
         grid-template-columns: 1fr;
-        gap: 12px;
       }
 
-      .grid-two,
-      .grid-three,
+      .kpi-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
       .grid-three-tight {
         grid-template-columns: 1fr;
-        gap: 10px;
-      }
-
-      .grid-three-tight .form-group:last-child {
-        grid-column: 1 / -1;
       }
 
       .btn-save {
         width: 100%;
-        justify-content: center;
       }
+    }
 
-      .card {
-        padding: 16px 14px 16px;
-      }
-
-      .form-group {
-        margin-bottom: 8px;
-      }
-
-      textarea {
-        min-height: 80px;
+    @media (max-width: 600px) {
+      .kpi-grid {
+        grid-template-columns: 1fr 1fr;
       }
     }
   </style>
@@ -822,7 +869,11 @@
     <main class="app-main">
       <nav class="side-menu">
         <div class="side-menu-title">Menu</div>
-        <button id="menu-novo" class="menu-item menu-item-active">
+        <button id="menu-dashboard" class="menu-item menu-item-active">
+          <span class="icon">🏠</span>
+          <span>Dashboard</span>
+        </button>
+        <button id="menu-novo" class="menu-item">
           <span class="icon">＋</span>
           <span>Novo lançamento</span>
         </button>
@@ -837,8 +888,47 @@
       </nav>
 
       <section class="app-content">
+        <!-- DASHBOARD -->
+        <div id="view-dashboard" class="app-view app-view-active">
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">
+                  <div class="card-title-icon">📊</div>
+                  <span>Dashboard</span>
+                </div>
+                <div class="card-subtitle">
+                  Visão geral dos lançamentos e status de validade.
+                </div>
+              </div>
+            </div>
+            <div class="kpi-grid">
+              <div class="kpi-card">
+                <div class="kpi-label">Lançamentos de hoje</div>
+                <div class="kpi-value" id="kpiTotalHoje">0</div>
+                <div class="kpi-tag">Itens cadastrados na data atual</div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">Itens vencidos</div>
+                <div class="kpi-value" id="kpiVencidos">0</div>
+                <div class="kpi-tag">Já fora da validade</div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">Vencem em até 7 dias</div>
+                <div class="kpi-value" id="kpiAte7">0</div>
+                <div class="kpi-tag">Risco imediato</div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">Vencem em até 15 dias</div>
+                <div class="kpi-value" id="kpiAte15">0</div>
+                <div class="kpi-tag">Planejamento de oferta</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- NOVO LANÇAMENTO -->
-        <div id="view-novo" class="app-view app-view-active">
+        <div id="view-novo" class="app-view">
           <div class="card">
             <div class="card-header">
               <div>
@@ -856,7 +946,6 @@
             </div>
 
             <div class="grid-two-columns">
-              <!-- Coluna única (desktop e mobile) -->
               <div>
                 <div class="grid-two">
                   <div class="form-group">
@@ -928,18 +1017,21 @@
                     <input id="validade" type="date" />
                   </div>
                   <div class="form-group">
-                    <label for="observacao">Observação</label>
-                    <textarea
-                      id="observacao"
-                      placeholder="Lote em oferta, ponto extra, etc."
-                    ></textarea>
-                  </div>
-                  <div class="form-group">
                     <label>&nbsp;</label>
                     <button id="btnSalvarLancamento" class="btn btn-save">
                       💾 Salvar lançamento
                     </button>
                   </div>
+                </div>
+              </div>
+
+              <div>
+                <div class="form-group">
+                  <label for="observacao">Observação</label>
+                  <textarea
+                    id="observacao"
+                    placeholder="Lote em oferta, ponto extra, etc."
+                  ></textarea>
                 </div>
               </div>
             </div>
@@ -956,10 +1048,10 @@
                   <span>Itens cadastrados</span>
                 </div>
                 <div class="card-subtitle">
-                  Filtros por status de vencimento e controle de oferta.
+                  Filtros por status de vencimento, oferta e controle de lote.
                 </div>
               </div>
-              <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+              <div style="display:flex; gap:8px; align-items:center;">
                 <button id="btnMarcarTodosOferta" class="btn-ghost">
                   📣 Marcar todos como oferta
                 </button>
@@ -973,7 +1065,7 @@
             </div>
 
             <div class="filters-row">
-              <label for="filtroStatus">Filtros:</label>
+              <label for="filtroStatus">Status:</label>
               <select id="filtroStatus">
                 <option value="todos">Todos</option>
                 <option value="7">Vence em 7 dias</option>
@@ -982,7 +1074,7 @@
                 <option value="vencidos">Vencidos</option>
               </select>
 
-              <label for="filtroDepartamento">•</label>
+              <label for="filtroDepartamento">Departamento:</label>
               <select id="filtroDepartamento">
                 <option value="todos">Todos departamentos</option>
                 <option>Açougue</option>
@@ -992,6 +1084,16 @@
                 <option>Mercearia Não Alimentos</option>
                 <option>Perecíveis Processados</option>
               </select>
+
+              <label for="filtroOferta">Oferta:</label>
+              <select id="filtroOferta">
+                <option value="todos">Todas</option>
+                <option value="lancado">Lançado</option>
+                <option value="nao_lancado">Não lançado</option>
+              </select>
+
+              <label for="buscaCodigo">Cód. barras:</label>
+              <input id="buscaCodigo" type="text" placeholder="Buscar código" />
             </div>
 
             <div class="items-table-wrapper">
@@ -1018,7 +1120,14 @@
               </table>
             </div>
             <div class="items-footer">
-              Total de itens: <span id="totalItens">0</span>
+              <div>
+                Total de itens filtrados: <span id="totalItens">0</span>
+              </div>
+              <div class="pagination">
+                <button id="btnPaginaAnterior">&laquo;</button>
+                <span>Página <span id="paginaAtual">1</span> de <span id="totalPaginas">1</span></span>
+                <button id="btnPaginaProxima">&raquo;</button>
+              </div>
             </div>
           </div>
         </div>
@@ -1162,10 +1271,12 @@
 
     const userBox = document.getElementById("userBox");
 
+    const menuDashboard = document.getElementById("menu-dashboard");
     const menuNovo = document.getElementById("menu-novo");
     const menuItens = document.getElementById("menu-itens");
     const menuUsuarios = document.getElementById("menu-usuarios");
 
+    const viewDashboard = document.getElementById("view-dashboard");
     const viewNovo = document.getElementById("view-novo");
     const viewItens = document.getElementById("view-itens");
     const viewUsuarios = document.getElementById("view-usuarios");
@@ -1192,9 +1303,21 @@
     const totalItensSpan = document.getElementById("totalItens");
     const filtroStatus = document.getElementById("filtroStatus");
     const filtroDepartamento = document.getElementById("filtroDepartamento");
+    const filtroOferta = document.getElementById("filtroOferta");
+    const buscaCodigo = document.getElementById("buscaCodigo");
     const btnMarcarTodosOferta = document.getElementById("btnMarcarTodosOferta");
     const btnExportExcel = document.getElementById("btnExportExcel");
     const btnExportPDF = document.getElementById("btnExportPDF");
+    const btnPaginaAnterior = document.getElementById("btnPaginaAnterior");
+    const btnPaginaProxima = document.getElementById("btnPaginaProxima");
+    const paginaAtualSpan = document.getElementById("paginaAtual");
+    const totalPaginasSpan = document.getElementById("totalPaginas");
+
+    // Dashboard KPIs
+    const kpiTotalHoje = document.getElementById("kpiTotalHoje");
+    const kpiVencidos = document.getElementById("kpiVencidos");
+    const kpiAte7 = document.getElementById("kpiAte7");
+    const kpiAte15 = document.getElementById("kpiAte15");
 
     // Usuários
     const usuariosBody = document.getElementById("usuariosBody");
@@ -1216,7 +1339,9 @@
     let perfilAtual = null; // admin / gerente / repositor
     let perfilLojaAtual = null;
 
-    let lancamentosCache = []; // para filtros/export
+    let lancamentosCache = []; // para filtros/export/paginação
+    let paginaAtual = 1;
+    const ITENS_POR_PAGINA = 50;
 
     // ===== HELPERS =====
     function showAlert(msg) {
@@ -1271,12 +1396,18 @@
     }
 
     function setView(viewId) {
-      [viewNovo, viewItens, viewUsuarios].forEach((v) => v.classList.remove("app-view-active"));
+      [viewDashboard, viewNovo, viewItens, viewUsuarios].forEach((v) =>
+        v.classList.remove("app-view-active")
+      );
+      if (viewId === "dashboard") viewDashboard.classList.add("app-view-active");
       if (viewId === "novo") viewNovo.classList.add("app-view-active");
       if (viewId === "itens") viewItens.classList.add("app-view-active");
       if (viewId === "usuarios") viewUsuarios.classList.add("app-view-active");
 
-      [menuNovo, menuItens, menuUsuarios].forEach((m) => m.classList.remove("menu-item-active"));
+      [menuDashboard, menuNovo, menuItens, menuUsuarios].forEach((m) =>
+        m.classList.remove("menu-item-active")
+      );
+      if (viewId === "dashboard") menuDashboard.classList.add("menu-item-active");
       if (viewId === "novo") menuNovo.classList.add("menu-item-active");
       if (viewId === "itens") menuItens.classList.add("menu-item-active");
       if (viewId === "usuarios") menuUsuarios.classList.add("menu-item-active");
@@ -1417,12 +1548,13 @@
         await solicitarLojaParaUsuario(ref);
       }
 
+      // Se gerente sem loja, não obrigo agora, mas recomendo manter preenchido via admin.
       if (perfilAtual === "admin") {
         menuUsuarios.style.display = "flex";
       } else {
         menuUsuarios.style.display = "none";
         if (viewUsuarios.classList.contains("app-view-active")) {
-          setView("novo");
+          setView("dashboard");
         }
       }
     }
@@ -1438,6 +1570,7 @@
       try {
         await carregarOuCriarPerfilUsuario(user);
       } catch (e) {
+        // se deu erro na escolha de loja, já deslogou
         return;
       }
 
@@ -1451,6 +1584,7 @@
       if (perfilAtual === "admin") {
         await carregarUsuarios();
       }
+      setView("dashboard");
     });
 
     // ===== MENU LATERAL / MOBILE =====
@@ -1468,6 +1602,11 @@
       else abrirMenu();
     });
     menuOverlay.addEventListener("click", fecharMenu);
+
+    menuDashboard.addEventListener("click", () => {
+      setView("dashboard");
+      fecharMenu();
+    });
 
     menuNovo.addEventListener("click", () => {
       setView("novo");
@@ -1525,6 +1664,49 @@
 
       if (cod.length > 13) {
         showAlert("Código de barras deve ter no máximo 13 dígitos.");
+        return;
+      }
+
+      if (qtd <= 0) {
+        showAlert("Quantidade deve ser maior que zero.");
+        return;
+      }
+
+      // validação de validade (não pode ser menor que hoje)
+      const [anoV, mesV, diaV] = val.split("-");
+      const dtVal = new Date(Number(anoV), Number(mesV) - 1, Number(diaV));
+      dtVal.setHours(0, 0, 0, 0);
+      const hoje = new Date();
+      hoje.setHours(0, 0, 0, 0);
+
+      if (dtVal < hoje) {
+        showAlert("A validade não pode ser menor que o dia atual.");
+        return;
+      }
+
+      const diasVal = diasEntreHoje(dtVal);
+      if (diasVal <= 7) {
+        const confirma = confirm(
+          `Atenção: este item vence em ${diasVal} dia(s). Deseja realmente cadastrar?`
+        );
+        if (!confirma) return;
+      }
+
+      // impedir duplicado: mesmo loja + mesmo código + mesmo lote
+      const loteChave = (loteVal || "").trim().toUpperCase();
+      const duplicado = lancamentosCache.some((item) => {
+        const loteExistente = (item.lote || "").trim().toUpperCase();
+        return (
+          (item.loja || "") === loja &&
+          (item.codigoBarras || "") === cod &&
+          loteExistente === loteChave
+        );
+      });
+
+      if (duplicado) {
+        showAlert(
+          "Já existe um lançamento para este código de barras e lote nesta loja. Verifique antes de cadastrar novamente."
+        );
         return;
       }
 
@@ -1589,7 +1771,16 @@
         lancamentosCache.push({ id, ...item });
       });
 
+      paginaAtual = 1;
       aplicarFiltrosETabela();
+      atualizarDashboardKPIs();
+    }
+
+    function diasParaItem(item) {
+      if (!item.validade) return 999999;
+      const [ano, mes, dia] = item.validade.split("-");
+      const dt = new Date(Number(ano), Number(mes) - 1, Number(dia));
+      return diasEntreHoje(dt);
     }
 
     function aplicarFiltrosETabela() {
@@ -1598,11 +1789,14 @@
 
       const filtroStatusVal = filtroStatus.value;
       const filtroDepVal = filtroDepartamento.value;
+      const filtroOfertaVal = filtroOferta.value;
+      const buscaCodVal = (buscaCodigo.value || "").trim();
 
       const hoje = new Date();
       hoje.setHours(0, 0, 0, 0);
 
       filtrados = filtrados.filter((item) => {
+        // filtro status
         if (item.validade) {
           const dt = new Date(item.validade);
           dt.setHours(0, 0, 0, 0);
@@ -1624,13 +1818,42 @@
           return false;
         }
 
+        // filtro departamento
         if (filtroDepVal !== "todos" && item.departamento !== filtroDepVal) return false;
+
+        // filtro oferta
+        if (filtroOfertaVal === "lancado" && item.oferta !== "lancado") return false;
+        if (filtroOfertaVal === "nao_lancado" && item.oferta === "lancado") return false;
+
+        // busca código
+        if (buscaCodVal) {
+          const cod = (item.codigoBarras || "").toString();
+          if (!cod.includes(buscaCodVal)) return false;
+        }
 
         return true;
       });
 
-      filtrados.forEach((item) => adicionarLinhaNaTabela(item));
-      totalItensSpan.textContent = filtrados.length;
+      // ordena por validade (mais próximo primeiro)
+      filtrados.sort((a, b) => diasParaItem(a) - diasParaItem(b));
+
+      // paginação
+      const totalItens = filtrados.length;
+      const totalPaginas = Math.max(1, Math.ceil(totalItens / ITENS_POR_PAGINA));
+      if (paginaAtual > totalPaginas) paginaAtual = totalPaginas;
+
+      const inicio = (paginaAtual - 1) * ITENS_POR_PAGINA;
+      const fim = inicio + ITENS_POR_PAGINA;
+      const paginaItens = filtrados.slice(inicio, fim);
+
+      paginaAtualSpan.textContent = String(paginaAtual);
+      totalPaginasSpan.textContent = String(totalPaginas);
+      totalItensSpan.textContent = String(totalItens);
+
+      paginaItens.forEach((item) => adicionarLinhaNaTabela(item));
+
+      btnPaginaAnterior.disabled = paginaAtual <= 1;
+      btnPaginaProxima.disabled = paginaAtual >= totalPaginas;
     }
 
     function adicionarLinhaNaTabela(item) {
@@ -1686,6 +1909,7 @@
           });
           item.oferta = novoValor;
           aplicarFiltrosETabela();
+          atualizarDashboardKPIs();
         } catch (err) {
           console.error(err);
           showAlert("Erro ao atualizar oferta.");
@@ -1757,6 +1981,7 @@
             await deleteDoc(doc(db, "lancamentos", item.id));
             lancamentosCache = lancamentosCache.filter((x) => x.id !== item.id);
             aplicarFiltrosETabela();
+            atualizarDashboardKPIs();
           } catch (err) {
             console.error(err);
             showAlert("Erro ao excluir.");
@@ -1791,8 +2016,34 @@
       tabelaItensBody.appendChild(tr);
     }
 
-    filtroStatus.addEventListener("change", aplicarFiltrosETabela);
-    filtroDepartamento.addEventListener("change", aplicarFiltrosETabela);
+    filtroStatus.addEventListener("change", () => {
+      paginaAtual = 1;
+      aplicarFiltrosETabela();
+    });
+    filtroDepartamento.addEventListener("change", () => {
+      paginaAtual = 1;
+      aplicarFiltrosETabela();
+    });
+    filtroOferta.addEventListener("change", () => {
+      paginaAtual = 1;
+      aplicarFiltrosETabela();
+    });
+    buscaCodigo.addEventListener("input", () => {
+      paginaAtual = 1;
+      aplicarFiltrosETabela();
+    });
+
+    btnPaginaAnterior.addEventListener("click", () => {
+      if (paginaAtual > 1) {
+        paginaAtual--;
+        aplicarFiltrosETabela();
+      }
+    });
+
+    btnPaginaProxima.addEventListener("click", () => {
+      paginaAtual++;
+      aplicarFiltrosETabela();
+    });
 
     // ===== EXPORTAR EXCEL / PDF =====
     btnExportExcel.addEventListener("click", () => {
@@ -1928,6 +2179,7 @@
         await Promise.all(promises);
         lancamentosCache.forEach((item) => (item.oferta = "lancado"));
         aplicarFiltrosETabela();
+        atualizarDashboardKPIs();
       } catch (err) {
         console.error(err);
         showAlert("Erro ao marcar ofertas.");
@@ -2060,7 +2312,62 @@
       }
     });
 
-    // ===== SCANNER (usa html5-qrcode local e câmera traseira) =====
+    // ===== DASHBOARD KPIs =====
+    function getDataCriacao(item) {
+      if (item.criadoEm && item.criadoEm.toDate) {
+        return item.criadoEm.toDate();
+      }
+      if (item.dataLancamentoTexto) {
+        // formato "dd/mm/yyyy hh:mm"
+        const partes = item.dataLancamentoTexto.split(" ");
+        if (partes.length >= 1) {
+          const [dia, mes, ano] = partes[0].split("/");
+          if (dia && mes && ano) {
+            return new Date(Number(ano), Number(mes) - 1, Number(dia));
+          }
+        }
+      }
+      return null;
+    }
+
+    function atualizarDashboardKPIs() {
+      let totalHoje = 0;
+      let vencidos = 0;
+      let ate7 = 0;
+      let ate15 = 0;
+
+      const hoje = new Date();
+      hoje.setHours(0, 0, 0, 0);
+
+      lancamentosCache.forEach((item) => {
+        const dtCriacao = getDataCriacao(item);
+        if (dtCriacao) {
+          const dtBase = new Date(dtCriacao);
+          dtBase.setHours(0, 0, 0, 0);
+          if (dtBase.getTime() === hoje.getTime()) {
+            totalHoje++;
+          }
+        }
+
+        if (item.validade) {
+          const [ano, mes, dia] = item.validade.split("-");
+          const dtVal = new Date(Number(ano), Number(mes) - 1, Number(dia));
+          dtVal.setHours(0, 0, 0, 0);
+          const dias = Math.round((dtVal - hoje) / (1000 * 60 * 60 * 24));
+
+          if (dias < 0) vencidos++;
+          else if (dias >= 0 && dias <= 7) ate7++;
+          else if (dias >= 8 && dias <= 15) ate15++;
+        }
+      });
+
+      kpiTotalHoje.textContent = String(totalHoje);
+      kpiVencidos.textContent = String(vencidos);
+      kpiAte7.textContent = String(ate7);
+      kpiAte15.textContent = String(ate15);
+    }
+
+    // ===== SCANNER (mantido como está) =====
     function scannerDisponivel() {
       return typeof Html5Qrcode !== "undefined";
     }
@@ -2078,15 +2385,33 @@
       html5QrCode = new Html5Qrcode("qr-reader");
       scannerAtivo = true;
 
-      const config = {
-        fps: 10,
-        qrbox: 250,
-        formatsToSupport: [Html5QrcodeSupportedFormats.EAN_13]
-      };
-
       try {
+        const devices = await Html5Qrcode.getCameras();
+        if (!devices || devices.length === 0) {
+          showAlert("Nenhuma câmera encontrada.");
+          fecharScanner();
+          return;
+        }
+
+        let cameraId = devices[0].id;
+        const traseira = devices.find((d) =>
+          d.label.toLowerCase().includes("back") ||
+          d.label.toLowerCase().includes("traseira")
+        );
+        if (traseira) cameraId = traseira.id;
+        else if (devices.length > 1) cameraId = devices[devices.length - 1].id;
+
+        const config = {
+          fps: 10,
+          qrbox: 250
+        };
+
+        if (window.Html5QrcodeSupportedFormats && window.Html5QrcodeSupportedFormats.EAN_13) {
+          config.formatsToSupport = [Html5QrcodeSupportedFormats.EAN_13];
+        }
+
         await html5QrCode.start(
-          { facingMode: { exact: "environment" } },
+          cameraId,
           config,
           (decodedText) => {
             if (/^[0-9]{8,13}$/.test(decodedText)) {
@@ -2098,7 +2423,7 @@
         );
       } catch (err) {
         console.error(err);
-        showAlert("Erro ao iniciar câmera. Verifique permissões ou tente outro navegador.");
+        showAlert("Erro ao iniciar câmera.");
         fecharScanner();
       }
     }
