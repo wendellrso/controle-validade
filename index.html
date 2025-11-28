@@ -5,6 +5,7 @@
   <title>Controle de Validade • Palato</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
+  <!-- Favicon / logo -->
   <link rel="icon" href="palato-logo.png" />
 
   <!-- SheetJS para Excel -->
@@ -12,8 +13,8 @@
   <!-- jsPDF para PDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
-  <!-- Html5Qrcode (leitor de código de barras / QR) -->
-  <script src="https://unpkg.com/html5-qrcode@2.3.10/html5-qrcode.min.js" defer></script>
+  <!-- Html5Qrcode (global) -->
+  <script src="https://unpkg.com/html5-qrcode@2.3.10/minified/html5-qrcode.min.js"></script>
 
   <style>
     :root {
@@ -25,6 +26,11 @@
       --border-soft: #262a33;
       --text-main: #ffffff;
       --text-soft: #9ca3af;
+      --badge-bg: #1f2933;
+      --badge-red-bg: #3b0710;
+      --badge-red-border: #ff4b5c;
+      --badge-green-bg: #073b1f;
+      --badge-green-border: #4ade80;
       --input-bg: #050509;
       --input-border: #272a33;
     }
@@ -41,6 +47,7 @@
     }
 
     /* ===== LOGIN ===== */
+
     #loginView {
       min-height: 100vh;
       display: flex;
@@ -156,6 +163,7 @@
     }
 
     /* ===== APP MAIN ===== */
+
     #appView {
       display: none;
       min-height: 100vh;
@@ -197,6 +205,7 @@
     }
 
     .header-menu-toggle {
+      display: none;
       width: 32px;
       height: 32px;
       border-radius: 999px;
@@ -204,7 +213,6 @@
       background: #020617;
       color: #e5e7eb;
       font-size: 18px;
-      display: none;
       align-items: center;
       justify-content: center;
       margin-right: 4px;
@@ -318,6 +326,7 @@
     }
 
     /* CARDS */
+
     .card {
       background: radial-gradient(circle at top left, #111827 0, #050509 45%, #000 100%);
       border-radius: 18px;
@@ -331,7 +340,6 @@
       align-items: center;
       justify-content: space-between;
       margin-bottom: 16px;
-      gap: 10px;
     }
 
     .card-title {
@@ -359,10 +367,11 @@
       color: var(--text-soft);
     }
 
-    /* FORM NOVO LANÇAMENTO – AGORA COLUNA ÚNICA */
+    /* GRIDS / FORM */
+
     .grid-two-columns {
-      display: flex;
-      flex-direction: column;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
       gap: 16px;
     }
 
@@ -370,18 +379,6 @@
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 12px;
-    }
-
-    .grid-three {
-      display: grid;
-      grid-template-columns: 2fr 2fr 1fr;
-      gap: 12px;
-    }
-
-    .grid-three-tight {
-      display: grid;
-      grid-template-columns: 1.2fr 1.5fr 1fr;
-      gap: 10px;
     }
 
     select,
@@ -428,13 +425,13 @@
     }
 
     .btn-save {
-      margin-top: 12px;
       background: #16a34a;
       color: #fff;
       box-shadow: 0 12px 30px rgba(22, 163, 74, 0.55);
     }
 
     /* TABELA ITENS */
+
     .filters-row {
       display: flex;
       flex-wrap: wrap;
@@ -463,6 +460,7 @@
       font-size: 13px;
       padding: 6px 12px;
       border-radius: 999px;
+      cursor: pointer;
     }
 
     .btn-export {
@@ -525,6 +523,38 @@
       background: #050815;
     }
 
+    .badge-status {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 120px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      text-align: center;
+      white-space: normal;
+      background: var(--badge-bg);
+      border: 1px solid #4b5563;
+    }
+
+    .badge-status-danger {
+      background: var(--badge-red-bg);
+      border-color: var(--badge-red-border);
+      color: #fecaca;
+    }
+
+    .badge-status-warning {
+      background: #3b2607;
+      border-color: #facc15;
+      color: #fef9c3;
+    }
+
+    .badge-status-ok {
+      background: var(--badge-green-bg);
+      border-color: var(--badge-green-border);
+      color: #bbf7d0;
+    }
+
     .badge-oferta {
       display: inline-flex;
       align-items: center;
@@ -566,6 +596,7 @@
     }
 
     /* ADMIN USUÁRIOS */
+
     .users-table-wrapper {
       border-radius: 12px;
       border: 1px solid #1f2933;
@@ -580,6 +611,7 @@
     }
 
     /* MODAL SCANNER */
+
     .modal-backdrop {
       position: fixed;
       inset: 0;
@@ -655,12 +687,14 @@
       .app-content {
         padding: 16px;
       }
-
+      .grid-two-columns {
+        grid-template-columns: minmax(0, 1fr);
+      }
       .card-header {
         flex-direction: column;
         align-items: flex-start;
+        gap: 8px;
       }
-
       .card-header > div:last-child {
         align-self: stretch;
         display: flex;
@@ -668,25 +702,13 @@
         gap: 6px;
         justify-content: flex-start;
       }
-
       .btn-ghost,
       .btn-export {
         font-size: 12px;
         padding: 5px 10px;
       }
-
-      .grid-two,
-      .grid-three,
-      .grid-three-tight {
-        grid-template-columns: 1fr;
-      }
-
-      .items-table-wrapper table {
+      table {
         font-size: 12px;
-      }
-
-      .items-table-wrapper {
-        border-radius: 12px;
       }
     }
   </style>
@@ -834,7 +856,7 @@
                   </div>
                 </div>
 
-                <div class="grid-three-tight">
+                <div class="grid-two">
                   <div class="form-group">
                     <label for="quantidade">Quantidade *</label>
                     <input id="quantidade" type="number" min="1" />
@@ -842,12 +864,6 @@
                   <div class="form-group">
                     <label for="validade">Validade *</label>
                     <input id="validade" type="date" />
-                  </div>
-                  <div class="form-group">
-                    <label>&nbsp;</label>
-                    <button id="btnSalvarLancamento" class="btn btn-save">
-                      💾 Salvar lançamento
-                    </button>
                   </div>
                 </div>
 
@@ -858,7 +874,15 @@
                     placeholder="Lote em oferta, ponto extra, etc."
                   ></textarea>
                 </div>
+
+                <div style="margin-top: 8px; text-align: right;">
+                  <button id="btnSalvarLancamento" class="btn btn-save">
+                    💾 Salvar lançamento
+                  </button>
+                </div>
               </div>
+
+              <div><!-- coluna direita vazia por enquanto --></div>
             </div>
           </div>
         </div>
@@ -873,10 +897,10 @@
                   <span>Itens cadastrados</span>
                 </div>
                 <div class="card-subtitle">
-                  Filtros por vencimento, oferta e departamento.
+                  Filtros por status de vencimento e controle de oferta.
                 </div>
               </div>
-              <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+              <div style="display:flex; gap:8px; align-items:center;">
                 <button id="btnMarcarTodosOferta" class="btn-ghost">
                   📣 Marcar todos como oferta
                 </button>
@@ -890,7 +914,7 @@
             </div>
 
             <div class="filters-row">
-              <label for="filtroStatus">Vencimento:</label>
+              <label for="filtroStatus">Status:</label>
               <select id="filtroStatus">
                 <option value="todos">Todos</option>
                 <option value="7">Vence em 7 dias</option>
@@ -899,22 +923,22 @@
                 <option value="vencidos">Vencidos</option>
               </select>
 
-              <label for="filtroOferta">• Oferta:</label>
-              <select id="filtroOferta">
-                <option value="todos">Todos</option>
-                <option value="lancado">Lançados</option>
-                <option value="nao_lancado">Não lançados</option>
-              </select>
-
               <label for="filtroDepartamento">• Departamento:</label>
               <select id="filtroDepartamento">
-                <option value="todos">Todos</option>
+                <option value="todos">Todos departamentos</option>
                 <option>Açougue</option>
                 <option>Adega</option>
                 <option>Bebidas</option>
                 <option>Mercearia Alimentos</option>
                 <option>Mercearia Não Alimentos</option>
                 <option>Perecíveis Processados</option>
+              </select>
+
+              <label for="filtroOferta">• Oferta:</label>
+              <select id="filtroOferta">
+                <option value="todos">Todos</option>
+                <option value="lancado">Lançados</option>
+                <option value="nao_lancado">Não lançados</option>
               </select>
             </div>
 
@@ -932,6 +956,9 @@
                     <th>Obs.</th>
                     <th>Oferta</th>
                     <th>Departamento</th>
+                    <th>Status</th>
+                    <th>Usuário</th>
+                    <th>Lançado em</th>
                     <th>Ações</th>
                   </tr>
                 </thead>
@@ -960,7 +987,7 @@
               <button id="btnReloadUsuarios" class="btn-ghost">🔄 Recarregar</button>
             </div>
 
-            <div class="grid-three">
+            <div class="grid-two">
               <div class="form-group">
                 <label for="novoUsuarioNome">Nome</label>
                 <input id="novoUsuarioNome" type="text" />
@@ -969,6 +996,9 @@
                 <label for="novoUsuarioEmail">E-mail</label>
                 <input id="novoUsuarioEmail" type="email" />
               </div>
+            </div>
+
+            <div class="grid-two" style="margin-top:10px;">
               <div class="form-group">
                 <label for="novoUsuarioPerfil">Perfil</label>
                 <select id="novoUsuarioPerfil">
@@ -977,9 +1007,6 @@
                   <option value="admin">Admin</option>
                 </select>
               </div>
-            </div>
-
-            <div class="grid-two" style="margin-top:10px;">
               <div class="form-group">
                 <label for="novoUsuarioLoja">Loja</label>
                 <select id="novoUsuarioLoja">
@@ -991,9 +1018,10 @@
                   <option>CD</option>
                 </select>
               </div>
-              <div class="form-group" style="display:flex; align-items:flex-end;">
-                <button id="btnSalvarUsuario" class="btn btn-save">💾 Salvar usuário</button>
-              </div>
+            </div>
+
+            <div class="form-group" style="margin-top:10px; text-align:right;">
+              <button id="btnSalvarUsuario" class="btn btn-save">💾 Salvar usuário</button>
             </div>
 
             <div class="users-table-wrapper">
@@ -1025,7 +1053,7 @@
       </div>
       <div id="qr-reader"></div>
       <div style="margin-top:8px; font-size:11px; color:#9ca3af;">
-        Aponte para o código (EAN-13). A câmera traseira será usada quando possível.
+        Aponte para o código de barras (EAN-13). A câmera traseira será usada quando possível.
       </div>
     </div>
   </div>
@@ -1132,19 +1160,13 @@
     const btnCloseScanner = document.getElementById("btnCloseScanner");
     let html5QrCode = null;
     let scannerAtivo = false;
-    let Html5QrcodeClass = null;
 
     // ===== ESTADO =====
     let usuarioAtual = null;
     let perfilAtual = null; // admin / gerente / repositor
     let perfilLojaAtual = null;
-    let lancamentosCache = [];
 
-    // Guardar opções originais de loja
-    const lojasOriginais = Array.from(novaLoja.options).map((o) => ({
-      value: o.value,
-      text: o.textContent
-    }));
+    let lancamentosCache = []; // para filtros/export
 
     // ===== HELPERS =====
     function showAlert(msg) {
@@ -1174,16 +1196,28 @@
       return Math.round(diffMs / (1000 * 60 * 60 * 24));
     }
 
+    // Status em faixas 7/15/30/vencido
     function calcularStatus(validadeStr) {
-      if (!validadeStr) return null;
+      if (!validadeStr) {
+        return { label: "Sem data", tipo: "neutro" };
+      }
       const [ano, mes, dia] = validadeStr.split("-");
       const dt = new Date(Number(ano), Number(mes) - 1, Number(dia));
       const dias = diasEntreHoje(dt);
-      if (dias < 0) return "vencidos";
-      if (dias <= 7) return "7";
-      if (dias <= 15) return "15";
-      if (dias <= 30) return "30";
-      return "ok";
+
+      if (dias < 0) return { label: "Vencido", tipo: "danger" };
+      if (dias <= 7) return { label: "Vence em 7 dias", tipo: "danger" };
+      if (dias <= 15) return { label: "Vence em 15 dias", tipo: "warning" };
+      if (dias <= 30) return { label: "Vence em 30 dias", tipo: "ok" };
+      return { label: "Dentro da validade", tipo: "ok" };
+    }
+
+    function aplicarBadgeStatus(element, statusInfo) {
+      element.className = "badge-status";
+      if (statusInfo.tipo === "danger") element.classList.add("badge-status-danger");
+      else if (statusInfo.tipo === "warning") element.classList.add("badge-status-warning");
+      else if (statusInfo.tipo === "ok") element.classList.add("badge-status-ok");
+      element.textContent = statusInfo.label;
     }
 
     function setView(viewId) {
@@ -1199,7 +1233,11 @@
     }
 
     function limparFormularioLancamento() {
-      novaLoja.value = perfilLojaAtual || "";
+      if (perfilAtual === "repositor" && perfilLojaAtual) {
+        novaLoja.value = perfilLojaAtual;
+      } else {
+        novaLoja.value = "";
+      }
       departamento.value = "";
       codigoBarras.value = "";
       descricao.value = "";
@@ -1235,89 +1273,71 @@
       });
     }
 
-    function aplicarRestricaoLojaRepositor() {
-      // restaura opções originais
-      novaLoja.innerHTML = "";
-      lojasOriginais.forEach(({ value, text }) => {
-        const opt = document.createElement("option");
-        opt.value = value;
-        opt.textContent = text;
-        novaLoja.appendChild(opt);
-      });
+    // ===== PERFIL / USUÁRIO FIRESTORE =====
+    async function carregarOuCriarPerfilUsuario(user) {
+      const ref = doc(db, "usuarios", user.uid);
+      const snap = await getDoc(ref);
 
-      if (perfilAtual === "repositor") {
-        if (!perfilLojaAtual) {
-          novaLoja.disabled = true;
-        } else {
-          novaLoja.disabled = false;
-          Array.from(novaLoja.options).forEach((opt) => {
-            if (opt.value && opt.value !== perfilLojaAtual) opt.disabled = true;
-          });
-          novaLoja.value = perfilLojaAtual;
-        }
+      if (snap.exists()) {
+        const data = snap.data();
+        perfilAtual = data.tipo || "repositor";
+        perfilLojaAtual = data.loja || "";
       } else {
-        novaLoja.disabled = false;
+        await setDoc(ref, {
+          email: user.email,
+          nome: user.displayName || "",
+          tipo: "repositor",
+          loja: "",
+          criadoEm: serverTimestamp()
+        });
+        perfilAtual = "repositor";
+        perfilLojaAtual = "";
+      }
+
+      if (perfilAtual === "admin") {
+        menuUsuarios.style.display = "flex";
+      } else {
+        menuUsuarios.style.display = "none";
+        if (viewUsuarios.classList.contains("app-view-active")) {
+          setView("novo");
+        }
       }
     }
 
-    function normalizarLojaEntrada(texto) {
-      if (!texto) return "";
-      const t = texto.trim().toLowerCase();
-      if (["ponta verde", "pv"].includes(t)) return "Ponta Verde";
-      if (["farol", "fl"].includes(t)) return "Farol";
-      if (["praia", "pr"].includes(t)) return "Praia";
-      if (["riomar", "rm"].includes(t)) return "Riomar";
-      if (["cd", "centro de distribuição"].includes(t)) return "CD";
-      return "";
-    }
+    // Repositor precisa ter loja definida
+    async function garantirLojaDefinidaSeRepositor() {
+      if (perfilAtual !== "repositor" || perfilLojaAtual) return;
 
-    async function perguntarLojaSeNecessario(user, dataAtual) {
-      if (perfilAtual !== "repositor") return;
+      const mapa = {
+        "ponta verde": "Ponta Verde",
+        "farol": "Farol",
+        "praia": "Praia",
+        "riomar": "Riomar",
+        "cd": "CD"
+      };
 
-      if (!perfilLojaAtual) {
-        const msg =
-          "Bem-vindo ao Controle de Validade.\n\n" +
-          "Antes de cadastrar produtos, informe em QUAL LOJA você trabalha:\n\n" +
-          "- Ponta Verde\n- Farol\n- Praia\n- Riomar\n- CD\n\n" +
-          "Digite exatamente o nome da loja (ex.: Ponta Verde).";
-        const resposta = prompt(msg, "Ponta Verde");
-        const lojaNormalizada = normalizarLojaEntrada(resposta);
+      while (!perfilLojaAtual) {
+        let resposta = prompt(
+          "Informe a loja onde você trabalha (Ponta Verde, Farol, Praia, Riomar ou CD):"
+        );
+        if (resposta === null) {
+          showAlert("É obrigatório informar uma loja para usar o sistema.");
+          break;
+        }
+        resposta = resposta.trim().toLowerCase();
+        if (!resposta) continue;
 
+        const lojaNormalizada = mapa[resposta];
         if (!lojaNormalizada) {
-          showAlert(
-            "Loja não definida. Você não poderá lançar produtos até o administrador vincular sua loja."
-          );
-          perfilLojaAtual = "";
-          aplicarRestricaoLojaRepositor();
-          return;
+          showAlert("Loja inválida. Digite exatamente: Ponta Verde, Farol, Praia, Riomar ou CD.");
+          continue;
         }
 
         perfilLojaAtual = lojaNormalizada;
-
-        try {
-          if (dataAtual) {
-            await updateDoc(doc(db, "usuarios", user.uid), {
-              loja: perfilLojaAtual
-            });
-          } else {
-            await setDoc(
-              doc(db, "usuarios", user.uid),
-              {
-                email: user.email,
-                nome: user.displayName || "",
-                tipo: "repositor",
-                loja: perfilLojaAtual,
-                criadoEm: serverTimestamp()
-              },
-              { merge: true }
-            );
-          }
-        } catch (e) {
-          console.error(e);
-        }
+        const ref = doc(db, "usuarios", usuarioAtual.uid);
+        await updateDoc(ref, { loja: perfilLojaAtual });
+        showAlert(`Loja vinculada: ${perfilLojaAtual}.`);
       }
-
-      aplicarRestricaoLojaRepositor();
     }
 
     // ===== LOGIN =====
@@ -1347,33 +1367,6 @@
       }
     });
 
-    // ===== PERFIL / USUÁRIO FIRESTORE =====
-    async function carregarOuCriarPerfilUsuario(user) {
-      const ref = doc(db, "usuarios", user.uid);
-      const snap = await getDoc(ref);
-
-      if (snap.exists()) {
-        const data = snap.data();
-        perfilAtual = data.tipo || "repositor";
-        perfilLojaAtual = data.loja || "";
-        await perguntarLojaSeNecessario(user, data);
-      } else {
-        perfilAtual = "repositor";
-        perfilLojaAtual = "";
-        await perguntarLojaSeNecessario(user, null);
-      }
-
-      if (perfilAtual === "admin") {
-        menuUsuarios.style.display = "flex";
-      } else {
-        menuUsuarios.style.display = "none";
-        if (viewUsuarios.classList.contains("app-view-active")) {
-          setView("novo");
-        }
-      }
-      aplicarRestricaoLojaRepositor();
-    }
-
     onAuthStateChanged(auth, async (user) => {
       usuarioAtual = user;
       if (!user) {
@@ -1383,6 +1376,7 @@
       }
 
       await carregarOuCriarPerfilUsuario(user);
+      await garantirLojaDefinidaSeRepositor();
       atualizarUserBox();
       limparFormularioLancamento();
 
@@ -1434,6 +1428,7 @@
         showAlert("Faça login novamente.");
         return;
       }
+
       const loja = novaLoja.value;
       const dep = departamento.value;
       let cod = codigoBarras.value.trim();
@@ -1448,23 +1443,6 @@
         return;
       }
 
-      // trava para repositor
-      if (perfilAtual === "repositor") {
-        if (!perfilLojaAtual) {
-          showAlert(
-            "Seu cadastro ainda não está vinculado a uma loja. Fale com o administrador ou defina a loja ao entrar."
-          );
-          return;
-        }
-        if (loja !== perfilLojaAtual) {
-          showAlert(
-            `Como REPOSITOR você só pode lançar produtos na loja "${perfilLojaAtual}".`
-          );
-          novaLoja.value = perfilLojaAtual;
-          return;
-        }
-      }
-
       if (!/^[0-9]+$/.test(cod)) {
         showAlert("Código de barras deve ter apenas números.");
         return;
@@ -1473,6 +1451,19 @@
       if (cod.length > 13) {
         showAlert("Código de barras deve ter no máximo 13 dígitos.");
         return;
+      }
+
+      // Repositor só pode lançar na própria loja
+      if (perfilAtual === "repositor") {
+        if (!perfilLojaAtual) {
+          showAlert("Defina sua loja antes de cadastrar. Saia e entre novamente.");
+          return;
+        }
+        if (loja !== perfilLojaAtual) {
+          showAlert(`Você só pode cadastrar itens na loja ${perfilLojaAtual}.`);
+          novaLoja.value = perfilLojaAtual;
+          return;
+        }
       }
 
       try {
@@ -1502,7 +1493,7 @@
       }
     });
 
-    // ===== CARREGAR LANCAMENTOS =====
+    // ===== CARREGAR LANÇAMENTOS =====
     async function carregarLancamentos() {
       if (!usuarioAtual) return;
       const colRef = collection(db, "lancamentos");
@@ -1542,25 +1533,37 @@
       const filtroDepVal = filtroDepartamento.value;
       const filtroOfertaVal = filtroOferta.value;
 
+      const hoje = new Date();
+      hoje.setHours(0, 0, 0, 0);
+
       filtrados = filtrados.filter((item) => {
-        // vencimento
-        if (filtroStatusVal !== "todos") {
-          if (item.validade) {
-            const statusCalc = calcularStatus(item.validade);
-            if (filtroStatusVal === "vencidos" && statusCalc !== "vencidos") return false;
-            if (["7", "15", "30"].includes(filtroStatusVal) && statusCalc !== filtroStatusVal)
-              return false;
-          } else {
-            return false;
-          }
+        // filtro por status
+        if (item.validade) {
+          const dt = new Date(item.validade);
+          dt.setHours(0, 0, 0, 0);
+          const dias = Math.round((dt - hoje) / (1000 * 60 * 60 * 24));
+
+          // 7 dias: 0 a 7
+          if (filtroStatusVal === "7" && !(dias >= 0 && dias <= 7)) return false;
+
+          // 15 dias: 8 a 15
+          if (filtroStatusVal === "15" && !(dias >= 8 && dias <= 15)) return false;
+
+          // 30 dias: 16 a 30
+          if (filtroStatusVal === "30" && !(dias >= 16 && dias <= 30)) return false;
+
+          // vencidos: < 0
+          if (filtroStatusVal === "vencidos" && !(dias < 0)) return false;
+        } else if (filtroStatusVal !== "todos") {
+          return false;
         }
 
-        // departamento
+        // filtro departamento
         if (filtroDepVal !== "todos" && item.departamento !== filtroDepVal) return false;
 
-        // oferta
-        if (filtroOfertaVal === "lancado" && item.oferta !== "lancado") return false;
-        if (filtroOfertaVal === "nao_lancado" && item.oferta === "lancado") return false;
+        // filtro oferta
+        const ofertaAtual = item.oferta || "nao_lancado";
+        if (filtroOfertaVal !== "todos" && ofertaAtual !== filtroOfertaVal) return false;
 
         return true;
       });
@@ -1576,6 +1579,8 @@
         item.dataLancamentoTexto ||
         (item.criadoEm && item.criadoEm.toDate ? formatarDataHora(item.criadoEm.toDate()) : "");
       const valStr = item.validade || "";
+
+      const statusInfo = calcularStatus(valStr);
 
       const tdData = document.createElement("td");
       tdData.textContent = dataLanc;
@@ -1608,7 +1613,7 @@
         spanOferta.classList.add("badge-oferta-lancado");
         spanOferta.textContent = "Lançado";
       } else {
-        spanOferta.textContent = "Não lançado";
+        spanOferta.textContent = "Não Lançado";
       }
       spanOferta.addEventListener("click", async () => {
         const novoValor = item.oferta === "lancado" ? "nao_lancado" : "lancado";
@@ -1627,6 +1632,17 @@
 
       const tdDep = document.createElement("td");
       tdDep.textContent = item.departamento || "";
+
+      const tdStatus = document.createElement("td");
+      const spanStatus = document.createElement("span");
+      aplicarBadgeStatus(spanStatus, statusInfo);
+      tdStatus.appendChild(spanStatus);
+
+      const tdUsuario = document.createElement("td");
+      tdUsuario.textContent = item.usuarioNome || item.usuarioEmail || "";
+
+      const tdLancadoEm = document.createElement("td");
+      tdLancadoEm.textContent = dataLanc;
 
       const tdAcoes = document.createElement("td");
       tdAcoes.className = "actions-cell";
@@ -1705,6 +1721,9 @@
         tdObs,
         tdOferta,
         tdDep,
+        tdStatus,
+        tdUsuario,
+        tdLancadoEm,
         tdAcoes
       ].forEach((td) => tr.appendChild(td));
 
@@ -1732,13 +1751,17 @@
           "Qtd",
           "Validade",
           "Obs.",
+          "Status",
           "Oferta",
-          "Departamento"
+          "Departamento",
+          "Usuário",
+          "Lançado em"
         ]
       ];
 
       lancamentosCache.forEach((item) => {
         const valStr = item.validade || "";
+        const statusInfo = calcularStatus(valStr);
         dados.push([
           item.dataLancamentoTexto ||
             (item.criadoEm && item.criadoEm.toDate ? formatarDataHora(item.criadoEm.toDate()) : ""),
@@ -1749,8 +1772,12 @@
           item.quantidade || "",
           valStr ? formatarSomenteData(valStr) : "",
           item.observacao || "",
-          item.oferta === "lancado" ? "Lançado" : "Não lançado",
-          item.departamento || ""
+          statusInfo.label,
+          item.oferta === "lancado" ? "Lançado" : "Não Lançado",
+          item.departamento || "",
+          item.usuarioNome || item.usuarioEmail || "",
+          item.dataLancamentoTexto ||
+            (item.criadoEm && item.criadoEm.toDate ? formatarDataHora(item.criadoEm.toDate()) : "")
         ]);
       });
 
@@ -1778,15 +1805,21 @@
         "Qtd",
         "Validade",
         "Obs.",
+        "Status",
         "Oferta",
-        "Departamento"
+        "Departamento",
+        "Usuário",
+        "Lançado em"
       ];
 
       const linhas = lancamentosCache.map((item) => {
         const valStr = item.validade || "";
-        return [
+        const statusInfo = calcularStatus(valStr);
+        const dataLanc =
           item.dataLancamentoTexto ||
-            (item.criadoEm && item.criadoEm.toDate ? formatarDataHora(item.criadoEm.toDate()) : ""),
+          (item.criadoEm && item.criadoEm.toDate ? formatarDataHora(item.criadoEm.toDate()) : "");
+        return [
+          dataLanc,
           item.loja || "",
           item.codigoBarras || "",
           item.descricao || "",
@@ -1794,8 +1827,11 @@
           item.quantidade || "",
           valStr ? formatarSomenteData(valStr) : "",
           item.observacao || "",
-          item.oferta === "lancado" ? "Lançado" : "Não lançado",
-          item.departamento || ""
+          statusInfo.label,
+          item.oferta === "lancado" ? "Lançado" : "Não Lançado",
+          item.departamento || "",
+          item.usuarioNome || item.usuarioEmail || "",
+          dataLanc
         ];
       });
 
@@ -1828,7 +1864,8 @@
     btnMarcarTodosOferta.addEventListener("click", async () => {
       if (!confirm("Marcar todos os itens filtrados como 'Lançado'?")) return;
 
-      const promises = lancamentosCache.map((item) =>
+      const filtrados = [...lancamentosCache];
+      const promises = filtrados.map((item) =>
         updateDoc(doc(db, "lancamentos", item.id), { oferta: "lancado" })
       );
       try {
@@ -1967,52 +2004,49 @@
       }
     });
 
-    // ===== BIBLIOTECA DO LEITOR (GLOBAL) =====
-    async function ensureScannerLib() {
-      if (Html5QrcodeClass) return Html5QrcodeClass;
-
-      if (window.Html5Qrcode) {
-        Html5QrcodeClass = window.Html5Qrcode;
-        return Html5QrcodeClass;
-      }
-
-      // pequena espera (caso o script ainda esteja carregando com defer)
-      await new Promise((res) => setTimeout(res, 500));
-
-      if (window.Html5Qrcode) {
-        Html5QrcodeClass = window.Html5Qrcode;
-        return Html5QrcodeClass;
-      }
-
-      throw new Error("Html5Qrcode não disponível");
-    }
-
-    // ===== SCANNER (câmera traseira) =====
+    // ===== SCANNER (usando Html5Qrcode global, câmera traseira) =====
     async function abrirScanner() {
-      scannerModal.classList.add("show");
-
-      let Html5Qrcode;
-      try {
-        Html5Qrcode = await ensureScannerLib();
-      } catch (err) {
-        console.error(err);
+      if (!window.Html5Qrcode || !window.Html5QrcodeSupportedFormats) {
         showAlert(
-          "Leitor de código de barras não carregou corretamente.\n\n" +
-          "Verifique sua conexão e tente novamente."
+          "Leitor de código de barras não carregou corretamente.\nVerifique sua conexão e tente novamente."
         );
-        scannerModal.classList.remove("show");
         return;
       }
 
-      if (!html5QrCode) {
-        html5QrCode = new Html5Qrcode("qr-reader");
+      scannerModal.classList.add("show");
+
+      if (html5QrCode) {
+        return;
       }
+
+      html5QrCode = new Html5Qrcode("qr-reader");
       scannerAtivo = true;
 
       try {
+        const devices = await Html5Qrcode.getCameras();
+        if (!devices || devices.length === 0) {
+          showAlert("Nenhuma câmera encontrada.");
+          fecharScanner();
+          return;
+        }
+
+        let cameraId = devices[0].id;
+        const traseira = devices.find((d) =>
+          d.label.toLowerCase().includes("back") ||
+          d.label.toLowerCase().includes("traseira")
+        );
+        if (traseira) cameraId = traseira.id;
+        else if (devices.length > 1) cameraId = devices[devices.length - 1].id;
+
+        const config = {
+          fps: 10,
+          qrbox: 250,
+          formatsToSupport: [Html5QrcodeSupportedFormats.EAN_13]
+        };
+
         await html5QrCode.start(
-          { facingMode: "environment" }, // câmera traseira
-          { fps: 10, qrbox: 250 },
+          cameraId,
+          config,
           (decodedText) => {
             if (/^[0-9]{8,13}$/.test(decodedText)) {
               codigoBarras.value = decodedText;
@@ -2023,7 +2057,7 @@
         );
       } catch (err) {
         console.error(err);
-        showAlert("Erro ao iniciar a câmera para leitura do código de barras.");
+        showAlert("Erro ao iniciar câmera.");
         fecharScanner();
       }
     }
@@ -2042,6 +2076,7 @@
         } catch (err) {
           console.error(err);
         }
+        html5QrCode = null;
       }
     }
 
