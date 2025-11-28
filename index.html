@@ -12,7 +12,7 @@
   <!-- jsPDF para PDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
-  <!-- html5-qrcode (scanner) -->
+  <!-- Html5 QRCode (scanner) -->
   <script src="https://unpkg.com/html5-qrcode@2.3.10/html5-qrcode.min.js"></script>
 
   <style>
@@ -472,8 +472,6 @@
       border: 1px solid #374151;
       font-size: 13px;
       padding: 6px 12px;
-      border-radius: 999px;
-      cursor: pointer;
     }
 
     .btn-export {
@@ -677,7 +675,6 @@
       background: #000;
     }
 
-    /* Responsivo */
     @media (max-width: 960px) {
       .side-menu {
         position: fixed;
@@ -701,6 +698,7 @@
         padding: 16px;
       }
 
+      /* Ajuste cards/botões no celular */
       .card-header {
         flex-direction: column;
         align-items: flex-start;
@@ -1242,21 +1240,20 @@
       if (viewId === "usuarios") menuUsuarios.classList.add("menu-item-active");
     }
 
-    function limparFormularioLancamento() {
-      // trava de loja por perfil
-      if (perfilAtual === "admin") {
-        novaLoja.disabled = false;
-        novaLoja.value = "";
-      } else if (perfilAtual === "gerente" || perfilAtual === "repositor") {
+    function aplicarRegraLojaUsuario() {
+      if (perfilAtual === "repositor") {
         if (perfilLojaAtual) {
           novaLoja.value = perfilLojaAtual;
           novaLoja.disabled = true;
         } else {
           novaLoja.disabled = false;
-          novaLoja.value = "";
         }
+      } else {
+        novaLoja.disabled = false;
       }
+    }
 
+    function limparFormularioLancamento() {
       departamento.value = "";
       codigoBarras.value = "";
       descricao.value = "";
@@ -1266,6 +1263,7 @@
       observacao.value = "";
       const agora = new Date();
       dataLancamento.value = formatarDataHora(agora);
+      aplicarRegraLojaUsuario();
     }
 
     function atualizarUserBox() {
@@ -1290,37 +1288,6 @@
       btnLogout.addEventListener("click", async () => {
         await signOut(auth);
       });
-    }
-
-    // pergunta a loja para usuários sem loja vinculada
-    async function solicitarLojaParaUsuario(docRef) {
-      const lojasValidas = ["Ponta Verde", "Farol", "Praia", "Riomar", "CD"];
-
-      while (true) {
-        const input = prompt(
-          "Você ainda não tem uma loja vinculada.\n\nDigite exatamente uma das opções:\n- Ponta Verde\n- Farol\n- Praia\n- Riomar\n- CD"
-        );
-        if (input === null) {
-          alert(
-            "Você precisa ter uma loja vinculada para usar o sistema. Você será desconectado.\nProcure o administrador."
-          );
-          await signOut(auth);
-          throw new Error("Usuário cancelou escolha de loja");
-        }
-
-        const normalizado = input.trim().toLowerCase();
-        const lojaEncontrada = lojasValidas.find(
-          (l) => l.toLowerCase() === normalizado
-        );
-        if (!lojaEncontrada) {
-          alert("Loja inválida. Digite exatamente uma das opções.");
-          continue;
-        }
-
-        await updateDoc(docRef, { loja: lojaEncontrada });
-        perfilLojaAtual = lojaEncontrada;
-        break;
-      }
     }
 
     // ===== LOGIN =====
@@ -1355,29 +1322,43 @@
       const ref = doc(db, "usuarios", user.uid);
       const snap = await getDoc(ref);
 
-      let data;
       if (snap.exists()) {
-        data = snap.data();
+        const data = snap.data();
+        perfilAtual = data.tipo || "repositor";
+        perfilLojaAtual = data.loja || "";
       } else {
-        data = {
+        await setDoc(ref, {
           email: user.email,
           nome: user.displayName || "",
           tipo: "repositor",
           loja: "",
           criadoEm: serverTimestamp()
-        };
-        await setDoc(ref, data);
+        });
+        perfilAtual = "repositor";
+        perfilLojaAtual = "";
       }
 
-      perfilAtual = data.tipo || "repositor";
-      perfilLojaAtual = data.loja || "";
-
-      // Se for repositor sem loja, obriga escolher
+      // Se repositor sem loja definida, perguntar e travar
       if (perfilAtual === "repositor" && !perfilLojaAtual) {
-        await solicitarLojaParaUsuario(ref);
+        const resposta = prompt(
+          "Antes de cadastrar produtos, informe sua loja (Ponta Verde, Farol, Praia, Riomar ou CD):"
+        );
+        const lojasValidas = ["Ponta Verde", "Farol", "Praia", "Riomar", "CD"];
+        const lojaEscolhida = lojasValidas.find(
+          (l) => l.toLowerCase() === (resposta || "").trim().toLowerCase()
+        );
+        if (lojaEscolhida) {
+          await updateDoc(ref, { loja: lojaEscolhida });
+          perfilLojaAtual = lojaEscolhida;
+        } else {
+          showAlert(
+            "Loja inválida. Você não poderá lançar produtos até ter uma loja vinculada. Procure o administrador."
+          );
+        }
       }
 
-      // Se gerente sem loja, não obrigo agora, mas recomendo manter preenchido via admin.
+      aplicarRegraLojaUsuario();
+
       if (perfilAtual === "admin") {
         menuUsuarios.style.display = "flex";
       } else {
@@ -1396,13 +1377,7 @@
         return;
       }
 
-      try {
-        await carregarOuCriarPerfilUsuario(user);
-      } catch (e) {
-        // se deu erro na escolha de loja, já deslogou
-        return;
-      }
-
+      await carregarOuCriarPerfilUsuario(user);
       atualizarUserBox();
       limparFormularioLancamento();
 
@@ -1463,21 +1438,21 @@
       const val = validade.value;
       const obs = observacao.value.trim();
 
-      // trava adicional de loja para repositor/gerente
-      if (perfilAtual !== "admin") {
-        if (!perfilLojaAtual) {
-          showAlert("Seu usuário ainda não tem uma loja vinculada. Procure o administrador.");
-          return;
-        }
-        if (loja !== perfilLojaAtual) {
-          showAlert(`Você só pode lançar produtos para a loja ${perfilLojaAtual}.`);
-          return;
-        }
-      }
-
       if (!loja || !dep || !cod || !desc || !qtd || !val) {
         showAlert("Preencha todos os campos obrigatórios.");
         return;
+      }
+
+      // Regra: repositor só pode lançar na própria loja
+      if (perfilAtual === "repositor") {
+        if (!perfilLojaAtual) {
+          showAlert("Seu usuário ainda não está vinculado a uma loja. Procure o administrador.");
+          return;
+        }
+        if (loja !== perfilLojaAtual) {
+          showAlert(`Você só pode cadastrar produtos para a loja ${perfilLojaAtual}.`);
+          return;
+        }
       }
 
       if (!/^[0-9]+$/.test(cod)) {
@@ -1539,12 +1514,7 @@
         } else {
           const uid = item.usuarioUid;
           const email = item.usuarioEmail;
-          if (
-            (uid === usuarioAtual.uid || email === usuarioAtual.email) &&
-            (!perfilLojaAtual || item.loja === perfilLojaAtual)
-          ) {
-            visivel = true;
-          }
+          if (uid === usuarioAtual.uid || email === usuarioAtual.email) visivel = true;
         }
         if (!visivel) return;
 
@@ -2022,19 +1992,14 @@
       }
     });
 
-    // ===== SCANNER (usa script global, camera traseira quando possível) =====
-    function scannerDisponivel() {
-      return typeof Html5Qrcode !== "undefined";
-    }
-
+    // ===== SCANNER (usando script global + câmera traseira) =====
     async function abrirScanner() {
-      if (!scannerDisponivel()) {
+      if (typeof Html5Qrcode === "undefined" || typeof Html5QrcodeSupportedFormats === "undefined") {
         showAlert("Leitor de código de barras não carregou corretamente.");
         return;
       }
 
       scannerModal.classList.add("show");
-
       if (html5QrCode) return;
 
       html5QrCode = new Html5Qrcode("qr-reader");
@@ -2058,12 +2023,9 @@
 
         const config = {
           fps: 10,
-          qrbox: 250
+          qrbox: { width: 250, height: 250 },
+          formatsToSupport: [Html5QrcodeSupportedFormats.EAN_13]
         };
-
-        if (window.Html5QrcodeSupportedFormats && window.Html5QrcodeSupportedFormats.EAN_13) {
-          config.formatsToSupport = [Html5QrcodeSupportedFormats.EAN_13];
-        }
 
         await html5QrCode.start(
           cameraId,
