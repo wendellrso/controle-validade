@@ -5,7 +5,6 @@
   <title>Controle de Validade • Palato</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- Favicon / logo -->
   <link rel="icon" href="palato-logo.png" />
 
   <!-- SheetJS para Excel -->
@@ -13,8 +12,8 @@
   <!-- jsPDF para PDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
-  <!-- Html5Qrcode (global) -->
-  <script src="https://unpkg.com/html5-qrcode@2.3.10/minified/html5-qrcode.min.js"></script>
+  <!-- html5-qrcode (scanner) -->
+  <script src="https://unpkg.com/html5-qrcode@2.3.10/html5-qrcode.min.js"></script>
 
   <style>
     :root {
@@ -213,6 +212,7 @@
       background: #020617;
       color: #e5e7eb;
       font-size: 18px;
+      display: flex;
       align-items: center;
       justify-content: center;
       margin-right: 4px;
@@ -367,11 +367,11 @@
       color: var(--text-soft);
     }
 
-    /* GRIDS / FORM */
+    /* FORM NOVO LANÇAMENTO */
 
     .grid-two-columns {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      grid-template-columns: 1.1fr 0.9fr;
       gap: 16px;
     }
 
@@ -379,6 +379,18 @@
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 12px;
+    }
+
+    .grid-three {
+      display: grid;
+      grid-template-columns: 2fr 2fr 1fr;
+      gap: 12px;
+    }
+
+    .grid-three-tight {
+      display: grid;
+      grid-template-columns: 1.2fr 1.5fr 1fr;
+      gap: 10px;
     }
 
     select,
@@ -425,6 +437,7 @@
     }
 
     .btn-save {
+      margin-top: 12px;
       background: #16a34a;
       color: #fff;
       box-shadow: 0 12px 30px rgba(22, 163, 74, 0.55);
@@ -664,7 +677,7 @@
       background: #000;
     }
 
-    /* ===== RESPONSIVO ===== */
+    /* Responsivo */
     @media (max-width: 960px) {
       .side-menu {
         position: fixed;
@@ -687,14 +700,13 @@
       .app-content {
         padding: 16px;
       }
-      .grid-two-columns {
-        grid-template-columns: minmax(0, 1fr);
-      }
+
       .card-header {
         flex-direction: column;
         align-items: flex-start;
         gap: 8px;
       }
+
       .card-header > div:last-child {
         align-self: stretch;
         display: flex;
@@ -702,13 +714,20 @@
         gap: 6px;
         justify-content: flex-start;
       }
+
       .btn-ghost,
       .btn-export {
+        width: auto;
         font-size: 12px;
         padding: 5px 10px;
       }
-      table {
+
+      .items-table-wrapper table {
         font-size: 12px;
+      }
+
+      .items-table-wrapper {
+        border-radius: 12px;
       }
     }
   </style>
@@ -856,7 +875,7 @@
                   </div>
                 </div>
 
-                <div class="grid-two">
+                <div class="grid-three-tight">
                   <div class="form-group">
                     <label for="quantidade">Quantidade *</label>
                     <input id="quantidade" type="number" min="1" />
@@ -865,8 +884,16 @@
                     <label for="validade">Validade *</label>
                     <input id="validade" type="date" />
                   </div>
+                  <div class="form-group">
+                    <label>&nbsp;</label>
+                    <button id="btnSalvarLancamento" class="btn btn-save">
+                      💾 Salvar lançamento
+                    </button>
+                  </div>
                 </div>
+              </div>
 
+              <div>
                 <div class="form-group">
                   <label for="observacao">Observação</label>
                   <textarea
@@ -874,15 +901,7 @@
                     placeholder="Lote em oferta, ponto extra, etc."
                   ></textarea>
                 </div>
-
-                <div style="margin-top: 8px; text-align: right;">
-                  <button id="btnSalvarLancamento" class="btn btn-save">
-                    💾 Salvar lançamento
-                  </button>
-                </div>
               </div>
-
-              <div><!-- coluna direita vazia por enquanto --></div>
             </div>
           </div>
         </div>
@@ -914,7 +933,7 @@
             </div>
 
             <div class="filters-row">
-              <label for="filtroStatus">Status:</label>
+              <label for="filtroStatus">Filtros:</label>
               <select id="filtroStatus">
                 <option value="todos">Todos</option>
                 <option value="7">Vence em 7 dias</option>
@@ -923,7 +942,7 @@
                 <option value="vencidos">Vencidos</option>
               </select>
 
-              <label for="filtroDepartamento">• Departamento:</label>
+              <label for="filtroDepartamento">•</label>
               <select id="filtroDepartamento">
                 <option value="todos">Todos departamentos</option>
                 <option>Açougue</option>
@@ -933,32 +952,25 @@
                 <option>Mercearia Não Alimentos</option>
                 <option>Perecíveis Processados</option>
               </select>
-
-              <label for="filtroOferta">• Oferta:</label>
-              <select id="filtroOferta">
-                <option value="todos">Todos</option>
-                <option value="lancado">Lançados</option>
-                <option value="nao_lancado">Não lançados</option>
-              </select>
             </div>
 
             <div class="items-table-wrapper">
               <table>
                 <thead>
                   <tr>
-                    <th>Data lançamento</th>
                     <th>Loja</th>
+                    <th>Data lançamento</th>
+                    <th>Departamento</th>
                     <th>Cód. barras</th>
                     <th>Descrição</th>
-                    <th>Lote</th>
                     <th>Qtd</th>
                     <th>Validade</th>
-                    <th>Obs.</th>
-                    <th>Oferta</th>
-                    <th>Departamento</th>
                     <th>Status</th>
+                    <th>Oferta</th>
+                    <th>Lote</th>
                     <th>Usuário</th>
                     <th>Lançado em</th>
+                    <th>Obs.</th>
                     <th>Ações</th>
                   </tr>
                 </thead>
@@ -987,7 +999,7 @@
               <button id="btnReloadUsuarios" class="btn-ghost">🔄 Recarregar</button>
             </div>
 
-            <div class="grid-two">
+            <div class="grid-three">
               <div class="form-group">
                 <label for="novoUsuarioNome">Nome</label>
                 <input id="novoUsuarioNome" type="text" />
@@ -996,9 +1008,6 @@
                 <label for="novoUsuarioEmail">E-mail</label>
                 <input id="novoUsuarioEmail" type="email" />
               </div>
-            </div>
-
-            <div class="grid-two" style="margin-top:10px;">
               <div class="form-group">
                 <label for="novoUsuarioPerfil">Perfil</label>
                 <select id="novoUsuarioPerfil">
@@ -1007,6 +1016,9 @@
                   <option value="admin">Admin</option>
                 </select>
               </div>
+            </div>
+
+            <div class="grid-two" style="margin-top:10px;">
               <div class="form-group">
                 <label for="novoUsuarioLoja">Loja</label>
                 <select id="novoUsuarioLoja">
@@ -1018,10 +1030,9 @@
                   <option>CD</option>
                 </select>
               </div>
-            </div>
-
-            <div class="form-group" style="margin-top:10px; text-align:right;">
-              <button id="btnSalvarUsuario" class="btn btn-save">💾 Salvar usuário</button>
+              <div class="form-group" style="display:flex; align-items:flex-end;">
+                <button id="btnSalvarUsuario" class="btn btn-save">💾 Salvar usuário</button>
+              </div>
             </div>
 
             <div class="users-table-wrapper">
@@ -1141,7 +1152,6 @@
     const totalItensSpan = document.getElementById("totalItens");
     const filtroStatus = document.getElementById("filtroStatus");
     const filtroDepartamento = document.getElementById("filtroDepartamento");
-    const filtroOferta = document.getElementById("filtroOferta");
     const btnMarcarTodosOferta = document.getElementById("btnMarcarTodosOferta");
     const btnExportExcel = document.getElementById("btnExportExcel");
     const btnExportPDF = document.getElementById("btnExportPDF");
@@ -1233,11 +1243,20 @@
     }
 
     function limparFormularioLancamento() {
-      if (perfilAtual === "repositor" && perfilLojaAtual) {
-        novaLoja.value = perfilLojaAtual;
-      } else {
+      // trava de loja por perfil
+      if (perfilAtual === "admin") {
+        novaLoja.disabled = false;
         novaLoja.value = "";
+      } else if (perfilAtual === "gerente" || perfilAtual === "repositor") {
+        if (perfilLojaAtual) {
+          novaLoja.value = perfilLojaAtual;
+          novaLoja.disabled = true;
+        } else {
+          novaLoja.disabled = false;
+          novaLoja.value = "";
+        }
       }
+
       departamento.value = "";
       codigoBarras.value = "";
       descricao.value = "";
@@ -1273,70 +1292,34 @@
       });
     }
 
-    // ===== PERFIL / USUÁRIO FIRESTORE =====
-    async function carregarOuCriarPerfilUsuario(user) {
-      const ref = doc(db, "usuarios", user.uid);
-      const snap = await getDoc(ref);
+    // pergunta a loja para usuários sem loja vinculada
+    async function solicitarLojaParaUsuario(docRef) {
+      const lojasValidas = ["Ponta Verde", "Farol", "Praia", "Riomar", "CD"];
 
-      if (snap.exists()) {
-        const data = snap.data();
-        perfilAtual = data.tipo || "repositor";
-        perfilLojaAtual = data.loja || "";
-      } else {
-        await setDoc(ref, {
-          email: user.email,
-          nome: user.displayName || "",
-          tipo: "repositor",
-          loja: "",
-          criadoEm: serverTimestamp()
-        });
-        perfilAtual = "repositor";
-        perfilLojaAtual = "";
-      }
-
-      if (perfilAtual === "admin") {
-        menuUsuarios.style.display = "flex";
-      } else {
-        menuUsuarios.style.display = "none";
-        if (viewUsuarios.classList.contains("app-view-active")) {
-          setView("novo");
-        }
-      }
-    }
-
-    // Repositor precisa ter loja definida
-    async function garantirLojaDefinidaSeRepositor() {
-      if (perfilAtual !== "repositor" || perfilLojaAtual) return;
-
-      const mapa = {
-        "ponta verde": "Ponta Verde",
-        "farol": "Farol",
-        "praia": "Praia",
-        "riomar": "Riomar",
-        "cd": "CD"
-      };
-
-      while (!perfilLojaAtual) {
-        let resposta = prompt(
-          "Informe a loja onde você trabalha (Ponta Verde, Farol, Praia, Riomar ou CD):"
+      while (true) {
+        const input = prompt(
+          "Você ainda não tem uma loja vinculada.\n\nDigite exatamente uma das opções:\n- Ponta Verde\n- Farol\n- Praia\n- Riomar\n- CD"
         );
-        if (resposta === null) {
-          showAlert("É obrigatório informar uma loja para usar o sistema.");
-          break;
+        if (input === null) {
+          alert(
+            "Você precisa ter uma loja vinculada para usar o sistema. Você será desconectado.\nProcure o administrador."
+          );
+          await signOut(auth);
+          throw new Error("Usuário cancelou escolha de loja");
         }
-        resposta = resposta.trim().toLowerCase();
-        if (!resposta) continue;
 
-        const lojaNormalizada = mapa[resposta];
-        if (!lojaNormalizada) {
-          showAlert("Loja inválida. Digite exatamente: Ponta Verde, Farol, Praia, Riomar ou CD.");
+        const normalizado = input.trim().toLowerCase();
+        const lojaEncontrada = lojasValidas.find(
+          (l) => l.toLowerCase() === normalizado
+        );
+        if (!lojaEncontrada) {
+          alert("Loja inválida. Digite exatamente uma das opções.");
           continue;
         }
 
-        perfilLojaAtual = lojaNormalizada;
-        const ref = doc(db, "usuarios", usuarioAtual.uid);
-        await updateDoc(ref, { loja: perfilLojaAtual });
-        showAlert(`Loja vinculada: ${perfilLojaAtual}.`);
+        await updateDoc(docRef, { loja: lojaEncontrada });
+        perfilLojaAtual = lojaEncontrada;
+        break;
       }
     }
 
@@ -1367,6 +1350,44 @@
       }
     });
 
+    // ===== PERFIL / USUÁRIO FIRESTORE =====
+    async function carregarOuCriarPerfilUsuario(user) {
+      const ref = doc(db, "usuarios", user.uid);
+      const snap = await getDoc(ref);
+
+      let data;
+      if (snap.exists()) {
+        data = snap.data();
+      } else {
+        data = {
+          email: user.email,
+          nome: user.displayName || "",
+          tipo: "repositor",
+          loja: "",
+          criadoEm: serverTimestamp()
+        };
+        await setDoc(ref, data);
+      }
+
+      perfilAtual = data.tipo || "repositor";
+      perfilLojaAtual = data.loja || "";
+
+      // Se for repositor sem loja, obriga escolher
+      if (perfilAtual === "repositor" && !perfilLojaAtual) {
+        await solicitarLojaParaUsuario(ref);
+      }
+
+      // Se gerente sem loja, não obrigo agora, mas recomendo manter preenchido via admin.
+      if (perfilAtual === "admin") {
+        menuUsuarios.style.display = "flex";
+      } else {
+        menuUsuarios.style.display = "none";
+        if (viewUsuarios.classList.contains("app-view-active")) {
+          setView("novo");
+        }
+      }
+    }
+
     onAuthStateChanged(auth, async (user) => {
       usuarioAtual = user;
       if (!user) {
@@ -1375,8 +1396,13 @@
         return;
       }
 
-      await carregarOuCriarPerfilUsuario(user);
-      await garantirLojaDefinidaSeRepositor();
+      try {
+        await carregarOuCriarPerfilUsuario(user);
+      } catch (e) {
+        // se deu erro na escolha de loja, já deslogou
+        return;
+      }
+
       atualizarUserBox();
       limparFormularioLancamento();
 
@@ -1428,7 +1454,6 @@
         showAlert("Faça login novamente.");
         return;
       }
-
       const loja = novaLoja.value;
       const dep = departamento.value;
       let cod = codigoBarras.value.trim();
@@ -1437,6 +1462,18 @@
       const qtd = Number(quantidade.value);
       const val = validade.value;
       const obs = observacao.value.trim();
+
+      // trava adicional de loja para repositor/gerente
+      if (perfilAtual !== "admin") {
+        if (!perfilLojaAtual) {
+          showAlert("Seu usuário ainda não tem uma loja vinculada. Procure o administrador.");
+          return;
+        }
+        if (loja !== perfilLojaAtual) {
+          showAlert(`Você só pode lançar produtos para a loja ${perfilLojaAtual}.`);
+          return;
+        }
+      }
 
       if (!loja || !dep || !cod || !desc || !qtd || !val) {
         showAlert("Preencha todos os campos obrigatórios.");
@@ -1451,19 +1488,6 @@
       if (cod.length > 13) {
         showAlert("Código de barras deve ter no máximo 13 dígitos.");
         return;
-      }
-
-      // Repositor só pode lançar na própria loja
-      if (perfilAtual === "repositor") {
-        if (!perfilLojaAtual) {
-          showAlert("Defina sua loja antes de cadastrar. Saia e entre novamente.");
-          return;
-        }
-        if (loja !== perfilLojaAtual) {
-          showAlert(`Você só pode cadastrar itens na loja ${perfilLojaAtual}.`);
-          novaLoja.value = perfilLojaAtual;
-          return;
-        }
       }
 
       try {
@@ -1515,7 +1539,12 @@
         } else {
           const uid = item.usuarioUid;
           const email = item.usuarioEmail;
-          if (uid === usuarioAtual.uid || email === usuarioAtual.email) visivel = true;
+          if (
+            (uid === usuarioAtual.uid || email === usuarioAtual.email) &&
+            (!perfilLojaAtual || item.loja === perfilLojaAtual)
+          ) {
+            visivel = true;
+          }
         }
         if (!visivel) return;
 
@@ -1531,13 +1560,11 @@
 
       const filtroStatusVal = filtroStatus.value;
       const filtroDepVal = filtroDepartamento.value;
-      const filtroOfertaVal = filtroOferta.value;
 
       const hoje = new Date();
       hoje.setHours(0, 0, 0, 0);
 
       filtrados = filtrados.filter((item) => {
-        // filtro por status
         if (item.validade) {
           const dt = new Date(item.validade);
           dt.setHours(0, 0, 0, 0);
@@ -1555,15 +1582,11 @@
           // vencidos: < 0
           if (filtroStatusVal === "vencidos" && !(dias < 0)) return false;
         } else if (filtroStatusVal !== "todos") {
+          // se não tem validade e o filtro não é "todos", ignora
           return false;
         }
 
-        // filtro departamento
         if (filtroDepVal !== "todos" && item.departamento !== filtroDepVal) return false;
-
-        // filtro oferta
-        const ofertaAtual = item.oferta || "nao_lancado";
-        if (filtroOfertaVal !== "todos" && ofertaAtual !== filtroOfertaVal) return false;
 
         return true;
       });
@@ -1582,11 +1605,14 @@
 
       const statusInfo = calcularStatus(valStr);
 
+      const tdLoja = document.createElement("td");
+      tdLoja.textContent = item.loja || "";
+
       const tdData = document.createElement("td");
       tdData.textContent = dataLanc;
 
-      const tdLoja = document.createElement("td");
-      tdLoja.textContent = item.loja || "";
+      const tdDep = document.createElement("td");
+      tdDep.textContent = item.departamento || "";
 
       const tdCod = document.createElement("td");
       tdCod.textContent = item.codigoBarras || "";
@@ -1594,17 +1620,16 @@
       const tdDesc = document.createElement("td");
       tdDesc.textContent = item.descricao || "";
 
-      const tdLote = document.createElement("td");
-      tdLote.textContent = item.lote || "";
-
       const tdQtd = document.createElement("td");
       tdQtd.textContent = item.quantidade || "";
 
       const tdVal = document.createElement("td");
       tdVal.textContent = valStr ? formatarSomenteData(valStr) : "";
 
-      const tdObs = document.createElement("td");
-      tdObs.textContent = item.observacao || "";
+      const tdStatus = document.createElement("td");
+      const spanStatus = document.createElement("span");
+      aplicarBadgeStatus(spanStatus, statusInfo);
+      tdStatus.appendChild(spanStatus);
 
       const tdOferta = document.createElement("td");
       const spanOferta = document.createElement("span");
@@ -1630,19 +1655,17 @@
       });
       tdOferta.appendChild(spanOferta);
 
-      const tdDep = document.createElement("td");
-      tdDep.textContent = item.departamento || "";
-
-      const tdStatus = document.createElement("td");
-      const spanStatus = document.createElement("span");
-      aplicarBadgeStatus(spanStatus, statusInfo);
-      tdStatus.appendChild(spanStatus);
+      const tdLote = document.createElement("td");
+      tdLote.textContent = item.lote || "";
 
       const tdUsuario = document.createElement("td");
       tdUsuario.textContent = item.usuarioNome || item.usuarioEmail || "";
 
       const tdLancadoEm = document.createElement("td");
       tdLancadoEm.textContent = dataLanc;
+
+      const tdObs = document.createElement("td");
+      tdObs.textContent = item.observacao || "";
 
       const tdAcoes = document.createElement("td");
       tdAcoes.className = "actions-cell";
@@ -1711,19 +1734,19 @@
       tdAcoes.appendChild(btnExcluir);
 
       [
-        tdData,
         tdLoja,
+        tdData,
+        tdDep,
         tdCod,
         tdDesc,
-        tdLote,
         tdQtd,
         tdVal,
-        tdObs,
-        tdOferta,
-        tdDep,
         tdStatus,
+        tdOferta,
+        tdLote,
         tdUsuario,
         tdLancadoEm,
+        tdObs,
         tdAcoes
       ].forEach((td) => tr.appendChild(td));
 
@@ -1732,7 +1755,6 @@
 
     filtroStatus.addEventListener("change", aplicarFiltrosETabela);
     filtroDepartamento.addEventListener("change", aplicarFiltrosETabela);
-    filtroOferta.addEventListener("change", aplicarFiltrosETabela);
 
     // ===== EXPORTAR EXCEL / PDF =====
     btnExportExcel.addEventListener("click", () => {
@@ -1743,19 +1765,19 @@
 
       const dados = [
         [
-          "Data lançamento",
           "Loja",
+          "Data lançamento",
+          "Departamento",
           "Cód. barras",
           "Descrição",
-          "Lote",
           "Qtd",
           "Validade",
-          "Obs.",
           "Status",
           "Oferta",
-          "Departamento",
+          "Lote",
           "Usuário",
-          "Lançado em"
+          "Lançado em",
+          "Obs."
         ]
       ];
 
@@ -1763,21 +1785,21 @@
         const valStr = item.validade || "";
         const statusInfo = calcularStatus(valStr);
         dados.push([
+          item.loja || "",
           item.dataLancamentoTexto ||
             (item.criadoEm && item.criadoEm.toDate ? formatarDataHora(item.criadoEm.toDate()) : ""),
-          item.loja || "",
+          item.departamento || "",
           item.codigoBarras || "",
           item.descricao || "",
-          item.lote || "",
           item.quantidade || "",
           valStr ? formatarSomenteData(valStr) : "",
-          item.observacao || "",
           statusInfo.label,
           item.oferta === "lancado" ? "Lançado" : "Não Lançado",
-          item.departamento || "",
+          item.lote || "",
           item.usuarioNome || item.usuarioEmail || "",
           item.dataLancamentoTexto ||
-            (item.criadoEm && item.criadoEm.toDate ? formatarDataHora(item.criadoEm.toDate()) : "")
+            (item.criadoEm && item.criadoEm.toDate ? formatarDataHora(item.criadoEm.toDate()) : ""),
+          item.observacao || ""
         ]);
       });
 
@@ -1797,17 +1819,16 @@
       const docPdf = new window.jspdf.jsPDF("l", "pt", "a4");
 
       const colunas = [
-        "Data lançamento",
         "Loja",
+        "Data lançamento",
+        "Departamento",
         "Cód. barras",
         "Descrição",
-        "Lote",
         "Qtd",
         "Validade",
-        "Obs.",
         "Status",
         "Oferta",
-        "Departamento",
+        "Lote",
         "Usuário",
         "Lançado em"
       ];
@@ -1815,23 +1836,21 @@
       const linhas = lancamentosCache.map((item) => {
         const valStr = item.validade || "";
         const statusInfo = calcularStatus(valStr);
-        const dataLanc =
-          item.dataLancamentoTexto ||
-          (item.criadoEm && item.criadoEm.toDate ? formatarDataHora(item.criadoEm.toDate()) : "");
         return [
-          dataLanc,
           item.loja || "",
+          item.dataLancamentoTexto ||
+            (item.criadoEm && item.criadoEm.toDate ? formatarDataHora(item.criadoEm.toDate()) : ""),
+          item.departamento || "",
           item.codigoBarras || "",
           item.descricao || "",
-          item.lote || "",
           item.quantidade || "",
           valStr ? formatarSomenteData(valStr) : "",
-          item.observacao || "",
           statusInfo.label,
           item.oferta === "lancado" ? "Lançado" : "Não Lançado",
-          item.departamento || "",
+          item.lote || "",
           item.usuarioNome || item.usuarioEmail || "",
-          dataLanc
+          item.dataLancamentoTexto ||
+            (item.criadoEm && item.criadoEm.toDate ? formatarDataHora(item.criadoEm.toDate()) : "")
         ];
       });
 
@@ -1864,8 +1883,7 @@
     btnMarcarTodosOferta.addEventListener("click", async () => {
       if (!confirm("Marcar todos os itens filtrados como 'Lançado'?")) return;
 
-      const filtrados = [...lancamentosCache];
-      const promises = filtrados.map((item) =>
+      const promises = lancamentosCache.map((item) =>
         updateDoc(doc(db, "lancamentos", item.id), { oferta: "lancado" })
       );
       try {
@@ -2004,20 +2022,20 @@
       }
     });
 
-    // ===== SCANNER (usando Html5Qrcode global, câmera traseira) =====
+    // ===== SCANNER (usa script global, camera traseira quando possível) =====
+    function scannerDisponivel() {
+      return typeof Html5Qrcode !== "undefined";
+    }
+
     async function abrirScanner() {
-      if (!window.Html5Qrcode || !window.Html5QrcodeSupportedFormats) {
-        showAlert(
-          "Leitor de código de barras não carregou corretamente.\nVerifique sua conexão e tente novamente."
-        );
+      if (!scannerDisponivel()) {
+        showAlert("Leitor de código de barras não carregou corretamente.");
         return;
       }
 
       scannerModal.classList.add("show");
 
-      if (html5QrCode) {
-        return;
-      }
+      if (html5QrCode) return;
 
       html5QrCode = new Html5Qrcode("qr-reader");
       scannerAtivo = true;
@@ -2040,9 +2058,12 @@
 
         const config = {
           fps: 10,
-          qrbox: 250,
-          formatsToSupport: [Html5QrcodeSupportedFormats.EAN_13]
+          qrbox: 250
         };
+
+        if (window.Html5QrcodeSupportedFormats && window.Html5QrcodeSupportedFormats.EAN_13) {
+          config.formatsToSupport = [Html5QrcodeSupportedFormats.EAN_13];
+        }
 
         await html5QrCode.start(
           cameraId,
