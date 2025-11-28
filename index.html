@@ -12,8 +12,8 @@
   <!-- jsPDF para PDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
-  <!-- html5-qrcode (scanner) -->
- <script src="html5-qrcode.min.js"></script>
+  <!-- html5-qrcode (scanner) – arquivo local -->
+  <script src="html5-qrcode.min.js"></script>
 
   <style>
     :root {
@@ -437,10 +437,14 @@
     }
 
     .btn-save {
-      margin-top: 12px;
+      margin-top: 0;
       background: #16a34a;
       color: #fff;
       box-shadow: 0 12px 30px rgba(22, 163, 74, 0.55);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: auto;
     }
 
     /* TABELA ITENS */
@@ -677,106 +681,97 @@
       background: #000;
     }
 
-    /* Responsivo */
-   @media (max-width: 960px) {
-  .side-menu {
-    position: fixed;
-    left: -280px;
-    top: 56px;
-    bottom: 0;
-    width: 260px;
-    padding: 20px 16px;
-    transition: left 0.2s ease;
-  }
+    /* ===== RESPONSIVO ===== */
+    @media (max-width: 960px) {
+      .side-menu {
+        position: fixed;
+        left: -280px;
+        top: 56px;
+        bottom: 0;
+        width: 260px;
+        padding: 20px 16px;
+        transition: left 0.2s ease;
+      }
 
-  .side-menu.open {
-    left: 0;
-  }
+      .side-menu.open {
+        left: 0;
+      }
 
-  .header-menu-toggle {
-    display: flex;
-  }
+      .header-menu-toggle {
+        display: flex;
+      }
 
-  .app-main {
-    flex-direction: column;
-  }
+      .app-main {
+        flex-direction: column;
+      }
 
-  .app-content {
-    padding: 6px 8px 12px;  /* menos espaço em cima e nas laterais */
-  }
-     
-  .app-content > .card:first-child {
-    margin-top: 0;
-  }
+      .app-content {
+        padding: 16px;
+      }
 
-  /* HEADER DO CARD MAIS FLEXÍVEL */
-  .card-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
+      .card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+      }
 
-  .card-header > div:last-child {
-    align-self: stretch;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    justify-content: flex-start;
-  }
+      .card-header > div:last-child {
+        align-self: stretch;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        justify-content: flex-start;
+      }
 
-  .btn-ghost,
-  .btn-export {
-    width: auto;
-    font-size: 12px;
-    padding: 5px 10px;
-  }
+      .btn-ghost,
+      .btn-export {
+        width: auto;
+        font-size: 12px;
+        padding: 5px 10px;
+      }
 
-  .items-table-wrapper table {
-    font-size: 12px;
-  }
+      .items-table-wrapper table {
+        font-size: 12px;
+      }
 
-  .items-table-wrapper {
-    border-radius: 12px;
-  }
+      .items-table-wrapper {
+        border-radius: 12px;
+      }
 
-  /* 🔻 AJUSTES FORTES PARA MOBILE 🔻 */
+      /* Formularios em uma coluna */
+      .grid-two-columns {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
 
-  /* Em telas menores, tudo em UMA coluna */
-  .grid-two-columns {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
+      .grid-two,
+      .grid-three,
+      .grid-three-tight {
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
 
-  .grid-two,
-  .grid-three,
-  .grid-three-tight {
-    grid-template-columns: 1fr;
-    gap: 10px;
-  }
+      .grid-three-tight .form-group:last-child {
+        grid-column: 1 / -1;
+      }
 
-  /* Botão de salvar ocupando a linha toda */
-  .grid-three-tight .form-group:last-child {
-    grid-column: 1 / -1;
-  }
+      .btn-save {
+        width: 100%;
+        justify-content: center;
+      }
 
-  .btn-save {
-    width: 100%;
-    justify-content: center;
-  }
+      .card {
+        padding: 16px 14px 16px;
+      }
 
-  /* Um pouco mais de respiro nos campos */
-  .card {
-    padding: 16px 14px 16px;
-  }
+      .form-group {
+        margin-bottom: 8px;
+      }
 
-  .form-group {
-    margin-bottom: 8px;
-  }
-
-  textarea {
-    min-height: 80px;
-  }
-}
+      textarea {
+        min-height: 80px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -861,6 +856,7 @@
             </div>
 
             <div class="grid-two-columns">
+              <!-- Coluna única (desktop e mobile) -->
               <div>
                 <div class="grid-two">
                   <div class="form-group">
@@ -923,31 +919,27 @@
                 </div>
 
                 <div class="grid-three-tight">
-                <div class="form-group">
-    <label for="quantidade">Quantidade *</label>
-    <input id="quantidade" type="number" min="1" />
-  </div>
-
-  <div class="form-group">
-    <label for="validade">Validade *</label>
-    <input id="validade" type="date" />
-  </div>
-
-  <div class="form-group">
-    <label for="observacao">Observação</label>
-    <textarea
-      id="observacao"
-      placeholder="Lote em oferta, ponto extra, etc."
-    ></textarea>
-  </div>
-
-  <div class="form-group">
-    <label>&nbsp;</label>
-    <button id="btnSalvarLancamento" class="btn btn-save">
-      💾 Salvar lançamento
-    </button>
-  </div>
-</div>
+                  <div class="form-group">
+                    <label for="quantidade">Quantidade *</label>
+                    <input id="quantidade" type="number" min="1" />
+                  </div>
+                  <div class="form-group">
+                    <label for="validade">Validade *</label>
+                    <input id="validade" type="date" />
+                  </div>
+                  <div class="form-group">
+                    <label for="observacao">Observação</label>
+                    <textarea
+                      id="observacao"
+                      placeholder="Lote em oferta, ponto extra, etc."
+                    ></textarea>
+                  </div>
+                  <div class="form-group">
+                    <label>&nbsp;</label>
+                    <button id="btnSalvarLancamento" class="btn btn-save">
+                      💾 Salvar lançamento
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -967,7 +959,7 @@
                   Filtros por status de vencimento e controle de oferta.
                 </div>
               </div>
-              <div style="display:flex; gap:8px; align-items:center;">
+              <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
                 <button id="btnMarcarTodosOferta" class="btn-ghost">
                   📣 Marcar todos como oferta
                 </button>
@@ -1425,7 +1417,6 @@
         await solicitarLojaParaUsuario(ref);
       }
 
-      // Se gerente sem loja, não obrigo agora, mas recomendo manter preenchido via admin.
       if (perfilAtual === "admin") {
         menuUsuarios.style.display = "flex";
       } else {
@@ -1447,7 +1438,6 @@
       try {
         await carregarOuCriarPerfilUsuario(user);
       } catch (e) {
-        // se deu erro na escolha de loja, já deslogou
         return;
       }
 
@@ -2070,10 +2060,9 @@
       }
     });
 
-    // ===== SCANNER (usa script global, camera traseira quando possível) =====
-     function scannerDisponivel() {
-      // Usa globalThis para garantir acesso ao escopo global dentro de <script type="module">
-      return typeof globalThis !== "undefined" && !!globalThis.Html5Qrcode;
+    // ===== SCANNER (usa html5-qrcode local e câmera traseira) =====
+    function scannerDisponivel() {
+      return typeof Html5Qrcode !== "undefined";
     }
 
     async function abrirScanner() {
@@ -2082,60 +2071,42 @@
         return;
       }
 
-      // Mostra o modal
       scannerModal.classList.add("show");
 
+      if (html5QrCode) return;
+
+      html5QrCode = new Html5Qrcode("qr-reader");
+      scannerAtivo = true;
+
+      const config = {
+        fps: 10,
+        qrbox: 250,
+        formatsToSupport: [Html5QrcodeSupportedFormats.EAN_13]
+      };
+
       try {
-        // Cria a instância apenas uma vez
-        if (!html5QrCode) {
-          html5QrCode = new globalThis.Html5Qrcode("qr-reader");
-        }
-
-        // Se já estiver rodando, não tenta iniciar de novo
-        if (scannerAtivo) return;
-
-        const config = {
-          fps: 10,
-          qrbox: 250
-        };
-
-        // Limita para EAN-13, se o objeto global existir
-        if (
-          globalThis.Html5QrcodeSupportedFormats &&
-          globalThis.Html5QrcodeSupportedFormats.EAN_13
-        ) {
-          config.formatsToSupport = [globalThis.Html5QrcodeSupportedFormats.EAN_13];
-        }
-
-        // Em vez de escolher cameraId manualmente, usamos facingMode: "environment"
         await html5QrCode.start(
-          { facingMode: "environment" },  // câmera traseira quando possível
+          { facingMode: { exact: "environment" } },
           config,
           (decodedText) => {
-            // Aceita só códigos numéricos de 8 a 13 dígitos
             if (/^[0-9]{8,13}$/.test(decodedText)) {
               codigoBarras.value = decodedText;
               fecharScanner();
             }
           },
-          (errorMessage) => {
-            // erros de leitura por frame (normal ficar em branco)
-            // console.log("Scan error:", errorMessage);
-          }
+          () => {}
         );
-
-        scannerAtivo = true;
       } catch (err) {
         console.error(err);
-        showAlert("Erro ao iniciar câmera.");
+        showAlert("Erro ao iniciar câmera. Verifique permissões ou tente outro navegador.");
         fecharScanner();
       }
     }
 
     async function fecharScanner() {
       scannerModal.classList.remove("show");
-
       if (html5QrCode && scannerAtivo) {
+        scannerAtivo = false;
         try {
           await html5QrCode.stop();
         } catch (err) {
@@ -2146,7 +2117,7 @@
         } catch (err) {
           console.error(err);
         }
-        scannerAtivo = false;
+        html5QrCode = null;
       }
     }
 
@@ -2164,11 +2135,3 @@
   </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
