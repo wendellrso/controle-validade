@@ -2085,24 +2085,28 @@
       };
 
       try {
-        await html5QrCode.start(
-          { facingMode: { exact: "environment" } },
-          config,
-          (decodedText) => {
-            if (/^[0-9]{8,13}$/.test(decodedText)) {
-              codigoBarras.value = decodedText;
-              fecharScanner();
-            }
-          },
-          () => {}
-        );
-      } catch (err) {
-        console.error(err);
-        showAlert("Erro ao iniciar câmera. Verifique permissões ou tente outro navegador.");
-        fecharScanner();
-      }
+    await html5QrCode.start(
+  { facingMode: { exact: "environment" } },
+  config,
+  (decodedText) => {
+    let text = decodedText.trim();
+
+    // Garante que é só número
+    if (!/^[0-9]+$/.test(text)) return;
+
+    // Se vier com 12 dígitos (UPC-A), completa com zero na frente (vira EAN-13)
+    if (text.length === 12) {
+      text = "0" + text;
     }
 
+    // Aceita entre 8 e 13 dígitos, mas agora preservando o zero
+    if (text.length >= 8 && text.length <= 13) {
+      codigoBarras.value = text;
+      fecharScanner();
+    }
+  },
+  () => {}
+);
     async function fecharScanner() {
       scannerModal.classList.remove("show");
       if (html5QrCode && scannerAtivo) {
@@ -2135,3 +2139,4 @@
   </script>
 </body>
 </html>
+
