@@ -25,11 +25,6 @@
       --border-soft: #262a33;
       --text-main: #ffffff;
       --text-soft: #9ca3af;
-      --badge-bg: #1f2933;
-      --badge-red-bg: #3b0710;
-      --badge-red-border: #ff4b5c;
-      --badge-green-bg: #073b1f;
-      --badge-green-border: #4ade80;
       --input-bg: #050509;
       --input-border: #272a33;
     }
@@ -339,6 +334,7 @@
       align-items: center;
       justify-content: space-between;
       margin-bottom: 16px;
+      gap: 10px;
     }
 
     .card-title {
@@ -370,8 +366,9 @@
 
     .grid-two-columns {
       display: grid;
-      grid-template-columns: 1.1fr 0.9fr;
+      grid-template-columns: 1.2fr 0.8fr;
       gap: 16px;
+      align-items: flex-start;
     }
 
     .grid-two {
@@ -471,6 +468,7 @@
       border: 1px solid #374151;
       font-size: 13px;
       padding: 6px 12px;
+      border-radius: 999px;
     }
 
     .btn-export {
@@ -531,38 +529,6 @@
 
     tbody tr:nth-child(odd) {
       background: #050815;
-    }
-
-    .badge-status {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-width: 120px;
-      padding: 4px 10px;
-      border-radius: 999px;
-      font-size: 11px;
-      text-align: center;
-      white-space: normal;
-      background: var(--badge-bg);
-      border: 1px solid #4b5563;
-    }
-
-    .badge-status-danger {
-      background: var(--badge-red-bg);
-      border-color: var(--badge-red-border);
-      color: #fecaca;
-    }
-
-    .badge-status-warning {
-      background: #3b2607;
-      border-color: #facc15;
-      color: #fef9c3;
-    }
-
-    .badge-status-ok {
-      background: var(--badge-green-bg);
-      border-color: var(--badge-green-border);
-      color: #bbf7d0;
     }
 
     .badge-oferta {
@@ -698,11 +664,9 @@
         padding: 16px;
       }
 
-      /* Ajuste das cards e botões no celular */
       .card-header {
         flex-direction: column;
         align-items: flex-start;
-        gap: 8px;
       }
 
       .card-header > div:last-child {
@@ -715,9 +679,18 @@
 
       .btn-ghost,
       .btn-export {
-        width: auto;
         font-size: 12px;
         padding: 5px 10px;
+      }
+
+      .grid-two-columns {
+        grid-template-columns: 1fr;   /* novo lançamento em uma coluna no celular */
+      }
+
+      .grid-two,
+      .grid-three,
+      .grid-three-tight {
+        grid-template-columns: 1fr;
       }
 
       .items-table-wrapper table {
@@ -914,10 +887,10 @@
                   <span>Itens cadastrados</span>
                 </div>
                 <div class="card-subtitle">
-                  Filtros por status de vencimento e controle de oferta.
+                  Filtros por vencimento, oferta e departamento.
                 </div>
               </div>
-              <div style="display:flex; gap:8px; align-items:center;">
+              <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
                 <button id="btnMarcarTodosOferta" class="btn-ghost">
                   📣 Marcar todos como oferta
                 </button>
@@ -931,7 +904,7 @@
             </div>
 
             <div class="filters-row">
-              <label for="filtroStatus">Filtros:</label>
+              <label for="filtroStatus">Vencimento:</label>
               <select id="filtroStatus">
                 <option value="todos">Todos</option>
                 <option value="7">Vence em 7 dias</option>
@@ -940,9 +913,16 @@
                 <option value="vencidos">Vencidos</option>
               </select>
 
-              <label for="filtroDepartamento">•</label>
+              <label for="filtroOferta">• Oferta:</label>
+              <select id="filtroOferta">
+                <option value="todos">Todos</option>
+                <option value="lancado">Lançados</option>
+                <option value="nao_lancado">Não lançados</option>
+              </select>
+
+              <label for="filtroDepartamento">• Departamento:</label>
               <select id="filtroDepartamento">
-                <option value="todos">Todos departamentos</option>
+                <option value="todos">Todos</option>
                 <option>Açougue</option>
                 <option>Adega</option>
                 <option>Bebidas</option>
@@ -956,19 +936,16 @@
               <table>
                 <thead>
                   <tr>
-                    <th>Loja</th>
                     <th>Data lançamento</th>
-                    <th>Departamento</th>
+                    <th>Loja</th>
                     <th>Cód. barras</th>
                     <th>Descrição</th>
+                    <th>Lote</th>
                     <th>Qtd</th>
                     <th>Validade</th>
-                    <th>Status</th>
-                    <th>Oferta</th>
-                    <th>Lote</th>
-                    <th>Usuário</th>
-                    <th>Lançado em</th>
                     <th>Obs.</th>
+                    <th>Oferta</th>
+                    <th>Departamento</th>
                     <th>Ações</th>
                   </tr>
                 </thead>
@@ -1062,7 +1039,7 @@
       </div>
       <div id="qr-reader"></div>
       <div style="margin-top:8px; font-size:11px; color:#9ca3af;">
-        Aponte para o código de barras (EAN-13). A câmera traseira será usada quando possível.
+        Aponte para o código (EAN-13). A câmera traseira será usada quando possível.
       </div>
     </div>
   </div>
@@ -1150,6 +1127,7 @@
     const totalItensSpan = document.getElementById("totalItens");
     const filtroStatus = document.getElementById("filtroStatus");
     const filtroDepartamento = document.getElementById("filtroDepartamento");
+    const filtroOferta = document.getElementById("filtroOferta");
     const btnMarcarTodosOferta = document.getElementById("btnMarcarTodosOferta");
     const btnExportExcel = document.getElementById("btnExportExcel");
     const btnExportPDF = document.getElementById("btnExportPDF");
@@ -1173,10 +1151,9 @@
     let usuarioAtual = null;
     let perfilAtual = null; // admin / gerente / repositor
     let perfilLojaAtual = null;
+    let lancamentosCache = [];
 
-    let lancamentosCache = []; // para filtros/export
-
-    // Guardar opções originais de loja (para restaurar quando precisar)
+    // Guardar opções originais de loja
     const lojasOriginais = Array.from(novaLoja.options).map((o) => ({
       value: o.value,
       text: o.textContent
@@ -1210,28 +1187,16 @@
       return Math.round(diffMs / (1000 * 60 * 60 * 24));
     }
 
-    // Status em faixas 7/15/30/vencido
     function calcularStatus(validadeStr) {
-      if (!validadeStr) {
-        return { label: "Sem data", tipo: "neutro" };
-      }
+      if (!validadeStr) return null;
       const [ano, mes, dia] = validadeStr.split("-");
       const dt = new Date(Number(ano), Number(mes) - 1, Number(dia));
       const dias = diasEntreHoje(dt);
-
-      if (dias < 0) return { label: "Vencido", tipo: "danger" };
-      if (dias <= 7) return { label: "Vence em 7 dias", tipo: "danger" };
-      if (dias <= 15) return { label: "Vence em 15 dias", tipo: "warning" };
-      if (dias <= 30) return { label: "Vence em 30 dias", tipo: "ok" };
-      return { label: "Dentro da validade", tipo: "ok" };
-    }
-
-    function aplicarBadgeStatus(element, statusInfo) {
-      element.className = "badge-status";
-      if (statusInfo.tipo === "danger") element.classList.add("badge-status-danger");
-      else if (statusInfo.tipo === "warning") element.classList.add("badge-status-warning");
-      else if (statusInfo.tipo === "ok") element.classList.add("badge-status-ok");
-      element.textContent = statusInfo.label;
+      if (dias < 0) return "vencidos";
+      if (dias <= 7) return "7";
+      if (dias <= 15) return "15";
+      if (dias <= 30) return "30";
+      return "ok";
     }
 
     function setView(viewId) {
@@ -1283,7 +1248,6 @@
       });
     }
 
-    // restringe loja para repositor
     function aplicarRestricaoLojaRepositor() {
       // restaura opções originais
       novaLoja.innerHTML = "";
@@ -1321,7 +1285,6 @@
     }
 
     async function perguntarLojaSeNecessario(user, dataAtual) {
-      // só interessa para repositor
       if (perfilAtual !== "repositor") return;
 
       if (!perfilLojaAtual) {
@@ -1590,32 +1553,30 @@
 
       const filtroStatusVal = filtroStatus.value;
       const filtroDepVal = filtroDepartamento.value;
+      const filtroOfertaVal = filtroOferta.value;
 
       const hoje = new Date();
       hoje.setHours(0, 0, 0, 0);
 
       filtrados = filtrados.filter((item) => {
-        if (item.validade) {
-          const dt = new Date(item.validade);
-          dt.setHours(0, 0, 0, 0);
-          const dias = Math.round((dt - hoje) / (1000 * 60 * 60 * 24));
-
-          // 7 dias: 0 a 7
-          if (filtroStatusVal === "7" && !(dias >= 0 && dias <= 7)) return false;
-
-          // 15 dias: 8 a 15
-          if (filtroStatusVal === "15" && !(dias >= 8 && dias <= 15)) return false;
-
-          // 30 dias: 16 a 30
-          if (filtroStatusVal === "30" && !(dias >= 16 && dias <= 30)) return false;
-
-          // vencidos: < 0
-          if (filtroStatusVal === "vencidos" && !(dias < 0)) return false;
-        } else if (filtroStatusVal !== "todos") {
-          return false;
+        // vencimento
+        if (filtroStatusVal !== "todos") {
+          if (item.validade) {
+            const statusCalc = calcularStatus(item.validade);
+            if (filtroStatusVal === "vencidos" && statusCalc !== "vencidos") return false;
+            if (["7", "15", "30"].includes(filtroStatusVal) && statusCalc !== filtroStatusVal)
+              return false;
+          } else {
+            return false;
+          }
         }
 
+        // departamento
         if (filtroDepVal !== "todos" && item.departamento !== filtroDepVal) return false;
+
+        // oferta
+        if (filtroOfertaVal === "lancado" && item.oferta !== "lancado") return false;
+        if (filtroOfertaVal === "nao_lancado" && item.oferta === "lancado") return false;
 
         return true;
       });
@@ -1632,16 +1593,11 @@
         (item.criadoEm && item.criadoEm.toDate ? formatarDataHora(item.criadoEm.toDate()) : "");
       const valStr = item.validade || "";
 
-      const statusInfo = calcularStatus(valStr);
-
-      const tdLoja = document.createElement("td");
-      tdLoja.textContent = item.loja || "";
-
       const tdData = document.createElement("td");
       tdData.textContent = dataLanc;
 
-      const tdDep = document.createElement("td");
-      tdDep.textContent = item.departamento || "";
+      const tdLoja = document.createElement("td");
+      tdLoja.textContent = item.loja || "";
 
       const tdCod = document.createElement("td");
       tdCod.textContent = item.codigoBarras || "";
@@ -1649,16 +1605,17 @@
       const tdDesc = document.createElement("td");
       tdDesc.textContent = item.descricao || "";
 
+      const tdLote = document.createElement("td");
+      tdLote.textContent = item.lote || "";
+
       const tdQtd = document.createElement("td");
       tdQtd.textContent = item.quantidade || "";
 
       const tdVal = document.createElement("td");
       tdVal.textContent = valStr ? formatarSomenteData(valStr) : "";
 
-      const tdStatus = document.createElement("td");
-      const spanStatus = document.createElement("span");
-      aplicarBadgeStatus(spanStatus, statusInfo);
-      tdStatus.appendChild(spanStatus);
+      const tdObs = document.createElement("td");
+      tdObs.textContent = item.observacao || "";
 
       const tdOferta = document.createElement("td");
       const spanOferta = document.createElement("span");
@@ -1667,7 +1624,7 @@
         spanOferta.classList.add("badge-oferta-lancado");
         spanOferta.textContent = "Lançado";
       } else {
-        spanOferta.textContent = "Não Lançado";
+        spanOferta.textContent = "Não lançado";
       }
       spanOferta.addEventListener("click", async () => {
         const novoValor = item.oferta === "lancado" ? "nao_lancado" : "lancado";
@@ -1684,17 +1641,8 @@
       });
       tdOferta.appendChild(spanOferta);
 
-      const tdLote = document.createElement("td");
-      tdLote.textContent = item.lote || "";
-
-      const tdUsuario = document.createElement("td");
-      tdUsuario.textContent = item.usuarioNome || item.usuarioEmail || "";
-
-      const tdLancadoEm = document.createElement("td");
-      tdLancadoEm.textContent = dataLanc;
-
-      const tdObs = document.createElement("td");
-      tdObs.textContent = item.observacao || "";
+      const tdDep = document.createElement("td");
+      tdDep.textContent = item.departamento || "";
 
       const tdAcoes = document.createElement("td");
       tdAcoes.className = "actions-cell";
@@ -1763,19 +1711,16 @@
       tdAcoes.appendChild(btnExcluir);
 
       [
-        tdLoja,
         tdData,
-        tdDep,
+        tdLoja,
         tdCod,
         tdDesc,
+        tdLote,
         tdQtd,
         tdVal,
-        tdStatus,
-        tdOferta,
-        tdLote,
-        tdUsuario,
-        tdLancadoEm,
         tdObs,
+        tdOferta,
+        tdDep,
         tdAcoes
       ].forEach((td) => tr.appendChild(td));
 
@@ -1784,6 +1729,7 @@
 
     filtroStatus.addEventListener("change", aplicarFiltrosETabela);
     filtroDepartamento.addEventListener("change", aplicarFiltrosETabela);
+    filtroOferta.addEventListener("change", aplicarFiltrosETabela);
 
     // ===== EXPORTAR EXCEL / PDF =====
     btnExportExcel.addEventListener("click", () => {
@@ -1794,41 +1740,33 @@
 
       const dados = [
         [
-          "Loja",
           "Data lançamento",
-          "Departamento",
+          "Loja",
           "Cód. barras",
           "Descrição",
+          "Lote",
           "Qtd",
           "Validade",
-          "Status",
+          "Obs.",
           "Oferta",
-          "Lote",
-          "Usuário",
-          "Lançado em",
-          "Obs."
+          "Departamento"
         ]
       ];
 
       lancamentosCache.forEach((item) => {
         const valStr = item.validade || "";
-        const statusInfo = calcularStatus(valStr);
         dados.push([
-          item.loja || "",
           item.dataLancamentoTexto ||
             (item.criadoEm && item.criadoEm.toDate ? formatarDataHora(item.criadoEm.toDate()) : ""),
-          item.departamento || "",
+          item.loja || "",
           item.codigoBarras || "",
           item.descricao || "",
+          item.lote || "",
           item.quantidade || "",
           valStr ? formatarSomenteData(valStr) : "",
-          statusInfo.label,
-          item.oferta === "lancado" ? "Lançado" : "Não Lançado",
-          item.lote || "",
-          item.usuarioNome || item.usuarioEmail || "",
-          item.dataLancamentoTexto ||
-            (item.criadoEm && item.criadoEm.toDate ? formatarDataHora(item.criadoEm.toDate()) : ""),
-          item.observacao || ""
+          item.observacao || "",
+          item.oferta === "lancado" ? "Lançado" : "Não lançado",
+          item.departamento || ""
         ]);
       });
 
@@ -1848,38 +1786,32 @@
       const docPdf = new window.jspdf.jsPDF("l", "pt", "a4");
 
       const colunas = [
-        "Loja",
         "Data lançamento",
-        "Departamento",
+        "Loja",
         "Cód. barras",
         "Descrição",
+        "Lote",
         "Qtd",
         "Validade",
-        "Status",
+        "Obs.",
         "Oferta",
-        "Lote",
-        "Usuário",
-        "Lançado em"
+        "Departamento"
       ];
 
       const linhas = lancamentosCache.map((item) => {
         const valStr = item.validade || "";
-        const statusInfo = calcularStatus(valStr);
         return [
-          item.loja || "",
           item.dataLancamentoTexto ||
             (item.criadoEm && item.criadoEm.toDate ? formatarDataHora(item.criadoEm.toDate()) : ""),
-          item.departamento || "",
+          item.loja || "",
           item.codigoBarras || "",
           item.descricao || "",
+          item.lote || "",
           item.quantidade || "",
           valStr ? formatarSomenteData(valStr) : "",
-          statusInfo.label,
-          item.oferta === "lancado" ? "Lançado" : "Não Lançado",
-          item.lote || "",
-          item.usuarioNome || item.usuarioEmail || "",
-          item.dataLancamentoTexto ||
-            (item.criadoEm && item.criadoEm.toDate ? formatarDataHora(item.criadoEm.toDate()) : "")
+          item.observacao || "",
+          item.oferta === "lancado" ? "Lançado" : "Não lançado",
+          item.departamento || ""
         ];
       });
 
@@ -2051,7 +1983,7 @@
       }
     });
 
-    // ===== SCANNER (usando script global + câmera traseira) =====
+    // ===== SCANNER (câmera traseira) =====
     async function abrirScanner() {
       scannerModal.classList.add("show");
 
@@ -2064,46 +1996,15 @@
         return;
       }
 
-      if (html5QrCode) return;
-
-      html5QrCode = new window.Html5Qrcode("qr-reader");
+      if (!html5QrCode) {
+        html5QrCode = new Html5Qrcode("qr-reader");
+      }
       scannerAtivo = true;
 
       try {
-        const devices = await window.Html5Qrcode.getCameras();
-        if (!devices || devices.length === 0) {
-          showAlert("Nenhuma câmera encontrada no dispositivo.");
-          fecharScanner();
-          return;
-        }
-
-        let cameraId = devices[0].id;
-        const traseira = devices.find((d) => {
-          const label = (d.label || "").toLowerCase();
-          return (
-            label.includes("back") ||
-            label.includes("traseira") ||
-            label.includes("rear")
-          );
-        });
-        if (traseira) cameraId = traseira.id;
-        else if (devices.length > 1) cameraId = devices[devices.length - 1].id;
-
-        const config = {
-          fps: 10,
-          qrbox: { width: 250, height: 250 }
-        };
-
-        if (
-          window.Html5QrcodeSupportedFormats &&
-          window.Html5QrcodeSupportedFormats.EAN_13
-        ) {
-          config.formatsToSupport = [window.Html5QrcodeSupportedFormats.EAN_13];
-        }
-
         await html5QrCode.start(
-          cameraId,
-          config,
+          { facingMode: "environment" }, // traseira
+          { fps: 10, qrbox: 250 },
           (decodedText) => {
             if (/^[0-9]{8,13}$/.test(decodedText)) {
               codigoBarras.value = decodedText;
@@ -2133,7 +2034,6 @@
         } catch (err) {
           console.error(err);
         }
-        html5QrCode = null;
       }
     }
 
