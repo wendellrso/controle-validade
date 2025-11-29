@@ -367,38 +367,6 @@
       color: var(--text-soft);
     }
 
-    /* DASHBOARD */
-
-    .kpi-grid {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 12px;
-    }
-
-    .kpi-card {
-      background: #020617;
-      border-radius: 14px;
-      border: 1px solid #1f2933;
-      padding: 12px 14px;
-    }
-
-    .kpi-label {
-      font-size: 12px;
-      color: var(--text-soft);
-      margin-bottom: 6px;
-    }
-
-    .kpi-value {
-      font-size: 20px;
-      font-weight: 600;
-    }
-
-    .kpi-tag {
-      font-size: 11px;
-      color: #9ca3af;
-      margin-top: 4px;
-    }
-
     /* FORM NOVO LANÇAMENTO */
 
     .grid-two-columns {
@@ -413,17 +381,10 @@
       gap: 12px;
     }
 
-    .grid-three {
-      display: grid;
-      grid-template-columns: 2fr 2fr 1fr;
-      gap: 12px;
-    }
-
     .grid-three-tight {
       display: grid;
       grid-template-columns: 1.2fr 1.5fr 1fr;
       gap: 10px;
-      align-items: end;
     }
 
     select,
@@ -476,6 +437,10 @@
       box-shadow: 0 12px 30px rgba(22, 163, 74, 0.55);
     }
 
+    .form-group-submit {
+      margin-top: 4px;
+    }
+
     /* TABELA ITENS */
 
     .filters-row {
@@ -494,13 +459,13 @@
 
     .filters-row select {
       width: auto;
-      min-width: 140px;
+      min-width: 150px;
       padding: 6px 10px;
       font-size: 13px;
     }
 
     .filters-row input[type="text"] {
-      width: 160px;
+      width: 180px;
       padding: 6px 10px;
       font-size: 13px;
     }
@@ -538,7 +503,7 @@
       overflow-x: auto;
       overflow-y: hidden;
       background: #020617;
-      max-height: 60vh;
+      margin-top: 10px;
     }
 
     table {
@@ -648,30 +613,82 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
       flex-wrap: wrap;
     }
 
-    .pagination {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 12px;
-    }
-
-    .pagination button {
+    .items-footer .page-btn {
       background: #020617;
-      border: 1px solid #374151;
       border-radius: 999px;
-      padding: 4px 8px;
+      border: 1px solid #374151;
       color: #e5e7eb;
-      cursor: pointer;
+      padding: 3px 8px;
       font-size: 12px;
+      cursor: pointer;
     }
 
-    .pagination button:disabled {
-      opacity: 0.4;
-      cursor: default;
+    /* CARDS MOBILE PARA ITENS (REPOSITOR / GERENTE) */
+    #mobileCardsContainer {
+      display: none;
+      margin-top: 10px;
+    }
+
+    .mobile-item-card {
+      background: #020617;
+      border-radius: 14px;
+      padding: 10px 12px;
+      border: 1px solid #1f2933;
+      margin-bottom: 8px;
+      font-size: 13px;
+    }
+
+    .mobile-item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+
+    .mobile-item-code {
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .mobile-item-loja {
+      font-size: 12px;
+      color: var(--text-soft);
+    }
+
+    .mobile-item-desc {
+      font-size: 13px;
+      margin-bottom: 4px;
+    }
+
+    .mobile-item-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--text-soft);
+      margin-bottom: 2px;
+    }
+
+    .mobile-item-footer {
+      margin-top: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .mobile-item-footer .badge-status {
+      min-width: 0;
+      font-size: 11px;
+      padding: 3px 8px;
+    }
+
+    .mobile-item-oferta {
+      font-size: 11px;
+      color: #e5e7eb;
     }
 
     /* ADMIN USUÁRIOS */
@@ -743,7 +760,7 @@
       background: #000;
     }
 
-    /* Responsivo */
+    /* ===== RESPONSIVO ===== */
     @media (max-width: 960px) {
       .side-menu {
         position: fixed;
@@ -794,29 +811,43 @@
 
       .items-table-wrapper {
         border-radius: 12px;
-        max-height: 65vh;
       }
 
       .grid-two-columns {
         grid-template-columns: 1fr;
       }
 
-      .kpi-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+      .grid-two {
+        grid-template-columns: 1fr;
       }
 
       .grid-three-tight {
         grid-template-columns: 1fr;
       }
 
-      .btn-save {
+      .filters-row {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .filters-row select,
+      .filters-row input[type="text"] {
         width: 100%;
+      }
+
+      .items-footer {
+        flex-direction: column;
+        align-items: flex-start;
       }
     }
 
-    @media (max-width: 600px) {
-      .kpi-grid {
-        grid-template-columns: 1fr 1fr;
+    /* Mostrar cards no mobile para não-admin */
+    @media (max-width: 768px) {
+      body.perfil-nao-admin .items-table-wrapper {
+        display: none;
+      }
+      body.perfil-nao-admin #mobileCardsContainer {
+        display: block;
       }
     }
   </style>
@@ -846,7 +877,7 @@
         Entrar com Google
       </button>
 
-      <div class="login-footer">Dúvidas? Procure o setor comercial.</div>
+      <div class="login-footer">Dúvidas? Procure a área de Compras / TI.</div>
     </div>
   </div>
 
@@ -869,11 +900,7 @@
     <main class="app-main">
       <nav class="side-menu">
         <div class="side-menu-title">Menu</div>
-        <button id="menu-dashboard" class="menu-item menu-item-active">
-          <span class="icon">🏠</span>
-          <span>Dashboard</span>
-        </button>
-        <button id="menu-novo" class="menu-item">
+        <button id="menu-novo" class="menu-item menu-item-active">
           <span class="icon">＋</span>
           <span>Novo lançamento</span>
         </button>
@@ -888,47 +915,8 @@
       </nav>
 
       <section class="app-content">
-        <!-- DASHBOARD -->
-        <div id="view-dashboard" class="app-view app-view-active">
-          <div class="card">
-            <div class="card-header">
-              <div>
-                <div class="card-title">
-                  <div class="card-title-icon">📊</div>
-                  <span>Dashboard</span>
-                </div>
-                <div class="card-subtitle">
-                  Visão geral dos lançamentos e status de validade.
-                </div>
-              </div>
-            </div>
-            <div class="kpi-grid">
-              <div class="kpi-card">
-                <div class="kpi-label">Lançamentos de hoje</div>
-                <div class="kpi-value" id="kpiTotalHoje">0</div>
-                <div class="kpi-tag">Itens cadastrados na data atual</div>
-              </div>
-              <div class="kpi-card">
-                <div class="kpi-label">Itens vencidos</div>
-                <div class="kpi-value" id="kpiVencidos">0</div>
-                <div class="kpi-tag">Já fora da validade</div>
-              </div>
-              <div class="kpi-card">
-                <div class="kpi-label">Vencem em até 7 dias</div>
-                <div class="kpi-value" id="kpiAte7">0</div>
-                <div class="kpi-tag">Risco imediato</div>
-              </div>
-              <div class="kpi-card">
-                <div class="kpi-label">Vencem em até 15 dias</div>
-                <div class="kpi-value" id="kpiAte15">0</div>
-                <div class="kpi-tag">Planejamento de oferta</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
         <!-- NOVO LANÇAMENTO -->
-        <div id="view-novo" class="app-view">
+        <div id="view-novo" class="app-view app-view-active">
           <div class="card">
             <div class="card-header">
               <div>
@@ -1016,16 +1004,14 @@
                     <label for="validade">Validade *</label>
                     <input id="validade" type="date" />
                   </div>
-                  <div class="form-group">
+                  <div class="form-group-submit form-group">
                     <label>&nbsp;</label>
                     <button id="btnSalvarLancamento" class="btn btn-save">
                       💾 Salvar lançamento
                     </button>
                   </div>
                 </div>
-              </div>
 
-              <div>
                 <div class="form-group">
                   <label for="observacao">Observação</label>
                   <textarea
@@ -1048,7 +1034,7 @@
                   <span>Itens cadastrados</span>
                 </div>
                 <div class="card-subtitle">
-                  Filtros por status de vencimento, oferta e controle de lote.
+                  Filtros por status de vencimento e controle de oferta.
                 </div>
               </div>
               <div style="display:flex; gap:8px; align-items:center;">
@@ -1087,13 +1073,13 @@
 
               <label for="filtroOferta">Oferta:</label>
               <select id="filtroOferta">
-                <option value="todos">Todas</option>
+                <option value="todas">Todas</option>
                 <option value="lancado">Lançado</option>
                 <option value="nao_lancado">Não lançado</option>
               </select>
 
-              <label for="buscaCodigo">Cód. barras:</label>
-              <input id="buscaCodigo" type="text" placeholder="Buscar código" />
+              <label for="filtroCodigo">Cód. barras:</label>
+              <input id="filtroCodigo" type="text" placeholder="Buscar código" />
             </div>
 
             <div class="items-table-wrapper">
@@ -1119,14 +1105,16 @@
                 <tbody id="tabelaItensBody"></tbody>
               </table>
             </div>
+
+            <!-- Cards para mobile (repositores/gerentes) -->
+            <div id="mobileCardsContainer"></div>
+
             <div class="items-footer">
+              <span>Total de itens filtrados: <span id="totalItens">0</span></span>
+              <span id="paginacaoInfo"></span>
               <div>
-                Total de itens filtrados: <span id="totalItens">0</span>
-              </div>
-              <div class="pagination">
-                <button id="btnPaginaAnterior">&laquo;</button>
-                <span>Página <span id="paginaAtual">1</span> de <span id="totalPaginas">1</span></span>
-                <button id="btnPaginaProxima">&raquo;</button>
+                <button id="btnPaginaAnterior" class="page-btn">«</button>
+                <button id="btnPaginaProxima" class="page-btn">»</button>
               </div>
             </div>
           </div>
@@ -1148,7 +1136,7 @@
               <button id="btnReloadUsuarios" class="btn-ghost">🔄 Recarregar</button>
             </div>
 
-            <div class="grid-three">
+            <div class="grid-three-tight">
               <div class="form-group">
                 <label for="novoUsuarioNome">Nome</label>
                 <input id="novoUsuarioNome" type="text" />
@@ -1271,12 +1259,10 @@
 
     const userBox = document.getElementById("userBox");
 
-    const menuDashboard = document.getElementById("menu-dashboard");
     const menuNovo = document.getElementById("menu-novo");
     const menuItens = document.getElementById("menu-itens");
     const menuUsuarios = document.getElementById("menu-usuarios");
 
-    const viewDashboard = document.getElementById("view-dashboard");
     const viewNovo = document.getElementById("view-novo");
     const viewItens = document.getElementById("view-itens");
     const viewUsuarios = document.getElementById("view-usuarios");
@@ -1304,20 +1290,14 @@
     const filtroStatus = document.getElementById("filtroStatus");
     const filtroDepartamento = document.getElementById("filtroDepartamento");
     const filtroOferta = document.getElementById("filtroOferta");
-    const buscaCodigo = document.getElementById("buscaCodigo");
+    const filtroCodigo = document.getElementById("filtroCodigo");
     const btnMarcarTodosOferta = document.getElementById("btnMarcarTodosOferta");
     const btnExportExcel = document.getElementById("btnExportExcel");
     const btnExportPDF = document.getElementById("btnExportPDF");
+    const mobileCardsContainer = document.getElementById("mobileCardsContainer");
+    const paginacaoInfo = document.getElementById("paginacaoInfo");
     const btnPaginaAnterior = document.getElementById("btnPaginaAnterior");
     const btnPaginaProxima = document.getElementById("btnPaginaProxima");
-    const paginaAtualSpan = document.getElementById("paginaAtual");
-    const totalPaginasSpan = document.getElementById("totalPaginas");
-
-    // Dashboard KPIs
-    const kpiTotalHoje = document.getElementById("kpiTotalHoje");
-    const kpiVencidos = document.getElementById("kpiVencidos");
-    const kpiAte7 = document.getElementById("kpiAte7");
-    const kpiAte15 = document.getElementById("kpiAte15");
 
     // Usuários
     const usuariosBody = document.getElementById("usuariosBody");
@@ -1339,9 +1319,10 @@
     let perfilAtual = null; // admin / gerente / repositor
     let perfilLojaAtual = null;
 
-    let lancamentosCache = []; // para filtros/export/paginação
-    let paginaAtual = 1;
-    const ITENS_POR_PAGINA = 50;
+    let lancamentosCache = []; // para filtros/export
+
+    let currentPage = 1;
+    const pageSize = 10;
 
     // ===== HELPERS =====
     function showAlert(msg) {
@@ -1396,18 +1377,12 @@
     }
 
     function setView(viewId) {
-      [viewDashboard, viewNovo, viewItens, viewUsuarios].forEach((v) =>
-        v.classList.remove("app-view-active")
-      );
-      if (viewId === "dashboard") viewDashboard.classList.add("app-view-active");
+      [viewNovo, viewItens, viewUsuarios].forEach((v) => v.classList.remove("app-view-active"));
       if (viewId === "novo") viewNovo.classList.add("app-view-active");
       if (viewId === "itens") viewItens.classList.add("app-view-active");
       if (viewId === "usuarios") viewUsuarios.classList.add("app-view-active");
 
-      [menuDashboard, menuNovo, menuItens, menuUsuarios].forEach((m) =>
-        m.classList.remove("menu-item-active")
-      );
-      if (viewId === "dashboard") menuDashboard.classList.add("menu-item-active");
+      [menuNovo, menuItens, menuUsuarios].forEach((m) => m.classList.remove("menu-item-active"));
       if (viewId === "novo") menuNovo.classList.add("menu-item-active");
       if (viewId === "itens") menuItens.classList.add("menu-item-active");
       if (viewId === "usuarios") menuUsuarios.classList.add("menu-item-active");
@@ -1461,6 +1436,13 @@
       btnLogout.addEventListener("click", async () => {
         await signOut(auth);
       });
+    }
+
+    function atualizarClassePerfilBody() {
+      document.body.classList.remove("perfil-admin", "perfil-nao-admin");
+      if (!perfilAtual) return;
+      if (perfilAtual === "admin") document.body.classList.add("perfil-admin");
+      else document.body.classList.add("perfil-nao-admin");
     }
 
     // pergunta a loja para usuários sem loja vinculada
@@ -1543,18 +1525,19 @@
       perfilAtual = data.tipo || "repositor";
       perfilLojaAtual = data.loja || "";
 
+      atualizarClassePerfilBody();
+
       // Se for repositor sem loja, obriga escolher
       if (perfilAtual === "repositor" && !perfilLojaAtual) {
         await solicitarLojaParaUsuario(ref);
       }
 
-      // Se gerente sem loja, não obrigo agora, mas recomendo manter preenchido via admin.
       if (perfilAtual === "admin") {
         menuUsuarios.style.display = "flex";
       } else {
         menuUsuarios.style.display = "none";
         if (viewUsuarios.classList.contains("app-view-active")) {
-          setView("dashboard");
+          setView("novo");
         }
       }
     }
@@ -1564,6 +1547,7 @@
       if (!user) {
         appView.style.display = "none";
         loginView.style.display = "flex";
+        document.body.classList.remove("perfil-admin", "perfil-nao-admin");
         return;
       }
 
@@ -1581,10 +1565,6 @@
       appView.style.display = "flex";
 
       await carregarLancamentos();
-      if (perfilAtual === "admin") {
-        await carregarUsuarios();
-      }
-      setView("dashboard");
     });
 
     // ===== MENU LATERAL / MOBILE =====
@@ -1602,11 +1582,6 @@
       else abrirMenu();
     });
     menuOverlay.addEventListener("click", fecharMenu);
-
-    menuDashboard.addEventListener("click", () => {
-      setView("dashboard");
-      fecharMenu();
-    });
 
     menuNovo.addEventListener("click", () => {
       setView("novo");
@@ -1667,46 +1642,13 @@
         return;
       }
 
-      if (qtd <= 0) {
-        showAlert("Quantidade deve ser maior que zero.");
-        return;
-      }
-
-      // validação de validade (não pode ser menor que hoje)
-      const [anoV, mesV, diaV] = val.split("-");
-      const dtVal = new Date(Number(anoV), Number(mesV) - 1, Number(diaV));
-      dtVal.setHours(0, 0, 0, 0);
+      // Bloqueia validade menor que hoje
       const hoje = new Date();
       hoje.setHours(0, 0, 0, 0);
-
+      const dtVal = new Date(val);
+      dtVal.setHours(0, 0, 0, 0);
       if (dtVal < hoje) {
-        showAlert("A validade não pode ser menor que o dia atual.");
-        return;
-      }
-
-      const diasVal = diasEntreHoje(dtVal);
-      if (diasVal <= 7) {
-        const confirma = confirm(
-          `Atenção: este item vence em ${diasVal} dia(s). Deseja realmente cadastrar?`
-        );
-        if (!confirma) return;
-      }
-
-      // impedir duplicado: mesmo loja + mesmo código + mesmo lote
-      const loteChave = (loteVal || "").trim().toUpperCase();
-      const duplicado = lancamentosCache.some((item) => {
-        const loteExistente = (item.lote || "").trim().toUpperCase();
-        return (
-          (item.loja || "") === loja &&
-          (item.codigoBarras || "") === cod &&
-          loteExistente === loteChave
-        );
-      });
-
-      if (duplicado) {
-        showAlert(
-          "Já existe um lançamento para este código de barras e lote nesta loja. Verifique antes de cadastrar novamente."
-        );
+        showAlert("A validade não pode ser menor que a data de hoje.");
         return;
       }
 
@@ -1744,7 +1686,6 @@
       const q = query(colRef, orderBy("criadoEm", "desc"));
 
       const snap = await getDocs(q);
-      tabelaItensBody.innerHTML = "";
       lancamentosCache = [];
 
       snap.forEach((docSnap) => {
@@ -1771,32 +1712,32 @@
         lancamentosCache.push({ id, ...item });
       });
 
-      paginaAtual = 1;
+      currentPage = 1;
       aplicarFiltrosETabela();
-      atualizarDashboardKPIs();
     }
 
-    function diasParaItem(item) {
-      if (!item.validade) return 999999;
-      const [ano, mes, dia] = item.validade.split("-");
-      const dt = new Date(Number(ano), Number(mes) - 1, Number(dia));
-      return diasEntreHoje(dt);
+    function parseValidadeDate(item) {
+      if (!item.validade) return null;
+      const d = new Date(item.validade);
+      d.setHours(0, 0, 0, 0);
+      return d;
     }
 
     function aplicarFiltrosETabela() {
       tabelaItensBody.innerHTML = "";
+      if (mobileCardsContainer) mobileCardsContainer.innerHTML = "";
+
       let filtrados = [...lancamentosCache];
 
       const filtroStatusVal = filtroStatus.value;
       const filtroDepVal = filtroDepartamento.value;
       const filtroOfertaVal = filtroOferta.value;
-      const buscaCodVal = (buscaCodigo.value || "").trim();
+      const buscaCodigoVal = filtroCodigo.value.trim();
 
       const hoje = new Date();
       hoje.setHours(0, 0, 0, 0);
 
       filtrados = filtrados.filter((item) => {
-        // filtro status
         if (item.validade) {
           const dt = new Date(item.validade);
           dt.setHours(0, 0, 0, 0);
@@ -1818,42 +1759,41 @@
           return false;
         }
 
-        // filtro departamento
         if (filtroDepVal !== "todos" && item.departamento !== filtroDepVal) return false;
 
-        // filtro oferta
-        if (filtroOfertaVal === "lancado" && item.oferta !== "lancado") return false;
-        if (filtroOfertaVal === "nao_lancado" && item.oferta === "lancado") return false;
+        if (filtroOfertaVal !== "todas" && item.oferta !== filtroOfertaVal) return false;
 
-        // busca código
-        if (buscaCodVal) {
-          const cod = (item.codigoBarras || "").toString();
-          if (!cod.includes(buscaCodVal)) return false;
+        if (buscaCodigoVal) {
+          const codBusca = buscaCodigoVal.replace(/\s+/g, "");
+          if (!item.codigoBarras || !item.codigoBarras.includes(codBusca)) return false;
         }
 
         return true;
       });
 
-      // ordena por validade (mais próximo primeiro)
-      filtrados.sort((a, b) => diasParaItem(a) - diasParaItem(b));
+      // Ordenar por validade (mais próxima -> mais distante)
+      filtrados.sort((a, b) => {
+        const da = parseValidadeDate(a);
+        const db = parseValidadeDate(b);
+        if (!da && !db) return 0;
+        if (!da) return 1;
+        if (!db) return -1;
+        return da - db;
+      });
 
-      // paginação
-      const totalItens = filtrados.length;
-      const totalPaginas = Math.max(1, Math.ceil(totalItens / ITENS_POR_PAGINA));
-      if (paginaAtual > totalPaginas) paginaAtual = totalPaginas;
+      const total = filtrados.length;
+      totalItensSpan.textContent = total;
 
-      const inicio = (paginaAtual - 1) * ITENS_POR_PAGINA;
-      const fim = inicio + ITENS_POR_PAGINA;
-      const paginaItens = filtrados.slice(inicio, fim);
+      const totalPages = Math.max(1, Math.ceil(total / pageSize));
+      if (currentPage > totalPages) currentPage = totalPages;
 
-      paginaAtualSpan.textContent = String(paginaAtual);
-      totalPaginasSpan.textContent = String(totalPaginas);
-      totalItensSpan.textContent = String(totalItens);
+      const startIndex = (currentPage - 1) * pageSize;
+      const pageItems = filtrados.slice(startIndex, startIndex + pageSize);
 
-      paginaItens.forEach((item) => adicionarLinhaNaTabela(item));
+      pageItems.forEach((item) => adicionarLinhaNaTabela(item));
+      atualizarCardsMobile(pageItems);
 
-      btnPaginaAnterior.disabled = paginaAtual <= 1;
-      btnPaginaProxima.disabled = paginaAtual >= totalPaginas;
+      paginacaoInfo.textContent = `Página ${currentPage} de ${totalPages}`;
     }
 
     function adicionarLinhaNaTabela(item) {
@@ -1909,7 +1849,6 @@
           });
           item.oferta = novoValor;
           aplicarFiltrosETabela();
-          atualizarDashboardKPIs();
         } catch (err) {
           console.error(err);
           showAlert("Erro ao atualizar oferta.");
@@ -1981,7 +1920,6 @@
             await deleteDoc(doc(db, "lancamentos", item.id));
             lancamentosCache = lancamentosCache.filter((x) => x.id !== item.id);
             aplicarFiltrosETabela();
-            atualizarDashboardKPIs();
           } catch (err) {
             console.error(err);
             showAlert("Erro ao excluir.");
@@ -2016,33 +1954,105 @@
       tabelaItensBody.appendChild(tr);
     }
 
+    function atualizarCardsMobile(pageItems) {
+      if (!mobileCardsContainer) return;
+      mobileCardsContainer.innerHTML = "";
+      if (perfilAtual === "admin") return;
+
+      pageItems.forEach((item) => {
+        const valStr = item.validade || "";
+        const statusInfo = calcularStatus(valStr);
+
+        const card = document.createElement("div");
+        card.className = "mobile-item-card";
+
+        const header = document.createElement("div");
+        header.className = "mobile-item-header";
+
+        const spanCode = document.createElement("span");
+        spanCode.className = "mobile-item-code";
+        spanCode.textContent = item.codigoBarras || "";
+
+        const spanLoja = document.createElement("span");
+        spanLoja.className = "mobile-item-loja";
+        spanLoja.textContent = item.loja || "";
+
+        header.appendChild(spanCode);
+        header.appendChild(spanLoja);
+
+        const desc = document.createElement("div");
+        desc.className = "mobile-item-desc";
+        desc.textContent = item.descricao || "";
+
+        const row1 = document.createElement("div");
+        row1.className = "mobile-item-row";
+        row1.innerHTML = `
+          <span>Validade: ${valStr ? formatarSomenteData(valStr) : "-"}</span>
+          <span>Qtd: ${item.quantidade || ""}</span>
+        `;
+
+        const row2 = document.createElement("div");
+        row2.className = "mobile-item-row";
+        row2.innerHTML = `
+          <span>${item.departamento || ""}</span>
+          <span>Lote: ${item.lote || "-"}</span>
+        `;
+
+        const footer = document.createElement("div");
+        footer.className = "mobile-item-footer";
+
+        const statusSpan = document.createElement("span");
+        aplicarBadgeStatus(statusSpan, statusInfo);
+
+        const ofertaSpan = document.createElement("span");
+        ofertaSpan.className = "mobile-item-oferta";
+        ofertaSpan.textContent =
+          item.oferta === "lancado" ? "Oferta: Lançado" : "Oferta: Não lançado";
+
+        footer.appendChild(statusSpan);
+        footer.appendChild(ofertaSpan);
+
+        card.appendChild(header);
+        card.appendChild(desc);
+        card.appendChild(row1);
+        card.appendChild(row2);
+        card.appendChild(footer);
+
+        mobileCardsContainer.appendChild(card);
+      });
+    }
+
     filtroStatus.addEventListener("change", () => {
-      paginaAtual = 1;
+      currentPage = 1;
       aplicarFiltrosETabela();
     });
     filtroDepartamento.addEventListener("change", () => {
-      paginaAtual = 1;
+      currentPage = 1;
       aplicarFiltrosETabela();
     });
     filtroOferta.addEventListener("change", () => {
-      paginaAtual = 1;
+      currentPage = 1;
       aplicarFiltrosETabela();
     });
-    buscaCodigo.addEventListener("input", () => {
-      paginaAtual = 1;
+    filtroCodigo.addEventListener("input", () => {
+      currentPage = 1;
       aplicarFiltrosETabela();
     });
 
     btnPaginaAnterior.addEventListener("click", () => {
-      if (paginaAtual > 1) {
-        paginaAtual--;
+      if (currentPage > 1) {
+        currentPage--;
         aplicarFiltrosETabela();
       }
     });
 
     btnPaginaProxima.addEventListener("click", () => {
-      paginaAtual++;
-      aplicarFiltrosETabela();
+      const total = Number(totalItensSpan.textContent || "0");
+      const totalPages = Math.max(1, Math.ceil(total / pageSize));
+      if (currentPage < totalPages) {
+        currentPage++;
+        aplicarFiltrosETabela();
+      }
     });
 
     // ===== EXPORTAR EXCEL / PDF =====
@@ -2179,7 +2189,6 @@
         await Promise.all(promises);
         lancamentosCache.forEach((item) => (item.oferta = "lancado"));
         aplicarFiltrosETabela();
-        atualizarDashboardKPIs();
       } catch (err) {
         console.error(err);
         showAlert("Erro ao marcar ofertas.");
@@ -2312,62 +2321,7 @@
       }
     });
 
-    // ===== DASHBOARD KPIs =====
-    function getDataCriacao(item) {
-      if (item.criadoEm && item.criadoEm.toDate) {
-        return item.criadoEm.toDate();
-      }
-      if (item.dataLancamentoTexto) {
-        // formato "dd/mm/yyyy hh:mm"
-        const partes = item.dataLancamentoTexto.split(" ");
-        if (partes.length >= 1) {
-          const [dia, mes, ano] = partes[0].split("/");
-          if (dia && mes && ano) {
-            return new Date(Number(ano), Number(mes) - 1, Number(dia));
-          }
-        }
-      }
-      return null;
-    }
-
-    function atualizarDashboardKPIs() {
-      let totalHoje = 0;
-      let vencidos = 0;
-      let ate7 = 0;
-      let ate15 = 0;
-
-      const hoje = new Date();
-      hoje.setHours(0, 0, 0, 0);
-
-      lancamentosCache.forEach((item) => {
-        const dtCriacao = getDataCriacao(item);
-        if (dtCriacao) {
-          const dtBase = new Date(dtCriacao);
-          dtBase.setHours(0, 0, 0, 0);
-          if (dtBase.getTime() === hoje.getTime()) {
-            totalHoje++;
-          }
-        }
-
-        if (item.validade) {
-          const [ano, mes, dia] = item.validade.split("-");
-          const dtVal = new Date(Number(ano), Number(mes) - 1, Number(dia));
-          dtVal.setHours(0, 0, 0, 0);
-          const dias = Math.round((dtVal - hoje) / (1000 * 60 * 60 * 24));
-
-          if (dias < 0) vencidos++;
-          else if (dias >= 0 && dias <= 7) ate7++;
-          else if (dias >= 8 && dias <= 15) ate15++;
-        }
-      });
-
-      kpiTotalHoje.textContent = String(totalHoje);
-      kpiVencidos.textContent = String(vencidos);
-      kpiAte7.textContent = String(ate7);
-      kpiAte15.textContent = String(ate15);
-    }
-
-    // ===== SCANNER (mantido como está) =====
+    // ===== SCANNER (mantido como estava funcionando) =====
     function scannerDisponivel() {
       return typeof Html5Qrcode !== "undefined";
     }
@@ -2460,4 +2414,3 @@
   </script>
 </body>
 </html>
-
