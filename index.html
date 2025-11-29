@@ -5,6 +5,7 @@
   <title>Controle de Validade • Palato</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
+  <!-- Ícone -->
   <link rel="icon" href="palato-logo.png" />
 
   <!-- SheetJS para Excel -->
@@ -365,6 +366,59 @@
     .card-subtitle {
       font-size: 13px;
       color: var(--text-soft);
+    }
+
+    /* DASHBOARD */
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 8px;
+      margin-bottom: 14px;
+    }
+
+    .kpi-card {
+      background: #020617;
+      border-radius: 14px;
+      padding: 10px 12px;
+      border: 1px solid #1f2933;
+    }
+
+    .kpi-label {
+      font-size: 11px;
+      color: var(--text-soft);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 4px;
+    }
+
+    .kpi-value {
+      font-size: 22px;
+      font-weight: 600;
+    }
+
+    .kpi-tag {
+      font-size: 11px;
+      margin-top: 2px;
+      color: #9ca3af;
+    }
+
+    .dashboard-list {
+      margin-top: 8px;
+      font-size: 13px;
+      color: var(--text-soft);
+    }
+
+    .dashboard-list h4 {
+      margin: 0 0 6px 0;
+      font-size: 13px;
+      color: #e5e7eb;
+    }
+
+    .dashboard-list ul {
+      margin: 0;
+      padding-left: 18px;
     }
 
     /* FORM NOVO LANÇAMENTO */
@@ -839,6 +893,10 @@
         flex-direction: column;
         align-items: flex-start;
       }
+
+      .kpi-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
     }
 
     /* Mostrar cards no mobile para não-admin */
@@ -900,11 +958,15 @@
     <main class="app-main">
       <nav class="side-menu">
         <div class="side-menu-title">Menu</div>
-        <button id="menu-novo" class="menu-item menu-item-active">
+        <button id="menu-dashboard" class="menu-item menu-item-active">
+          <span class="icon">📊</span>
+          <span>Dashboard</span>
+        </button>
+        <button id="menu-novo" class="menu-item menu-item-secondary">
           <span class="icon">＋</span>
           <span>Novo lançamento</span>
         </button>
-        <button id="menu-itens" class="menu-item">
+        <button id="menu-itens" class="menu-item menu-item-secondary">
           <span class="icon">📋</span>
           <span>Itens cadastrados</span>
         </button>
@@ -915,8 +977,55 @@
       </nav>
 
       <section class="app-content">
+        <!-- DASHBOARD -->
+        <div id="view-dashboard" class="app-view app-view-active">
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">
+                  <div class="card-title-icon">📊</div>
+                  <span>Visão geral</span>
+                </div>
+                <div class="card-subtitle">
+                  KPIs rápidos por loja e status de validade (apenas itens aos quais você tem acesso).
+                </div>
+              </div>
+            </div>
+
+            <div class="kpi-grid">
+              <div class="kpi-card">
+                <div class="kpi-label">Total de itens</div>
+                <div class="kpi-value" id="kpiTotal">0</div>
+                <div class="kpi-tag">Lançamentos cadastrados</div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">Vencidos</div>
+                <div class="kpi-value" id="kpiVencidos">0</div>
+                <div class="kpi-tag">Precisam de ação imediata</div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">Vence em 7 dias</div>
+                <div class="kpi-value" id="kpi7dias">0</div>
+                <div class="kpi-tag">Janela crítica</div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">Em oferta</div>
+                <div class="kpi-value" id="kpiOferta">0</div>
+                <div class="kpi-tag">Marcados como oferta</div>
+              </div>
+            </div>
+
+            <div class="dashboard-list">
+              <h4>Resumo por loja</h4>
+              <ul id="dashboardResumoLoja">
+                <!-- preenchido via JS -->
+              </ul>
+            </div>
+          </div>
+        </div>
+
         <!-- NOVO LANÇAMENTO -->
-        <div id="view-novo" class="app-view app-view-active">
+        <div id="view-novo" class="app-view">
           <div class="card">
             <div class="card-header">
               <div>
@@ -1232,7 +1341,7 @@
       serverTimestamp
     } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
 
-    // ===== CONFIG FIREBASE =====
+    /* ===== CONFIG FIREBASE ===== */
     const firebaseConfig = {
       apiKey: "AIzaSyDa1z9LwlSHxwSTC974ci9RMEYdEiA_wEg",
       authDomain: "controle-validade-fc108.firebaseapp.com",
@@ -1248,7 +1357,7 @@
     const db = getFirestore(app);
     const googleProvider = new GoogleAuthProvider();
 
-    // ===== ELEMENTOS =====
+    /* ===== ELEMENTOS ===== */
     const loginView = document.getElementById("loginView");
     const appView = document.getElementById("appView");
 
@@ -1259,10 +1368,12 @@
 
     const userBox = document.getElementById("userBox");
 
+    const menuDashboard = document.getElementById("menu-dashboard");
     const menuNovo = document.getElementById("menu-novo");
     const menuItens = document.getElementById("menu-itens");
     const menuUsuarios = document.getElementById("menu-usuarios");
 
+    const viewDashboard = document.getElementById("view-dashboard");
     const viewNovo = document.getElementById("view-novo");
     const viewItens = document.getElementById("view-itens");
     const viewUsuarios = document.getElementById("view-usuarios");
@@ -1270,6 +1381,13 @@
     const sideMenu = document.querySelector(".side-menu");
     const menuOverlay = document.getElementById("menuOverlay");
     const btnToggleMenu = document.getElementById("btnToggleMenu");
+
+    // Dashboard
+    const kpiTotal = document.getElementById("kpiTotal");
+    const kpiVencidos = document.getElementById("kpiVencidos");
+    const kpi7dias = document.getElementById("kpi7dias");
+    const kpiOferta = document.getElementById("kpiOferta");
+    const dashboardResumoLoja = document.getElementById("dashboardResumoLoja");
 
     // Novo lançamento
     const novaLoja = document.getElementById("novaLoja");
@@ -1314,7 +1432,7 @@
     let html5QrCode = null;
     let scannerAtivo = false;
 
-    // ===== ESTADO =====
+    /* ===== ESTADO ===== */
     let usuarioAtual = null;
     let perfilAtual = null; // admin / gerente / repositor
     let perfilLojaAtual = null;
@@ -1324,7 +1442,7 @@
     let currentPage = 1;
     const pageSize = 10;
 
-    // ===== HELPERS =====
+    /* ===== HELPERS ===== */
     function showAlert(msg) {
       alert(msg);
     }
@@ -1377,19 +1495,86 @@
     }
 
     function setView(viewId) {
-      [viewNovo, viewItens, viewUsuarios].forEach((v) => v.classList.remove("app-view-active"));
+      [viewDashboard, viewNovo, viewItens, viewUsuarios].forEach((v) =>
+        v.classList.remove("app-view-active")
+      );
+      if (viewId === "dashboard") viewDashboard.classList.add("app-view-active");
       if (viewId === "novo") viewNovo.classList.add("app-view-active");
       if (viewId === "itens") viewItens.classList.add("app-view-active");
       if (viewId === "usuarios") viewUsuarios.classList.add("app-view-active");
 
-      [menuNovo, menuItens, menuUsuarios].forEach((m) => m.classList.remove("menu-item-active"));
+      [menuDashboard, menuNovo, menuItens, menuUsuarios].forEach((m) =>
+        m.classList.remove("menu-item-active", "menu-item-secondary")
+      );
+
+      menuDashboard.classList.add("menu-item-secondary");
+      menuNovo.classList.add("menu-item-secondary");
+      menuItens.classList.add("menu-item-secondary");
+      menuUsuarios.classList.add("menu-item-secondary");
+
+      if (viewId === "dashboard") menuDashboard.classList.add("menu-item-active");
       if (viewId === "novo") menuNovo.classList.add("menu-item-active");
       if (viewId === "itens") menuItens.classList.add("menu-item-active");
       if (viewId === "usuarios") menuUsuarios.classList.add("menu-item-active");
     }
 
+    function atualizarDashboard() {
+      if (!kpiTotal) return;
+
+      const hoje = new Date();
+      hoje.setHours(0, 0, 0, 0);
+
+      let total = lancamentosCache.length;
+      let vencidos = 0;
+      let em7 = 0;
+      let oferta = 0;
+
+      const resumoLoja = {};
+
+      lancamentosCache.forEach((item) => {
+        const loja = item.loja || "Sem loja";
+        if (!resumoLoja[loja]) resumoLoja[loja] = { total: 0, vencidos: 0 };
+
+        resumoLoja[loja].total++;
+
+        const valStr = item.validade || "";
+        if (valStr) {
+          const dt = new Date(valStr);
+          dt.setHours(0, 0, 0, 0);
+          const dias = Math.round((dt - hoje) / (1000 * 60 * 60 * 24));
+          if (dias < 0) {
+            vencidos++;
+            resumoLoja[loja].vencidos++;
+          } else if (dias <= 7) {
+            em7++;
+          }
+        }
+
+        if (item.oferta === "lancado") oferta++;
+      });
+
+      kpiTotal.textContent = total;
+      kpiVencidos.textContent = vencidos;
+      kpi7dias.textContent = em7;
+      kpiOferta.textContent = oferta;
+
+      dashboardResumoLoja.innerHTML = "";
+      const lojas = Object.keys(resumoLoja);
+      if (lojas.length === 0) {
+        const li = document.createElement("li");
+        li.textContent = "Nenhum lançamento encontrado para o seu perfil.";
+        dashboardResumoLoja.appendChild(li);
+      } else {
+        lojas.forEach((loja) => {
+          const info = resumoLoja[loja];
+          const li = document.createElement("li");
+          li.textContent = `${loja}: ${info.total} itens (${info.vencidos} vencidos)`;
+          dashboardResumoLoja.appendChild(li);
+        });
+      }
+    }
+
     function limparFormularioLancamento() {
-      // trava de loja por perfil
       if (perfilAtual === "admin") {
         novaLoja.disabled = false;
         novaLoja.value = "";
@@ -1445,7 +1630,6 @@
       else document.body.classList.add("perfil-nao-admin");
     }
 
-    // pergunta a loja para usuários sem loja vinculada
     async function solicitarLojaParaUsuario(docRef) {
       const lojasValidas = ["Ponta Verde", "Farol", "Praia", "Riomar", "CD"];
 
@@ -1476,7 +1660,7 @@
       }
     }
 
-    // ===== LOGIN =====
+    /* ===== LOGIN ===== */
     btnLoginEmail.addEventListener("click", async () => {
       const email = loginEmail.value.trim();
       const senha = loginSenha.value;
@@ -1503,7 +1687,6 @@
       }
     });
 
-    // ===== PERFIL / USUÁRIO FIRESTORE =====
     async function carregarOuCriarPerfilUsuario(user) {
       const ref = doc(db, "usuarios", user.uid);
       const snap = await getDoc(ref);
@@ -1527,7 +1710,6 @@
 
       atualizarClassePerfilBody();
 
-      // Se for repositor sem loja, obriga escolher
       if (perfilAtual === "repositor" && !perfilLojaAtual) {
         await solicitarLojaParaUsuario(ref);
       }
@@ -1537,7 +1719,7 @@
       } else {
         menuUsuarios.style.display = "none";
         if (viewUsuarios.classList.contains("app-view-active")) {
-          setView("novo");
+          setView("dashboard");
         }
       }
     }
@@ -1554,7 +1736,6 @@
       try {
         await carregarOuCriarPerfilUsuario(user);
       } catch (e) {
-        // se deu erro na escolha de loja, já deslogou
         return;
       }
 
@@ -1564,10 +1745,11 @@
       loginView.style.display = "none";
       appView.style.display = "flex";
 
+      setView("dashboard");
       await carregarLancamentos();
     });
 
-    // ===== MENU LATERAL / MOBILE =====
+    /* ===== MENU / MOBILE ===== */
     function abrirMenu() {
       sideMenu.classList.add("open");
       menuOverlay.classList.add("show");
@@ -1583,6 +1765,11 @@
     });
     menuOverlay.addEventListener("click", fecharMenu);
 
+    menuDashboard.addEventListener("click", () => {
+      setView("dashboard");
+      fecharMenu();
+      atualizarDashboard();
+    });
     menuNovo.addEventListener("click", () => {
       setView("novo");
       limparFormularioLancamento();
@@ -1600,7 +1787,7 @@
       await carregarUsuarios();
     });
 
-    // ===== NOVO LANÇAMENTO =====
+    /* ===== NOVO LANÇAMENTO ===== */
     btnSalvarLancamento.addEventListener("click", async () => {
       if (!usuarioAtual) {
         showAlert("Faça login novamente.");
@@ -1615,7 +1802,6 @@
       const val = validade.value;
       const obs = observacao.value.trim();
 
-      // trava adicional de loja para repositor/gerente
       if (perfilAtual !== "admin") {
         if (!perfilLojaAtual) {
           showAlert("Seu usuário ainda não tem uma loja vinculada. Procure o administrador.");
@@ -1642,7 +1828,6 @@
         return;
       }
 
-      // Bloqueia validade menor que hoje
       const hoje = new Date();
       hoje.setHours(0, 0, 0, 0);
       const dtVal = new Date(val);
@@ -1679,7 +1864,7 @@
       }
     });
 
-    // ===== CARREGAR LANÇAMENTOS =====
+    /* ===== CARREGAR LANÇAMENTOS ===== */
     async function carregarLancamentos() {
       if (!usuarioAtual) return;
       const colRef = collection(db, "lancamentos");
@@ -1714,6 +1899,7 @@
 
       currentPage = 1;
       aplicarFiltrosETabela();
+      atualizarDashboard();
     }
 
     function parseValidadeDate(item) {
@@ -1743,19 +1929,11 @@
           dt.setHours(0, 0, 0, 0);
           const dias = Math.round((dt - hoje) / (1000 * 60 * 60 * 24));
 
-          // 7 dias: 0 a 7
           if (filtroStatusVal === "7" && !(dias >= 0 && dias <= 7)) return false;
-
-          // 15 dias: 8 a 15
           if (filtroStatusVal === "15" && !(dias >= 8 && dias <= 15)) return false;
-
-          // 30 dias: 16 a 30
           if (filtroStatusVal === "30" && !(dias >= 16 && dias <= 30)) return false;
-
-          // vencidos: < 0
           if (filtroStatusVal === "vencidos" && !(dias < 0)) return false;
         } else if (filtroStatusVal !== "todos") {
-          // se não tem validade e o filtro não é "todos", ignora
           return false;
         }
 
@@ -1771,7 +1949,6 @@
         return true;
       });
 
-      // Ordenar por validade (mais próxima -> mais distante)
       filtrados.sort((a, b) => {
         const da = parseValidadeDate(a);
         const db = parseValidadeDate(b);
@@ -1849,6 +2026,7 @@
           });
           item.oferta = novoValor;
           aplicarFiltrosETabela();
+          atualizarDashboard();
         } catch (err) {
           console.error(err);
           showAlert("Erro ao atualizar oferta.");
@@ -1920,6 +2098,7 @@
             await deleteDoc(doc(db, "lancamentos", item.id));
             lancamentosCache = lancamentosCache.filter((x) => x.id !== item.id);
             aplicarFiltrosETabela();
+            atualizarDashboard();
           } catch (err) {
             console.error(err);
             showAlert("Erro ao excluir.");
@@ -2055,7 +2234,7 @@
       }
     });
 
-    // ===== EXPORTAR EXCEL / PDF =====
+    /* ===== EXPORTAR ===== */
     btnExportExcel.addEventListener("click", () => {
       if (!window.XLSX) {
         showAlert("Biblioteca de Excel não carregou.");
@@ -2178,7 +2357,6 @@
       docPdf.save("controle-validade.pdf");
     });
 
-    // ===== MARCAR TODOS COMO OFERTA =====
     btnMarcarTodosOferta.addEventListener("click", async () => {
       if (!confirm("Marcar todos os itens filtrados como 'Lançado'?")) return;
 
@@ -2189,13 +2367,14 @@
         await Promise.all(promises);
         lancamentosCache.forEach((item) => (item.oferta = "lancado"));
         aplicarFiltrosETabela();
+        atualizarDashboard();
       } catch (err) {
         console.error(err);
         showAlert("Erro ao marcar ofertas.");
       }
     });
 
-    // ===== ADMIN USUÁRIOS =====
+    /* ===== ADMIN USUÁRIOS ===== */
     async function carregarUsuarios() {
       if (perfilAtual !== "admin") return;
       const snap = await getDocs(collection(db, "usuarios"));
@@ -2321,13 +2500,24 @@
       }
     });
 
-    // ===== SCANNER (mantido como estava funcionando) =====
+    /* ===== SCANNER ===== */
+    function getScannerConstructor() {
+      return (
+        (typeof Html5Qrcode !== "undefined" && Html5Qrcode) ||
+        (typeof window !== "undefined" && window.Html5Qrcode) ||
+        (typeof globalThis !== "undefined" && globalThis.Html5Qrcode) ||
+        (typeof globalThis !== "undefined" && globalThis.html5Qrcode) ||
+        null
+      );
+    }
+
     function scannerDisponivel() {
-      return typeof Html5Qrcode !== "undefined";
+      return !!getScannerConstructor();
     }
 
     async function abrirScanner() {
-      if (!scannerDisponivel()) {
+      const Ctor = getScannerConstructor();
+      if (!Ctor) {
         showAlert("Leitor de código de barras não carregou corretamente.");
         return;
       }
@@ -2336,37 +2526,14 @@
 
       if (html5QrCode) return;
 
-      html5QrCode = new Html5Qrcode("qr-reader");
+      html5QrCode = new Ctor("qr-reader");
       scannerAtivo = true;
 
       try {
-        const devices = await Html5Qrcode.getCameras();
-        if (!devices || devices.length === 0) {
-          showAlert("Nenhuma câmera encontrada.");
-          fecharScanner();
-          return;
-        }
-
-        let cameraId = devices[0].id;
-        const traseira = devices.find((d) =>
-          d.label.toLowerCase().includes("back") ||
-          d.label.toLowerCase().includes("traseira")
-        );
-        if (traseira) cameraId = traseira.id;
-        else if (devices.length > 1) cameraId = devices[devices.length - 1].id;
-
-        const config = {
-          fps: 10,
-          qrbox: 250
-        };
-
-        if (window.Html5QrcodeSupportedFormats && window.Html5QrcodeSupportedFormats.EAN_13) {
-          config.formatsToSupport = [Html5QrcodeSupportedFormats.EAN_13];
-        }
-
+        // usa câmera traseira automaticamente quando possível
         await html5QrCode.start(
-          cameraId,
-          config,
+          { facingMode: "environment" },
+          { fps: 10, qrbox: 250 },
           (decodedText) => {
             if (/^[0-9]{8,13}$/.test(decodedText)) {
               codigoBarras.value = decodedText;
@@ -2406,7 +2573,7 @@
       if (e.target === scannerModal) fecharScanner();
     });
 
-    // ===== INICIAL =====
+    /* ===== INICIAL ===== */
     (function initDataLancamento() {
       const agora = new Date();
       dataLancamento.value = formatarDataHora(agora);
