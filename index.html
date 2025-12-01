@@ -14,7 +14,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
   <!-- html5-qrcode (scanner) -->
-  <script src="https://unpkg.com/html5-qrcode@2.3.10/html5-qrcode.min.js"></script>
+  <script src="html5-qrcode.min.js"></script>
 
   <style>
     :root {
@@ -2034,7 +2034,6 @@
       tdUsuario.textContent = item.usuarioNome || item.usuarioEmail || "";
 
       const tdLancadoEm = document.createElement("td");
-      tdLancadoEn
       tdLancadoEm.textContent = dataLanc;
 
       const tdObs = document.createElement("td");
@@ -2494,41 +2493,34 @@
     });
 
     /* ===== SCANNER (SIMPLIFICADO) ===== */
-    async function abrirScanner() {
-      scannerModal.classList.add("show");
+   async function abrirScanner() {
+  scannerModal.classList.add("show");
 
-      if (html5QrCode) return;
+  if (html5QrCode) return;
 
-      try {
-        const Ctor =
-          (typeof window !== "undefined" && window.Html5Qrcode) ||
-          (typeof Html5Qrcode !== "undefined" && Html5Qrcode);
+  try {
+    // Usa o objeto global criado pelo html5-qrcode.min.js
+    html5QrCode = new Html5Qrcode("qr-reader");
+    scannerAtivo = true;
 
-        if (!Ctor) {
-          throw new Error("Html5Qrcode não encontrado no window.");
+    await html5QrCode.start(
+      { facingMode: "environment" },
+      { fps: 10, qrbox: 250 },
+      (decodedText) => {
+        if (/^[0-9]{8,13}$/.test(decodedText)) {
+          codigoBarras.value = decodedText;
+          fecharScanner();
         }
-
-        html5QrCode = new Ctor("qr-reader");
-        scannerAtivo = true;
-
-        await html5QrCode.start(
-          { facingMode: "environment" },
-          { fps: 10, qrbox: 250 },
-          (decodedText) => {
-            if (/^[0-9]{8,13}$/.test(decodedText)) {
-              codigoBarras.value = decodedText;
-              fecharScanner();
-            }
-          },
-          () => {}
-        );
-      } catch (err) {
-        console.error("Erro ao iniciar scanner:", err);
-        showAlert("Erro ao iniciar o leitor. Tente recarregar a página.");
-        fecharScanner();
-      }
-    }
-
+      },
+      () => {}
+    );
+  } catch (err) {
+    console.error("Erro ao iniciar scanner:", err);
+    showAlert("Erro ao iniciar o leitor. Tente recarregar a página.");
+    fecharScanner();
+  }
+}
+    
     async function fecharScanner() {
       scannerModal.classList.remove("show");
       if (html5QrCode && scannerAtivo) {
@@ -2561,3 +2553,4 @@
   </script>
 </body>
 </html>
+
