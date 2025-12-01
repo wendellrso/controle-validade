@@ -127,10 +127,8 @@
     }
 
     .btn-primary {
-      width: 100%;
       background: var(--accent-red);
       color: #fff;
-      margin-top: 6px;
       box-shadow: 0 10px 30px rgba(227, 6, 19, 0.5);
     }
 
@@ -155,11 +153,128 @@
       height: 16px;
     }
 
+    .btn-full {
+      width: 100%;
+      margin-top: 6px;
+    }
+
+    .btn-ghost {
+      background: #020617;
+      color: #e5e7eb;
+      border: 1px solid #374151;
+      font-size: 13px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      cursor: pointer;
+    }
+
     .login-footer {
       margin-top: 14px;
       font-size: 12px;
       color: #6b7280;
       text-align: center;
+    }
+
+    /* ===== ONBOARDING ===== */
+
+    #onboardingView {
+      min-height: 100vh;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .onboarding-card {
+      max-width: 460px;
+    }
+
+    .onboarding-step-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: var(--text-soft);
+      margin-bottom: 6px;
+    }
+
+    .onboarding-title {
+      font-size: 18px;
+      margin-bottom: 6px;
+      text-align: left;
+    }
+
+    .onboarding-subtitle {
+      font-size: 13px;
+      color: var(--text-soft);
+      margin-bottom: 16px;
+    }
+
+    .onboarding-step-title {
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+
+    .loja-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .cargo-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .onboarding-chip {
+      width: 100%;
+      border-radius: 12px;
+      border: 1px solid #374151;
+      background: #020617;
+      color: #e5e7eb;
+      padding: 10px 12px;
+      font-size: 13px;
+      text-align: left;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      transition: border 0.1s ease, background 0.1s ease, transform 0.06s ease;
+    }
+
+    .onboarding-chip span.label-main {
+      font-weight: 500;
+    }
+
+    .onboarding-chip span.label-sub {
+      font-size: 11px;
+      color: var(--text-soft);
+    }
+
+    .onboarding-chip-selected {
+      border-color: var(--accent-red-soft);
+      background: radial-gradient(circle at top, #111827 0, #020617 60%, #000 100%);
+      transform: translateY(-1px);
+    }
+
+    .onboarding-hint {
+      font-size: 11px;
+      color: var(--text-soft);
+      margin-bottom: 4px;
+    }
+
+    .onboarding-footer {
+      margin-top: 12px;
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .onboarding-footer .btn {
+      flex: 1;
     }
 
     /* ===== APP MAIN ===== */
@@ -286,7 +401,6 @@
       font-size: 18px;
     }
 
-    /* agora o secondary é igual ao vermelho normal */
     .menu-item-secondary {
       background: var(--accent-red);
       color: #fff;
@@ -321,6 +435,7 @@
       display: none;
       z-index: 35;
     }
+
     .menu-overlay.show {
       display: block;
     }
@@ -521,16 +636,6 @@
       width: 180px;
       padding: 6px 10px;
       font-size: 13px;
-    }
-
-    .btn-ghost {
-      background: #020617;
-      color: #e5e7eb;
-      border: 1px solid #374151;
-      font-size: 13px;
-      padding: 6px 12px;
-      border-radius: 999px;
-      cursor: pointer;
     }
 
     .btn-export {
@@ -898,7 +1003,6 @@
       }
     }
 
-    /* Mostrar cards no mobile para não-admin */
     @media (max-width: 768px) {
       body.perfil-nao-admin .items-table-wrapper {
         display: none;
@@ -927,7 +1031,7 @@
         <label for="loginSenha">Senha *</label>
         <input id="loginSenha" type="password" placeholder="Digite sua senha" />
       </div>
-      <button id="btnLoginEmail" class="btn btn-primary">Entrar</button>
+      <button id="btnLoginEmail" class="btn btn-primary btn-full">Entrar</button>
 
       <button id="btnLoginGoogle" class="btn btn-google">
         <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" />
@@ -935,6 +1039,96 @@
       </button>
 
       <div class="login-footer">Dúvidas? Procure o setor Comercial.</div>
+    </div>
+  </div>
+
+  <!-- ===== ONBOARDING ===== -->
+  <div id="onboardingView">
+    <div class="login-card onboarding-card">
+      <div class="login-logo">
+        <img src="palato-logo.png" alt="Palato" />
+      </div>
+      <div class="onboarding-title">Boas-vindas! Vamos configurar sua conta.</div>
+      <div class="onboarding-subtitle">
+        São só 2 passos rápidos para liberar seu acesso ao Controle de Validade.
+      </div>
+
+      <!-- Passo 1: Loja -->
+      <div id="onboardingStep1">
+        <div class="onboarding-step-label">Passo 1 de 2</div>
+        <div class="onboarding-step-title">Qual é a sua loja?</div>
+        <div class="loja-grid">
+          <button class="onboarding-chip loja-btn" data-loja="Ponta Verde">
+            <span class="label-main">Ponta Verde</span>
+          </button>
+          <button class="onboarding-chip loja-btn" data-loja="Parque">
+            <span class="label-main">Parque</span>
+          </button>
+          <button class="onboarding-chip loja-btn" data-loja="Farol">
+            <span class="label-main">Farol</span>
+          </button>
+          <button class="onboarding-chip loja-btn" data-loja="Praia">
+            <span class="label-main">Praia</span>
+          </button>
+          <button class="onboarding-chip loja-btn" data-loja="Aldebaran">
+            <span class="label-main">Aldebaran</span>
+          </button>
+          <button class="onboarding-chip loja-btn" data-loja="Parque Shopping">
+            <span class="label-main">Parque Shopping</span>
+          </button>
+          <button class="onboarding-chip loja-btn" data-loja="nao_fixa">
+            <span class="label-main">Não tenho loja fixa</span>
+            <span class="label-sub">Ex.: Gestor de Categoria / Assistente Comercial</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Passo 2: Cargo -->
+      <div id="onboardingStep2" style="display:none;">
+        <div class="onboarding-step-label">Passo 2 de 2</div>
+        <div class="onboarding-step-title">Qual é o seu cargo?</div>
+
+        <div class="cargo-grid">
+          <button class="onboarding-chip cargo-btn" data-cargo="repositor">
+            <div>
+              <span class="label-main">Repositor</span><br />
+              <span class="label-sub">Liberação automática após concluir</span>
+            </div>
+          </button>
+          <button class="onboarding-chip cargo-btn" data-cargo="gerente">
+            <div>
+              <span class="label-main">Gerente</span><br />
+              <span class="label-sub">Acesso depende da aprovação do admin</span>
+            </div>
+          </button>
+          <button class="onboarding-chip cargo-btn" data-cargo="gestor_categoria">
+            <div>
+              <span class="label-main">Gestor de Categoria</span><br />
+              <span class="label-sub">Visualiza todas as lojas (após liberação)</span>
+            </div>
+          </button>
+          <button class="onboarding-chip cargo-btn" data-cargo="assistente_comercial">
+            <div>
+              <span class="label-main">Assistente Comercial</span><br />
+              <span class="label-sub">Visualiza todas as lojas (após liberação)</span>
+            </div>
+          </button>
+        </div>
+
+        <div class="onboarding-hint">
+          Repositores são liberados automaticamente. Demais cargos ficam pendentes até aprovação do
+          administrador.
+        </div>
+      </div>
+
+      <div class="onboarding-footer">
+        <button id="onboardingBack" class="btn btn-ghost" type="button" style="display:none;">
+          Voltar
+        </button>
+        <button id="onboardingNext" class="btn btn-primary" type="button">
+          Continuar
+        </button>
+      </div>
     </div>
   </div>
 
@@ -1047,10 +1241,11 @@
                     <select id="novaLoja">
                       <option value="">Selecione</option>
                       <option>Ponta Verde</option>
+                      <option>Parque</option>
                       <option>Farol</option>
                       <option>Praia</option>
-                      <option>Riomar</option>
-                      <option>CD</option>
+                      <option>Aldebaran</option>
+                      <option>Parque Shopping</option>
                     </select>
                   </div>
                   <div class="form-group">
@@ -1110,21 +1305,24 @@
                     <label for="validade">Validade *</label>
                     <input id="validade" type="date" />
                   </div>
+                  <div>
                     <div class="form-group">
-                  <label for="observacao">Observação</label>
-                  <textarea
-                    id="observacao"
-                    placeholder="Lote em oferta, ponto extra, etc."
-                  ></textarea>
-                  <div class="form-group-submit form-group">
-                    <label>&nbsp;</label>
-                    <button id="btnSalvarLancamento" class="btn btn-save">
-                      💾 Salvar lançamento
-                    </button>
+                      <label for="observacao">Observação</label>
+                      <textarea
+                        id="observacao"
+                        placeholder="Lote em oferta, ponto extra, etc."
+                      ></textarea>
+                    </div>
+                    <div class="form-group-submit form-group">
+                      <label>&nbsp;</label>
+                      <button id="btnSalvarLancamento" class="btn btn-save">
+                        💾 Salvar lançamento
+                      </button>
+                    </div>
                   </div>
                 </div>
-                </div>
               </div>
+              <!-- Coluna da direita reservada para algo futuro se quiser -->
             </div>
           </div>
         </div>
@@ -1255,6 +1453,8 @@
                 <select id="novoUsuarioPerfil">
                   <option value="repositor">Repositor</option>
                   <option value="gerente">Gerente</option>
+                  <option value="gestor_categoria">Gestor de Categoria</option>
+                  <option value="assistente_comercial">Assistente Comercial</option>
                   <option value="admin">Admin</option>
                 </select>
               </div>
@@ -1266,10 +1466,11 @@
                 <select id="novoUsuarioLoja">
                   <option value="">Nenhuma</option>
                   <option>Ponta Verde</option>
+                  <option>Parque</option>
                   <option>Farol</option>
                   <option>Praia</option>
-                  <option>Riomar</option>
-                  <option>CD</option>
+                  <option>Aldebaran</option>
+                  <option>Parque Shopping</option>
                 </select>
               </div>
               <div class="form-group" style="display:flex; align-items:flex-end;">
@@ -1354,6 +1555,7 @@
 
     /* ===== ELEMENTOS ===== */
     const loginView = document.getElementById("loginView");
+    const onboardingView = document.getElementById("onboardingView");
     const appView = document.getElementById("appView");
 
     const loginEmail = document.getElementById("loginEmail");
@@ -1427,6 +1629,14 @@
     let html5QrCode = null;
     let scannerAtivo = false;
 
+    // Onboarding elementos
+    const onboardingStep1 = document.getElementById("onboardingStep1");
+    const onboardingStep2 = document.getElementById("onboardingStep2");
+    const onboardingNext = document.getElementById("onboardingNext");
+    const onboardingBack = document.getElementById("onboardingBack");
+    const lojaButtons = document.querySelectorAll(".loja-btn");
+    const cargoButtons = document.querySelectorAll(".cargo-btn");
+
     /* ===== ESTADO ===== */
     let usuarioAtual = null;
     let perfilAtual = null;
@@ -1436,6 +1646,13 @@
 
     let currentPage = 1;
     const pageSize = 10;
+
+    // Onboarding estado
+    let onboardingStep = 1;
+    let onboardingSelectedLoja = null;
+    let onboardingSelectedCargo = null;
+    let onboardingDocRef = null;
+    let onboardingUser = null;
 
     /* ===== HELPERS ===== */
     function showAlert(msg) {
@@ -1578,6 +1795,10 @@
           novaLoja.disabled = false;
           novaLoja.value = "";
         }
+      } else {
+        // gestor_categoria / assistente_comercial
+        novaLoja.disabled = false;
+        novaLoja.value = "";
       }
 
       departamento.value = "";
@@ -1591,18 +1812,30 @@
       dataLancamento.value = formatarDataHora(agora);
     }
 
+    function labelPerfil(perfil, loja) {
+      switch (perfil) {
+        case "admin":
+          return "Perfil: admin";
+        case "gerente":
+          return `Perfil: gerente${loja ? " (" + loja + ")" : ""}`;
+        case "repositor":
+          return `Perfil: repositor${loja ? " (" + loja + ")" : ""}`;
+        case "gestor_categoria":
+          return "Perfil: Gestor de Categoria";
+        case "assistente_comercial":
+          return "Perfil: Assistente Comercial";
+        default:
+          return "Perfil não definido";
+      }
+    }
+
     function atualizarUserBox() {
       if (!usuarioAtual) {
         userBox.innerHTML = "";
         return;
       }
       const nome = usuarioAtual.displayName || usuarioAtual.email || "";
-      const perfilLabel =
-        perfilAtual === "admin"
-          ? "Perfil: admin"
-          : perfilAtual === "gerente"
-          ? `Perfil: gerente${perfilLojaAtual ? " (" + perfilLojaAtual + ")" : ""}`
-          : `Perfil: repositor${perfilLojaAtual ? " (" + perfilLojaAtual + ")" : ""}`;
+      const perfilLabel = labelPerfil(perfilAtual, perfilLojaAtual);
 
       userBox.innerHTML = `
         <strong>${nome}</strong>
@@ -1622,35 +1855,140 @@
       else document.body.classList.add("perfil-nao-admin");
     }
 
-    async function solicitarLojaParaUsuario(docRef) {
-      const lojasValidas = ["Ponta Verde", "Farol", "Praia", "Riomar", "CD"];
+    async function abrirAppAposLogin() {
+      atualizarClassePerfilBody();
+      atualizarUserBox();
+      limparFormularioLancamento();
 
-      while (true) {
-        const input = prompt(
-          "Você ainda não tem uma loja vinculada.\n\nDigite exatamente uma das opções:\n- Ponta Verde\n- Farol\n- Praia\n- Riomar\n- CD"
-        );
-        if (input === null) {
-          alert(
-            "Você precisa ter uma loja vinculada para usar o sistema. Você será desconectado.\nProcure o administrador."
-          );
-          await signOut(auth);
-          throw new Error("Usuário cancelou escolha de loja");
-        }
+      loginView.style.display = "none";
+      onboardingView.style.display = "none";
+      appView.style.display = "flex";
 
-        const normalizado = input.trim().toLowerCase();
-        const lojaEncontrada = lojasValidas.find(
-          (l) => l.toLowerCase() === normalizado
-        );
-        if (!lojaEncontrada) {
-          alert("Loja inválida. Digite exatamente uma das opções.");
-          continue;
-        }
+      setView("dashboard");
+      await carregarLancamentos();
+    }
 
-        await updateDoc(docRef, { loja: lojaEncontrada });
-        perfilLojaAtual = lojaEncontrada;
-        break;
+    /* ===== ONBOARDING ===== */
+
+    function atualizarOnboardingUI() {
+      if (onboardingStep === 1) {
+        onboardingStep1.style.display = "block";
+        onboardingStep2.style.display = "none";
+        onboardingBack.style.display = "none";
+        onboardingNext.textContent = "Continuar";
+      } else {
+        onboardingStep1.style.display = "none";
+        onboardingStep2.style.display = "block";
+        onboardingBack.style.display = "inline-flex";
+        onboardingNext.textContent = "Concluir";
       }
     }
+
+    function mostrarOnboarding() {
+      loginView.style.display = "none";
+      appView.style.display = "none";
+      onboardingView.style.display = "flex";
+
+      onboardingStep = 1;
+      onboardingSelectedLoja = null;
+      onboardingSelectedCargo = null;
+
+      lojaButtons.forEach((b) => b.classList.remove("onboarding-chip-selected"));
+      cargoButtons.forEach((b) => b.classList.remove("onboarding-chip-selected"));
+
+      atualizarOnboardingUI();
+    }
+
+    lojaButtons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        lojaButtons.forEach((b) => b.classList.remove("onboarding-chip-selected"));
+        btn.classList.add("onboarding-chip-selected");
+        onboardingSelectedLoja = btn.dataset.loja;
+      });
+    });
+
+    cargoButtons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        cargoButtons.forEach((b) => b.classList.remove("onboarding-chip-selected"));
+        btn.classList.add("onboarding-chip-selected");
+        onboardingSelectedCargo = btn.dataset.cargo;
+      });
+    });
+
+    onboardingBack.addEventListener("click", () => {
+      if (onboardingStep === 2) {
+        onboardingStep = 1;
+        atualizarOnboardingUI();
+      }
+    });
+
+    onboardingNext.addEventListener("click", async () => {
+      if (onboardingStep === 1) {
+        if (!onboardingSelectedLoja) {
+          showAlert("Escolha uma loja ou 'Não tenho loja fixa'.");
+          return;
+        }
+        onboardingStep = 2;
+        atualizarOnboardingUI();
+        return;
+      }
+
+      // Passo 2: concluir
+      if (!onboardingSelectedCargo) {
+        showAlert("Escolha o seu cargo.");
+        return;
+      }
+
+      if (!onboardingDocRef || !onboardingUser) {
+        showAlert("Erro ao salvar suas informações. Tente fazer login novamente.");
+        return;
+      }
+
+      const lojaToSave =
+        onboardingSelectedLoja && onboardingSelectedLoja !== "nao_fixa"
+          ? onboardingSelectedLoja
+          : "";
+
+      let tipoToSave = "repositor";
+      let cargoSolicitado = null;
+
+      if (onboardingSelectedCargo === "repositor") {
+        tipoToSave = "repositor";
+      } else {
+        tipoToSave = "pendente";
+        cargoSolicitado = onboardingSelectedCargo;
+      }
+
+      try {
+        await setDoc(
+          onboardingDocRef,
+          {
+            email: onboardingUser.email,
+            nome: onboardingUser.displayName || "",
+            tipo: tipoToSave,
+            loja: lojaToSave,
+            cargoSolicitado: cargoSolicitado || null,
+            onboardingConcluido: true,
+            atualizadoEm: serverTimestamp()
+          },
+          { merge: true }
+        );
+
+        if (tipoToSave === "repositor") {
+          perfilAtual = "repositor";
+          perfilLojaAtual = lojaToSave || "";
+          await abrirAppAposLogin();
+        } else {
+          showAlert(
+            "Seu cadastro foi enviado para aprovação.\n\nApós o administrador liberar seu perfil, você poderá acessar o sistema."
+          );
+          await signOut(auth);
+        }
+      } catch (err) {
+        console.error(err);
+        showAlert("Erro ao concluir o cadastro. Tente novamente.");
+      }
+    });
 
     /* ===== LOGIN ===== */
     btnLoginEmail.addEventListener("click", async () => {
@@ -1681,30 +2019,43 @@
 
     async function carregarOuCriarPerfilUsuario(user) {
       const ref = doc(db, "usuarios", user.uid);
-      const snap = await getDoc(ref);
+      onboardingDocRef = ref;
+      onboardingUser = user;
 
+      const snap = await getDoc(ref);
       let data;
-      if (snap.exists()) {
-        data = snap.data();
-      } else {
+      if (!snap.exists()) {
         data = {
           email: user.email,
           nome: user.displayName || "",
-          tipo: "repositor",
+          tipo: null,
           loja: "",
           criadoEm: serverTimestamp()
         };
         await setDoc(ref, data);
+      } else {
+        data = snap.data();
+      }
+
+      // Se ainda não tem tipo definido, vai pro onboarding
+      if (!data.tipo) {
+        mostrarOnboarding();
+        return false;
+      }
+
+      // Se está pendente de liberação
+      if (data.tipo === "pendente") {
+        showAlert(
+          "Seu cadastro está pendente de aprovação pelo administrador.\n\nProcure o setor Comercial para liberar o acesso."
+        );
+        await signOut(auth);
+        throw new Error("Acesso pendente");
       }
 
       perfilAtual = data.tipo || "repositor";
       perfilLojaAtual = data.loja || "";
 
       atualizarClassePerfilBody();
-
-      if (perfilAtual === "repositor" && !perfilLojaAtual) {
-        await solicitarLojaParaUsuario(ref);
-      }
 
       if (perfilAtual === "admin") {
         menuUsuarios.style.display = "flex";
@@ -1714,31 +2065,31 @@
           setView("dashboard");
         }
       }
+
+      return true;
     }
 
     onAuthStateChanged(auth, async (user) => {
       usuarioAtual = user;
       if (!user) {
         appView.style.display = "none";
+        onboardingView.style.display = "none";
         loginView.style.display = "flex";
         document.body.classList.remove("perfil-admin", "perfil-nao-admin");
         return;
       }
 
       try {
-        await carregarOuCriarPerfilUsuario(user);
+        const pronto = await carregarOuCriarPerfilUsuario(user);
+        if (!pronto) {
+          // está em modo onboarding, não abre o app ainda
+          return;
+        }
       } catch (e) {
         return;
       }
 
-      atualizarUserBox();
-      limparFormularioLancamento();
-
-      loginView.style.display = "none";
-      appView.style.display = "flex";
-
-      setView("dashboard");
-      await carregarLancamentos();
+      await abrirAppAposLogin();
     });
 
     /* ===== MENU / MOBILE ===== */
@@ -1794,7 +2145,7 @@
       const val = validade.value;
       const obs = observacao.value.trim();
 
-      if (perfilAtual !== "admin") {
+      if (perfilAtual === "repositor" || perfilAtual === "gerente") {
         if (!perfilLojaAtual) {
           showAlert("Seu usuário ainda não tem uma loja vinculada. Procure o administrador.");
           return;
@@ -1870,11 +2221,16 @@
         const id = docSnap.id;
 
         let visivel = false;
-        if (perfilAtual === "admin") {
+        if (
+          perfilAtual === "admin" ||
+          perfilAtual === "gestor_categoria" ||
+          perfilAtual === "assistente_comercial"
+        ) {
           visivel = true;
         } else if (perfilAtual === "gerente") {
           if (!perfilLojaAtual || item.loja === perfilLojaAtual) visivel = true;
         } else {
+          // repositor
           const uid = item.usuarioUid;
           const email = item.usuarioEmail;
           if (
@@ -2383,13 +2739,15 @@
 
         const tdPerfil = document.createElement("td");
         const selPerfil = document.createElement("select");
-        ["admin", "gerente", "repositor"].forEach((optVal) => {
-          const opt = document.createElement("option");
-          opt.value = optVal;
-          opt.textContent = optVal;
-          if ((item.tipo || "repositor") === optVal) opt.selected = true;
-          selPerfil.appendChild(opt);
-        });
+        ["repositor", "gerente", "gestor_categoria", "assistente_comercial", "admin", "pendente"].forEach(
+          (optVal) => {
+            const opt = document.createElement("option");
+            opt.value = optVal;
+            opt.textContent = optVal;
+            if ((item.tipo || "repositor") === optVal) opt.selected = true;
+            selPerfil.appendChild(opt);
+          }
+        );
         tdPerfil.appendChild(selPerfil);
 
         const tdLoja = document.createElement("td");
@@ -2397,10 +2755,11 @@
         [
           { v: "", t: "Nenhuma" },
           { v: "Ponta Verde", t: "Ponta Verde" },
+          { v: "Parque", t: "Parque" },
           { v: "Farol", t: "Farol" },
           { v: "Praia", t: "Praia" },
-          { v: "Riomar", t: "Riomar" },
-          { v: "CD", t: "CD" }
+          { v: "Aldebaran", t: "Aldebaran" },
+          { v: "Parque Shopping", t: "Parque Shopping" }
         ].forEach((o) => {
           const opt = document.createElement("option");
           opt.value = o.v;
@@ -2492,34 +2851,33 @@
     });
 
     /* ===== SCANNER (SIMPLIFICADO) ===== */
-   async function abrirScanner() {
-  scannerModal.classList.add("show");
+    async function abrirScanner() {
+      scannerModal.classList.add("show");
 
-  if (html5QrCode) return;
+      if (html5QrCode) return;
 
-  try {
-    // Usa o objeto global criado pelo html5-qrcode.min.js
-    html5QrCode = new Html5Qrcode("qr-reader");
-    scannerAtivo = true;
+      try {
+        html5QrCode = new Html5Qrcode("qr-reader");
+        scannerAtivo = true;
 
-    await html5QrCode.start(
-      { facingMode: "environment" },
-      { fps: 10, qrbox: 250 },
-      (decodedText) => {
-        if (/^[0-9]{8,13}$/.test(decodedText)) {
-          codigoBarras.value = decodedText;
-          fecharScanner();
-        }
-      },
-      () => {}
-    );
-  } catch (err) {
-    console.error("Erro ao iniciar scanner:", err);
-    showAlert("Erro ao iniciar o leitor. Tente recarregar a página.");
-    fecharScanner();
-  }
-}
-    
+        await html5QrCode.start(
+          { facingMode: "environment" },
+          { fps: 10, qrbox: 250 },
+          (decodedText) => {
+            if (/^[0-9]{8,13}$/.test(decodedText)) {
+              codigoBarras.value = decodedText;
+              fecharScanner();
+            }
+          },
+          () => {}
+        );
+      } catch (err) {
+        console.error("Erro ao iniciar scanner:", err);
+        showAlert("Erro ao iniciar o leitor. Tente recarregar a página.");
+        fecharScanner();
+      }
+    }
+
     async function fecharScanner() {
       scannerModal.classList.remove("show");
       if (html5QrCode && scannerAtivo) {
@@ -2552,6 +2910,3 @@
   </script>
 </body>
 </html>
-
-
-
