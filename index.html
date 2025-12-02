@@ -2483,71 +2483,71 @@
     }
 
     function atualizarCardsMobile(pageItems) {
-      if (perfilAtual === "admin") return;
+  mobileCardsContainer.innerHTML = "";
 
-      mobileCardsContainer.innerHTML = "";
-      pageItems.forEach((item) => {
-        const valStr = item.validade || "";
-        const statusInfo = calcularStatus(valStr);
+  pageItems.forEach((item) => {
+    const valStr = item.validade || "";
+    const statusInfo = calcularStatus(valStr);
 
-        const card = document.createElement("div");
-        card.className = "mobile-item-card";
+    const card = document.createElement("div");
+    card.className = "mobile-item-card";
 
-        const header = document.createElement("div");
-        header.className = "mobile-item-header";
+    const header = document.createElement("div");
+    header.className = "mobile-item-header";
 
-        const spanCode = document.createElement("span");
-        spanCode.className = "mobile-item-code";
-        spanCode.textContent = item.codigoBarras || "";
+    const spanCode = document.createElement("span");
+    spanCode.className = "mobile-item-code";
+    spanCode.textContent = item.codigoBarras || "";
 
-        const spanLoja = document.createElement("span");
-        spanLoja.className = "mobile-item-loja";
-        spanLoja.textContent = item.loja || "";
+    const spanLoja = document.createElement("span");
+    spanLoja.className = "mobile-item-loja";
+    spanLoja.textContent = item.loja || "";
 
-        header.appendChild(spanCode);
-        header.appendChild(spanLoja);
+    header.appendChild(spanCode);
+    header.appendChild(spanLoja);
 
-        const desc = document.createElement("div");
-        desc.className = "mobile-item-desc";
-        desc.textContent = item.descricao || "";
+    const desc = document.createElement("div");
+    desc.className = "mobile-item-desc";
+    desc.textContent = item.descricao || "";
 
-        const row1 = document.createElement("div");
-        row1.className = "mobile-item-row";
-        row1.innerHTML = `
-          <span>Validade: ${valStr ? formatarSomenteData(valStr) : "-"}</span>
-          <span>Qtd: ${item.quantidade || ""}</span>
-        `;
+    const row1 = document.createElement("div");
+    row1.className = "mobile-item-row";
+    row1.innerHTML = `
+      <span>Validade: ${valStr ? formatarSomenteData(valStr) : "-"}</span>
+      <span>Qtd: ${item.quantidade || ""}</span>
+    `;
 
-        const row2 = document.createElement("div");
-        row2.className = "mobile-item-row";
-        row2.innerHTML = `
-          <span>${item.departamento || ""}</span>
-          <span>Lote: ${item.lote || "-"}</span>
-        `;
+    const row2 = document.createElement("div");
+    row2.className = "mobile-item-row";
+    row2.innerHTML = `
+      <span>${item.departamento || ""}</span>
+      <span>Lote: ${item.lote || "-"}</span>
+    `;
 
-        const footer = document.createElement("div");
-        footer.className = "mobile-item-footer";
+    const footer = document.createElement("div");
+    footer.className = "mobile-item-footer";
 
-        const statusSpan = document.createElement("span");
-        aplicarBadgeStatus(statusSpan, statusInfo);
+    const statusSpan = document.createElement("span");
+    aplicarBadgeStatus(statusSpan, statusInfo);
 
-        const ofertaSpan = document.createElement("span");
-        ofertaSpan.className = "mobile-item-oferta";
-        ofertaSpan.textContent =
-          item.oferta === "lancado" ? "Oferta: Lançado" : "Oferta: Não lançado";
+    const ofertaSpan = document.createElement("span");
+    ofertaSpan.className = "mobile-item-oferta";
+    ofertaSpan.textContent =
+      item.oferta === "lancado" ? "Oferta: Lançado" : "Oferta: Não lançado";
 
-        footer.appendChild(statusSpan);
-        footer.appendChild(ofertaSpan);
+    footer.appendChild(statusSpan);
+    footer.appendChild(ofertaSpan);
 
-        card.appendChild(header);
-        card.appendChild(desc);
-        card.appendChild(row1);
-        card.appendChild(row2);
-        card.appendChild(footer);
+    card.appendChild(header);
+    card.appendChild(desc);
+    card.appendChild(row1);
+    card.appendChild(row2);
+    card.appendChild(footer);
 
-        mobileCardsContainer.appendChild(card);
-      });
-    }
+    mobileCardsContainer.appendChild(card);
+  });
+}
+
 
     filtroStatus.addEventListener("change", () => {
       currentPage = 1;
@@ -2911,4 +2911,5 @@
   </script>
 </body>
 </html>
+
 
