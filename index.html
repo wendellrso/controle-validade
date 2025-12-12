@@ -1,2915 +1,939 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8" />
-  <title>Controle de Validade • Palato</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-  <!-- Ícone -->
-  <link rel="icon" href="palato-logo.png" />
-
-  <!-- SheetJS para Excel -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <!-- jsPDF para PDF -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
-  <!-- html5-qrcode (scanner) -->
-  <script src="html5-qrcode.min.js"></script>
-
-  <style>
-    :root {
-      --bg-main: #050509;
-      --bg-card: #11141b;
-      --bg-card-alt: #181b23;
-      --accent-red: #e30613;
-      --accent-red-soft: #ff4b5c;
-      --border-soft: #262a33;
-      --text-main: #ffffff;
-      --text-soft: #9ca3af;
-      --badge-bg: #1f2933;
-      --badge-red-bg: #3b0710;
-      --badge-red-border: #ff4b5c;
-      --badge-green-bg: #073b1f;
-      --badge-green-border: #4ade80;
-      --input-bg: #050509;
-      --input-border: #272a33;
-    }
-
-    * {
-      box-sizing: border-box;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    }
-
-    body {
-      margin: 0;
-      background: radial-gradient(circle at top, #111827 0, #050509 45%, #000 100%);
-      color: var(--text-main);
-    }
-
-    /* ===== LOGIN ===== */
-
-    #loginView {
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
-    }
-
-    .login-card {
-      width: 100%;
-      max-width: 420px;
-      background: rgba(8, 10, 20, 0.98);
-      border-radius: 24px;
-      padding: 32px 28px 28px;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
-      border: 1px solid rgba(255, 255, 255, 0.04);
-    }
-
-    .login-logo {
-      display: flex;
-      justify-content: center;
-      margin-bottom: 16px;
-    }
-
-    .login-logo img {
-      height: 32px;
-    }
-
-    .login-title {
-      text-align: center;
-      margin-bottom: 4px;
-      font-size: 20px;
-      letter-spacing: 0.12em;
-    }
-
-    .login-subtitle {
-      text-align: center;
-      margin-bottom: 24px;
-      font-size: 13px;
-      color: var(--text-soft);
-    }
-
-    .form-group {
-      margin-bottom: 14px;
-    }
-
-    label {
-      display: block;
-      font-size: 13px;
-      margin-bottom: 4px;
-      color: var(--text-soft);
-    }
-
-    input[type="email"],
-    input[type="password"] {
-      width: 100%;
-      padding: 10px 12px;
-      border-radius: 10px;
-      border: 1px solid var(--input-border);
-      background: var(--input-bg);
-      color: var(--text-main);
-      font-size: 14px;
-    }
-
-    input::placeholder {
-      color: #4b5563;
-    }
-
-    .btn {
-      border-radius: 999px;
-      border: none;
-      padding: 10px 16px;
-      font-size: 14px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.08s ease;
-    }
-
-    .btn-primary {
-      background: var(--accent-red);
-      color: #fff;
-      box-shadow: 0 10px 30px rgba(227, 6, 19, 0.5);
-    }
-
-    .btn-primary:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 14px 34px rgba(227, 6, 19, 0.7);
-    }
-
-    .btn-google {
-      width: 100%;
-      margin-top: 10px;
-      background: #111827;
-      color: #e5e7eb;
-      border: 1px solid #374151;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-    }
-
-    .btn-google img {
-      height: 16px;
-    }
-
-    .btn-full {
-      width: 100%;
-      margin-top: 6px;
-    }
-
-    .btn-ghost {
-      background: #020617;
-      color: #e5e7eb;
-      border: 1px solid #374151;
-      font-size: 13px;
-      padding: 6px 12px;
-      border-radius: 999px;
-      cursor: pointer;
-    }
-
-    .login-footer {
-      margin-top: 14px;
-      font-size: 12px;
-      color: #6b7280;
-      text-align: center;
-    }
-
-    /* ===== ONBOARDING ===== */
-
-    #onboardingView {
-      min-height: 100vh;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
-    }
-
-    .onboarding-card {
-      max-width: 460px;
-    }
-
-    .onboarding-step-label {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.16em;
-      color: var(--text-soft);
-      margin-bottom: 6px;
-    }
-
-    .onboarding-title {
-      font-size: 18px;
-      margin-bottom: 6px;
-      text-align: left;
-    }
-
-    .onboarding-subtitle {
-      font-size: 13px;
-      color: var(--text-soft);
-      margin-bottom: 16px;
-    }
-
-    .onboarding-step-title {
-      font-size: 14px;
-      margin-bottom: 8px;
-    }
-
-    .loja-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 8px;
-      margin-bottom: 16px;
-    }
-
-    .cargo-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 8px;
-      margin-bottom: 12px;
-    }
-
-    .onboarding-chip {
-      width: 100%;
-      border-radius: 12px;
-      border: 1px solid #374151;
-      background: #020617;
-      color: #e5e7eb;
-      padding: 10px 12px;
-      font-size: 13px;
-      text-align: left;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 6px;
-      transition: border 0.1s ease, background 0.1s ease, transform 0.06s ease;
-    }
-
-    .onboarding-chip span.label-main {
-      font-weight: 500;
-    }
-
-    .onboarding-chip span.label-sub {
-      font-size: 11px;
-      color: var(--text-soft);
-    }
-
-    .onboarding-chip-selected {
-      border-color: var(--accent-red-soft);
-      background: radial-gradient(circle at top, #111827 0, #020617 60%, #000 100%);
-      transform: translateY(-1px);
-    }
-
-    .onboarding-hint {
-      font-size: 11px;
-      color: var(--text-soft);
-      margin-bottom: 4px;
-    }
-
-    .onboarding-footer {
-      margin-top: 12px;
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-    }
-
-    .onboarding-footer .btn {
-      flex: 1;
-    }
-
-    /* ===== APP MAIN ===== */
-
-    #appView {
-      display: none;
-      min-height: 100vh;
-      flex-direction: column;
-      background: linear-gradient(135deg, #000 0%, #050509 40%, #020617 100%);
-    }
-
-    .app-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 10px 24px;
-      background: #000;
-      border-bottom: 1px solid #111827;
-    }
-
-    .app-header-left {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .logo-palato {
-      height: 28px;
-      display: block;
-    }
-
-    .app-title h1 {
-      font-size: 16px;
-      margin: 0;
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-    }
-
-    .app-title span {
-      font-size: 11px;
-      color: var(--text-soft);
-    }
-
-    .header-menu-toggle {
-      display: none;
-      width: 32px;
-      height: 32px;
-      border-radius: 999px;
-      border: 1px solid #374151;
-      background: #020617;
-      color: #e5e7eb;
-      font-size: 18px;
-      align-items: center;
-      justify-content: center;
-      margin-right: 4px;
-      cursor: pointer;
-    }
-
-    .user-box {
-      text-align: right;
-      font-size: 13px;
-    }
-
-    .user-box strong {
-      display: block;
-      font-size: 14px;
-    }
-
-    .user-profile-label {
-      color: var(--accent-red-soft);
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-    }
-
-    .user-box a {
-      color: #f97373;
-      font-size: 12px;
-      cursor: pointer;
-      text-decoration: none;
-    }
-
-    .app-main {
-      display: flex;
-      flex: 1;
-      min-height: 0;
-    }
-
-    .side-menu {
-      width: 260px;
-      background: #000;
-      padding: 24px 16px;
-      border-right: 1px solid #111827;
-      z-index: 40;
-    }
-
-    .side-menu-title {
-      font-size: 13px;
-      color: var(--text-soft);
-      margin-bottom: 16px;
-      text-transform: uppercase;
-      letter-spacing: 0.16em;
-    }
-
-    .menu-item {
-      width: 100%;
-      border-radius: 999px;
-      border: none;
-      text-align: left;
-      padding: 12px 16px;
-      margin-bottom: 12px;
-      font-size: 14px;
-      font-weight: 500;
-      color: #fff;
-      background: var(--accent-red);
-      cursor: pointer;
-      box-shadow: 0 12px 30px rgba(227, 6, 19, 0.45);
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .menu-item span.icon {
-      font-size: 18px;
-    }
-
-    .menu-item-secondary {
-      background: var(--accent-red);
-      color: #fff;
-      border: none;
-      box-shadow: 0 12px 30px rgba(227, 6, 19, 0.45);
-    }
-
-    .menu-item-active {
-      outline: 2px solid rgba(255, 255, 255, 0.12);
-      outline-offset: 2px;
-    }
-
-    .app-content {
-      flex: 1;
-      padding: 24px;
-      overflow-y: auto;
-    }
-
-    .app-view {
-      display: none;
-    }
-
-    .app-view-active {
-      display: block;
-    }
-
-    /* MENU OVERLAY MOBILE */
-    .menu-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.6);
-      display: none;
-      z-index: 35;
-    }
-
-    .menu-overlay.show {
-      display: block;
-    }
-
-    /* CARDS */
-
-    .card {
-      background: radial-gradient(circle at top left, #111827 0, #050509 45%, #000 100%);
-      border-radius: 18px;
-      padding: 18px 20px 18px;
-      border: 1px solid rgba(148, 163, 184, 0.16);
-      box-shadow: 0 18px 45px rgba(0, 0, 0, 0.8);
-    }
-
-    .card-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 16px;
-    }
-
-    .card-title {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 16px;
-      font-weight: 600;
-    }
-
-    .card-title-icon {
-      width: 26px;
-      height: 26px;
-      border-radius: 999px;
-      background: rgba(227, 6, 19, 0.12);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--accent-red-soft);
-      font-size: 14px;
-    }
-
-    .card-subtitle {
-      font-size: 13px;
-      color: var(--text-soft);
-    }
-
-    /* DASHBOARD */
-
-    .kpi-grid {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 14px;
-      margin-top: 8px;
-      margin-bottom: 14px;
-    }
-
-    .kpi-card {
-      background: #020617;
-      border-radius: 14px;
-      padding: 10px 12px;
-      border: 1px solid #1f2933;
-    }
-
-    .kpi-label {
-      font-size: 11px;
-      color: var(--text-soft);
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      margin-bottom: 4px;
-    }
-
-    .kpi-value {
-      font-size: 22px;
-      font-weight: 600;
-    }
-
-    .kpi-tag {
-      font-size: 11px;
-      margin-top: 2px;
-      color: #9ca3af;
-    }
-
-    .dashboard-list {
-      margin-top: 8px;
-      font-size: 13px;
-      color: var(--text-soft);
-    }
-
-    .dashboard-list h4 {
-      margin: 0 0 6px 0;
-      font-size: 13px;
-      color: #e5e7eb;
-    }
-
-    .dashboard-list ul {
-      margin: 0;
-      padding-left: 18px;
-    }
-
-    /* FORM NOVO LANÇAMENTO */
-
-    .grid-two-columns {
-      display: grid;
-      grid-template-columns: 1.1fr 0.9fr;
-      gap: 16px;
-    }
-
-    .grid-two {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px;
-    }
-
-    .grid-three-tight {
-      display: grid;
-      grid-template-columns: 1.2fr 1.5fr 1fr;
-      gap: 10px;
-    }
-
-    select,
-    input[type="number"],
-    input[type="text"],
-    input[type="date"],
-    textarea {
-      width: 100%;
-      padding: 9px 10px;
-      border-radius: 10px;
-      border: 1px solid var(--input-border);
-      background: var(--input-bg);
-      color: var(--text-main);
-      font-size: 14px;
-    }
-
-    select {
-      cursor: pointer;
-    }
-
-    textarea {
-      resize: vertical;
-      min-height: 60px;
-    }
-
-    .input-inline-btn {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-    }
-
-    .btn-icon {
-      width: 36px;
-      height: 36px;
-      border-radius: 12px;
-      border: 1px solid var(--input-border);
-      background: #020617;
-      color: #e5e7eb;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      font-size: 16px;
-    }
-
-    .btn-save {
-      margin-top: 12px;
-      background: #16a34a;
-      color: #fff;
-      box-shadow: 0 12px 30px rgba(22, 163, 74, 0.55);
-    }
-
-    .form-group-submit {
-      margin-top: 4px;
-    }
-
-    /* TABELA ITENS */
-
-    .filters-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      align-items: center;
-      margin-bottom: 12px;
-      font-size: 13px;
-      color: var(--text-soft);
-    }
-
-    .filters-row label {
-      margin-bottom: 0;
-    }
-
-    .filters-row select {
-      width: auto;
-      min-width: 150px;
-      padding: 6px 10px;
-      font-size: 13px;
-    }
-
-    .filters-row input[type="text"] {
-      width: 180px;
-      padding: 6px 10px;
-      font-size: 13px;
-    }
-
-    .btn-export {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: #020617;
-      border-radius: 999px;
-      border: 1px solid #374151;
-      padding: 6px 12px;
-      color: #e5e7eb;
-      font-size: 13px;
-      cursor: pointer;
-    }
-
-    .btn-export span.icon {
-      font-size: 14px;
-    }
-
-    .items-table-wrapper {
-      border-radius: 14px;
-      border: 1px solid #1f2933;
-      overflow-x: auto;
-      overflow-y: hidden;
-      background: #020617;
-      margin-top: 10px;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 13px;
-    }
-
-    thead {
-      background: #020617;
-    }
-
-    th,
-    td {
-      padding: 8px 10px;
-      border-bottom: 1px solid #111827;
-      text-align: left;
-      white-space: nowrap;
-    }
-
-    th {
-      font-weight: 500;
-      color: #9ca3af;
-      position: sticky;
-      top: 0;
-      background: #020617;
-      z-index: 1;
-    }
-
-    tbody tr:nth-child(even) {
-      background: #020617;
-    }
-
-    tbody tr:nth-child(odd) {
-      background: #050815;
-    }
-
-    .badge-status {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-width: 120px;
-      padding: 4px 10px;
-      border-radius: 999px;
-      font-size: 11px;
-      text-align: center;
-      white-space: normal;
-      background: var(--badge-bg);
-      border: 1px solid #4b5563;
-    }
-
-    .badge-status-danger {
-      background: var(--badge-red-bg);
-      border-color: var(--badge-red-border);
-      color: #fecaca;
-    }
-
-    .badge-status-warning {
-      background: #3b2607;
-      border-color: #facc15;
-      color: #fef9c3;
-    }
-
-    .badge-status-ok {
-      background: var(--badge-green-bg);
-      border-color: var(--badge-green-border);
-      color: #bbf7d0;
-    }
-
-    .badge-oferta {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-width: 100px;
-      padding: 4px 10px;
-      border-radius: 999px;
-      font-size: 11px;
-      cursor: pointer;
-      border: 1px solid #4b5563;
-      background: #020617;
-    }
-
-    .badge-oferta-lancado {
-      background: #065f46;
-      border-color: #34d399;
-      color: #bbf7d0;
-    }
-
-    .actions-cell button {
-      background: transparent;
-      border: none;
-      color: #facc15;
-      font-size: 12px;
-      cursor: pointer;
-      padding: 0;
-      margin-right: 8px;
-    }
-
-    .actions-cell button.btn-delete {
-      color: #fb7185;
-    }
-
-    .items-footer {
-      margin-top: 8px;
-      font-size: 12px;
-      color: #9ca3af;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    .items-footer .page-btn {
-      background: #020617;
-      border-radius: 999px;
-      border: 1px solid #374151;
-      color: #e5e7eb;
-      padding: 3px 8px;
-      font-size: 12px;
-      cursor: pointer;
-    }
-
-    /* CARDS MOBILE PARA ITENS (REPOSITOR / GERENTE) */
-    #mobileCardsContainer {
-      display: none;
-      margin-top: 10px;
-    }
-
-    .mobile-item-card {
-      background: #020617;
-      border-radius: 14px;
-      padding: 10px 12px;
-      border: 1px solid #1f2933;
-      margin-bottom: 8px;
-      font-size: 13px;
-    }
-
-    .mobile-item-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 4px;
-    }
-
-    .mobile-item-code {
-      font-weight: 600;
-      font-size: 14px;
-    }
-
-    .mobile-item-loja {
-      font-size: 12px;
-      color: var(--text-soft);
-    }
-
-    .mobile-item-desc {
-      font-size: 13px;
-      margin-bottom: 4px;
-    }
-
-    .mobile-item-row {
-      display: flex;
-      justify-content: space-between;
-      font-size: 12px;
-      color: var(--text-soft);
-      margin-bottom: 2px;
-    }
-
-    .mobile-item-footer {
-      margin-top: 6px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .mobile-item-footer .badge-status {
-      min-width: 0;
-      font-size: 11px;
-      padding: 3px 8px;
-    }
-
-    .mobile-item-oferta {
-      font-size: 11px;
-      color: #e5e7eb;
-    }
-
-    /* ADMIN USUÁRIOS */
-
-    .users-table-wrapper {
-      border-radius: 12px;
-      border: 1px solid #1f2933;
-      overflow: hidden;
-      background: #020617;
-      margin-top: 12px;
-    }
-
-    .users-table-wrapper table th,
-    .users-table-wrapper table td {
-      font-size: 13px;
-    }
-
-    /* MODAL SCANNER */
-
-    .modal-backdrop {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.78);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 50;
-    }
-
-    .modal-backdrop.show {
-      display: flex;
-    }
-
-    .modal {
-      background: #050509;
-      border-radius: 18px;
-      border: 1px solid #374151;
-      padding: 16px;
-      width: 100%;
-      max-width: 360px;
-      color: #e5e7eb;
-    }
-
-    .modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 8px;
-    }
-
-    .modal-header h3 {
-      margin: 0;
-      font-size: 15px;
-    }
-
-    .modal-close {
-      background: transparent;
-      border: none;
-      color: #9ca3af;
-      cursor: pointer;
-      font-size: 18px;
-    }
-
-    #qr-reader {
-      width: 100%;
-      min-height: 260px;
-      border-radius: 12px;
-      overflow: hidden;
-      background: #000;
-    }
-
-    /* ===== RESPONSIVO ===== */
-    @media (max-width: 960px) {
-      .side-menu {
-        position: fixed;
-        left: -280px;
-        top: 56px;
-        bottom: 0;
-        width: 260px;
-        padding: 20px 16px;
-        transition: left 0.2s ease;
-      }
-      .side-menu.open {
-        left: 0;
-      }
-      .header-menu-toggle {
-        display: flex;
-      }
-      .app-main {
-        flex-direction: column;
-      }
-      .app-content {
-        padding: 16px;
-      }
-
-      .card-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 8px;
-      }
-
-      .card-header > div:last-child {
-        align-self: stretch;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 6px;
-        justify-content: flex-start;
-      }
-
-      .btn-ghost,
-      .btn-export {
-        width: auto;
-        font-size: 12px;
-        padding: 5px 10px;
-      }
-
-      .items-table-wrapper table {
-        font-size: 12px;
-      }
-
-      .items-table-wrapper {
-        border-radius: 12px;
-      }
-
-      .grid-two-columns {
-        grid-template-columns: 1fr;
-      }
-
-      .grid-two {
-        grid-template-columns: 1fr;
-      }
-
-      .grid-three-tight {
-        grid-template-columns: 1fr;
-      }
-
-      .filters-row {
-        flex-direction: column;
-        align-items: stretch;
-      }
-
-      .filters-row select,
-      .filters-row input[type="text"] {
-        width: 100%;
-      }
-
-      .items-footer {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-
-      .kpi-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-    }
-
- @media (max-width: 768px) {
-  .items-table-wrapper {
-    display: none;
-  }
-  #mobileCardsContainer {
-    display: block;
-  }
-   
-    }
-  </style>
-</head>
-<body>
-  <!-- ===== LOGIN ===== -->
-  <div id="loginView">
-    <div class="login-card">
-      <div class="login-logo">
-        <img src="palato-logo.png" alt="Palato" />
-      </div>
-      <div class="login-title">Controle de Validade</div>
-      <div class="login-subtitle">Acesso restrito a colaboradores autorizados.</div>
-
-      <div class="form-group">
-        <label for="loginEmail">E-mail *</label>
-        <input id="loginEmail" type="email" placeholder="seu.email@palato.com.br" />
-      </div>
-      <div class="form-group">
-        <label for="loginSenha">Senha *</label>
-        <input id="loginSenha" type="password" placeholder="Digite sua senha" />
-      </div>
-      <button id="btnLoginEmail" class="btn btn-primary btn-full">Entrar</button>
-
-      <button id="btnLoginGoogle" class="btn btn-google">
-        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" />
-        Entrar com Google
-      </button>
-
-      <div class="login-footer">Dúvidas? Procure o setor Comercial.</div>
-    </div>
-  </div>
-
-  <!-- ===== ONBOARDING ===== -->
-  <div id="onboardingView">
-    <div class="login-card onboarding-card">
-      <div class="login-logo">
-        <img src="palato-logo.png" alt="Palato" />
-      </div>
-      <div class="onboarding-title">Boas-vindas! Vamos configurar sua conta.</div>
-      <div class="onboarding-subtitle">
-        São só 2 passos rápidos para liberar seu acesso ao Controle de Validade.
-      </div>
-
-      <!-- Passo 1: Loja -->
-      <div id="onboardingStep1">
-        <div class="onboarding-step-label">Passo 1 de 2</div>
-        <div class="onboarding-step-title">Qual é a sua loja?</div>
-        <div class="loja-grid">
-          <button class="onboarding-chip loja-btn" data-loja="Ponta Verde">
-            <span class="label-main">Ponta Verde</span>
-          </button>
-          <button class="onboarding-chip loja-btn" data-loja="Parque">
-            <span class="label-main">Parque</span>
-          </button>
-          <button class="onboarding-chip loja-btn" data-loja="Farol">
-            <span class="label-main">Farol</span>
-          </button>
-          <button class="onboarding-chip loja-btn" data-loja="Praia">
-            <span class="label-main">Praia</span>
-          </button>
-          <button class="onboarding-chip loja-btn" data-loja="Aldebaran">
-            <span class="label-main">Aldebaran</span>
-          </button>
-          <button class="onboarding-chip loja-btn" data-loja="Parque Shopping">
-            <span class="label-main">Parque Shopping</span>
-          </button>
-          <button class="onboarding-chip loja-btn" data-loja="nao_fixa">
-            <span class="label-main">Não tenho loja fixa</span>
-            <span class="label-sub">Ex.: Gestor de Categoria / Assistente Comercial</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Passo 2: Cargo -->
-      <div id="onboardingStep2" style="display:none;">
-        <div class="onboarding-step-label">Passo 2 de 2</div>
-        <div class="onboarding-step-title">Qual é o seu cargo?</div>
-
-        <div class="cargo-grid">
-          <button class="onboarding-chip cargo-btn" data-cargo="repositor">
-            <div>
-              <span class="label-main">Repositor</span><br />
-              <span class="label-sub">Liberação automática após concluir</span>
-            </div>
-          </button>
-          <button class="onboarding-chip cargo-btn" data-cargo="gerente">
-            <div>
-              <span class="label-main">Gerente</span><br />
-              <span class="label-sub">Acesso depende da aprovação do admin</span>
-            </div>
-          </button>
-          <button class="onboarding-chip cargo-btn" data-cargo="gestor_categoria">
-            <div>
-              <span class="label-main">Gestor de Categoria</span><br />
-              <span class="label-sub">Visualiza todas as lojas (após liberação)</span>
-            </div>
-          </button>
-          <button class="onboarding-chip cargo-btn" data-cargo="assistente_comercial">
-            <div>
-              <span class="label-main">Assistente Comercial</span><br />
-              <span class="label-sub">Visualiza todas as lojas (após liberação)</span>
-            </div>
-          </button>
-        </div>
-
-        <div class="onboarding-hint">
-          Repositores são liberados automaticamente. Demais cargos ficam pendentes até aprovação do
-          administrador.
-        </div>
-      </div>
-
-      <div class="onboarding-footer">
-        <button id="onboardingBack" class="btn btn-ghost" type="button" style="display:none;">
-          Voltar
-        </button>
-        <button id="onboardingNext" class="btn btn-primary" type="button">
-          Continuar
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ===== APP ===== -->
-  <div id="appView">
-    <header class="app-header">
-      <div class="app-header-left">
-        <button id="btnToggleMenu" class="header-menu-toggle">☰</button>
-        <img src="palato-logo.png" alt="Palato" class="logo-palato" />
-        <div class="app-title">
-          <h1>CONTROLE DE VALIDADE</h1>
-          <span>Controle preventivo para evitar perdas</span>
-        </div>
-      </div>
-      <div class="user-box" id="userBox"></div>
-    </header>
-
-    <div id="menuOverlay" class="menu-overlay"></div>
-
-    <main class="app-main">
-      <nav class="side-menu">
-        <div class="side-menu-title">Menu</div>
-        <button id="menu-dashboard" class="menu-item menu-item-active">
-          <span class="icon">📊</span>
-          <span>Dashboard</span>
-        </button>
-        <button id="menu-novo" class="menu-item menu-item-secondary">
-          <span class="icon">＋</span>
-          <span>Novo lançamento</span>
-        </button>
-        <button id="menu-itens" class="menu-item menu-item-secondary">
-          <span class="icon">📋</span>
-          <span>Itens cadastrados</span>
-        </button>
-        <button id="menu-usuarios" class="menu-item menu-item-secondary">
-          <span class="icon">⚙️</span>
-          <span>Gerenciar usuários</span>
-        </button>
-      </nav>
-
-      <section class="app-content">
-        <!-- DASHBOARD -->
-        <div id="view-dashboard" class="app-view app-view-active">
-          <div class="card">
-            <div class="card-header">
-              <div>
-                <div class="card-title">
-                  <div class="card-title-icon">📊</div>
-                  <span>Visão geral</span>
-                </div>
-                <div class="card-subtitle">
-                  KPIs rápidos por loja e status de validade.
-                </div>
-              </div>
-            </div>
-
-            <div class="kpi-grid">
-              <div class="kpi-card">
-                <div class="kpi-label">Total de itens</div>
-                <div class="kpi-value" id="kpiTotal">0</div>
-                <div class="kpi-tag">Lançamentos cadastrados</div>
-              </div>
-              <div class="kpi-card">
-                <div class="kpi-label">Vencidos</div>
-                <div class="kpi-value" id="kpiVencidos">0</div>
-                <div class="kpi-tag">Precisam de ação imediata</div>
-              </div>
-              <div class="kpi-card">
-                <div class="kpi-label">Vence em 7 dias</div>
-                <div class="kpi-value" id="kpi7dias">0</div>
-                <div class="kpi-tag">Janela crítica</div>
-              </div>
-              <div class="kpi-card">
-                <div class="kpi-label">Em oferta</div>
-                <div class="kpi-value" id="kpiOferta">0</div>
-                <div class="kpi-tag">Marcados como oferta</div>
-              </div>
-            </div>
-
-            <div class="dashboard-list">
-              <h4>Resumo por loja</h4>
-              <ul id="dashboardResumoLoja"></ul>
-            </div>
-          </div>
-        </div>
-
-        <!-- NOVO LANÇAMENTO -->
-        <div id="view-novo" class="app-view">
-          <div class="card">
-            <div class="card-header">
-              <div>
-                <div class="card-title">
-                  <div class="card-title-icon">＋</div>
-                  <span>Novo lançamento</span>
-                </div>
-                <div class="card-subtitle">
-                  Registrar validade por loja, departamento e lote.
-                </div>
-              </div>
-              <div id="novoLancamentoStatus" class="card-subtitle">
-                • Cadastro rápido
-              </div>
-            </div>
-
-            <div class="grid-two-columns">
-              <div>
-                <div class="grid-two">
-                  <div class="form-group">
-                    <label for="novaLoja">Loja *</label>
-                    <select id="novaLoja">
-                      <option value="">Selecione</option>
-                      <option>Ponta Verde</option>
-                      <option>Parque</option>
-                      <option>Farol</option>
-                      <option>Praia</option>
-                      <option>Aldebaran</option>
-                      <option>Parque Shopping</option>
-                    </select>
-                  </div>
-                  <div class="form-group">
-                    <label for="dataLancamento">Data lançamento *</label>
-                    <input id="dataLancamento" type="text" readonly />
-                  </div>
-                </div>
-
-                <div class="grid-two">
-                  <div class="form-group">
-                    <label for="departamento">Departamento *</label>
-                    <select id="departamento">
-                      <option value="">Selecione</option>
-                      <option>Açougue</option>
-                      <option>Adega</option>
-                      <option>Bebidas</option>
-                      <option>Mercearia Alimentos</option>
-                      <option>Mercearia Não Alimentos</option>
-                      <option>Perecíveis Processados</option>
-                    </select>
-                  </div>
-                  <div class="form-group">
-                    <label for="codigoBarras">Cód. barras (números, máx. 13) *</label>
-                    <div class="input-inline-btn">
-                      <input
-                        id="codigoBarras"
-                        type="text"
-                        maxlength="13"
-                        inputmode="numeric"
-                        pattern="[0-9]*"
-                        placeholder="789..."
-                      />
-                      <button id="btnScan" type="button" class="btn-icon" title="Ler código de barras">
-                        📷
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="grid-two">
-                  <div class="form-group">
-                    <label for="descricao">Descrição *</label>
-                    <input id="descricao" type="text" />
-                  </div>
-                  <div class="form-group">
-                    <label for="lote">Lote</label>
-                    <input id="lote" type="text" />
-                  </div>
-                </div>
-
-                <div class="grid-three-tight">
-                  <div class="form-group">
-                    <label for="quantidade">Quantidade *</label>
-                    <input id="quantidade" type="number" min="1" />
-                  </div>
-                  <div class="form-group">
-                    <label for="validade">Validade *</label>
-                    <input id="validade" type="date" />
-                  </div>
-                  <div>
-                    <div class="form-group">
-                      <label for="observacao">Observação</label>
-                      <textarea
-                        id="observacao"
-                        placeholder="Lote em oferta, ponto extra, etc."
-                      ></textarea>
-                    </div>
-                    <div class="form-group-submit form-group">
-                      <label>&nbsp;</label>
-                      <button id="btnSalvarLancamento" class="btn btn-save">
-                        💾 Salvar lançamento
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <!-- Coluna da direita reservada para algo futuro se quiser -->
-            </div>
-          </div>
-        </div>
-
-        <!-- ITENS CADASTRADOS -->
-        <div id="view-itens" class="app-view">
-          <div class="card">
-            <div class="card-header">
-              <div>
-                <div class="card-title">
-                  <div class="card-title-icon">📋</div>
-                  <span>Itens cadastrados</span>
-                </div>
-                <div class="card-subtitle">
-                  Filtros por status de vencimento e controle de oferta.
-                </div>
-              </div>
-              <div style="display:flex; gap:8px; align-items:center;">
-                <button id="btnMarcarTodosOferta" class="btn-ghost">
-                  📣 Marcar todos como oferta
-                </button>
-                <button id="btnExportExcel" class="btn-export">
-                  <span class="icon">📊</span><span>Excel</span>
-                </button>
-                <button id="btnExportPDF" class="btn-export">
-                  <span class="icon">📄</span><span>PDF</span>
-                </button>
-              </div>
-            </div>
-
-            <div class="filters-row">
-              <label for="filtroStatus">Status:</label>
-              <select id="filtroStatus">
-                <option value="todos">Todos</option>
-                <option value="7">Vence em 7 dias</option>
-                <option value="15">Vence em 15 dias</option>
-                <option value="30">Vence em 30 dias</option>
-                <option value="vencidos">Vencidos</option>
-              </select>
-
-              <label for="filtroDepartamento">Departamento:</label>
-              <select id="filtroDepartamento">
-                <option value="todos">Todos departamentos</option>
-                <option>Açougue</option>
-                <option>Adega</option>
-                <option>Bebidas</option>
-                <option>Mercearia Alimentos</option>
-                <option>Mercearia Não Alimentos</option>
-                <option>Perecíveis Processados</option>
-              </select>
-
-              <label for="filtroOferta">Oferta:</label>
-              <select id="filtroOferta">
-                <option value="todas">Todas</option>
-                <option value="lancado">Lançado</option>
-                <option value="nao_lancado">Não lançado</option>
-              </select>
-
-              <label for="filtroCodigo">Cód. barras:</label>
-              <input id="filtroCodigo" type="text" placeholder="Buscar código" />
-            </div>
-
-            <div class="items-table-wrapper">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Loja</th>
-                    <th>Data lançamento</th>
-                    <th>Departamento</th>
-                    <th>Cód. barras</th>
-                    <th>Descrição</th>
-                    <th>Qtd</th>
-                    <th>Validade</th>
-                    <th>Status</th>
-                    <th>Oferta</th>
-                    <th>Lote</th>
-                    <th>Usuário</th>
-                    <th>Lançado em</th>
-                    <th>Obs.</th>
-                    <th>Ações</th>
-                  </tr>
-                </thead>
-                <tbody id="tabelaItensBody"></tbody>
-              </table>
-            </div>
-
-            <!-- Cards mobile -->
-            <div id="mobileCardsContainer"></div>
-
-            <div class="items-footer">
-              <span>Total de itens filtrados: <span id="totalItens">0</span></span>
-              <span id="paginacaoInfo"></span>
-              <div>
-                <button id="btnPaginaAnterior" class="page-btn">«</button>
-                <button id="btnPaginaProxima" class="page-btn">»</button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- GERENCIAR USUÁRIOS -->
-        <div id="view-usuarios" class="app-view">
-          <div class="card">
-            <div class="card-header">
-              <div>
-                <div class="card-title">
-                  <div class="card-title-icon">🛡️</div>
-                  <span>Administração de usuários</span>
-                </div>
-                <div class="card-subtitle">
-                  Gerencie perfis (admin, gerente, repositor) e lojas vinculadas.
-                </div>
-              </div>
-              <button id="btnReloadUsuarios" class="btn-ghost">🔄 Recarregar</button>
-            </div>
-
-            <div class="grid-three-tight">
-              <div class="form-group">
-                <label for="novoUsuarioNome">Nome</label>
-                <input id="novoUsuarioNome" type="text" />
-              </div>
-              <div class="form-group">
-                <label for="novoUsuarioEmail">E-mail</label>
-                <input id="novoUsuarioEmail" type="email" />
-              </div>
-              <div class="form-group">
-                <label for="novoUsuarioPerfil">Perfil</label>
-                <select id="novoUsuarioPerfil">
-                  <option value="repositor">Repositor</option>
-                  <option value="gerente">Gerente</option>
-                  <option value="gestor_categoria">Gestor de Categoria</option>
-                  <option value="assistente_comercial">Assistente Comercial</option>
-                  <option value="admin">Admin</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="grid-two" style="margin-top:10px;">
-              <div class="form-group">
-                <label for="novoUsuarioLoja">Loja</label>
-                <select id="novoUsuarioLoja">
-                  <option value="">Nenhuma</option>
-                  <option>Ponta Verde</option>
-                  <option>Parque</option>
-                  <option>Farol</option>
-                  <option>Praia</option>
-                  <option>Aldebaran</option>
-                  <option>Parque Shopping</option>
-                </select>
-              </div>
-              <div class="form-group" style="display:flex; align-items:flex-end;">
-                <button id="btnSalvarUsuario" class="btn btn-save">💾 Salvar usuário</button>
-              </div>
-            </div>
-
-            <div class="users-table-wrapper">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Nome</th>
-                    <th>E-mail</th>
-                    <th>Perfil</th>
-                    <th>Loja</th>
-                    <th>Ações</th>
-                  </tr>
-                </thead>
-                <tbody id="usuariosBody"></tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </section>
-    </main>
-  </div>
-
-  <!-- MODAL SCANNER -->
-  <div id="scannerModal" class="modal-backdrop">
-    <div class="modal">
-      <div class="modal-header">
-        <h3>Leitor de código de barras</h3>
-        <button class="modal-close" id="btnCloseScanner">×</button>
-      </div>
-      <div id="qr-reader"></div>
-      <div style="margin-top:8px; font-size:11px; color:#9ca3af;">
-        Aponte para o código de barras (EAN-13). A câmera traseira será usada quando possível.
-      </div>
-    </div>
-  </div>
-
-  <!-- FIREBASE + APP -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
-    import {
-      getAuth,
-      signInWithEmailAndPassword,
-      signInWithPopup,
-      GoogleAuthProvider,
-      onAuthStateChanged,
-      signOut
-    } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
-    import {
-      getFirestore,
-      collection,
-      doc,
-      getDoc,
-      getDocs,
-      setDoc,
-      updateDoc,
-      deleteDoc,
-      addDoc,
-      query,
-      orderBy,
-      serverTimestamp
-    } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyDa1z9LwlSHxwSTC974ci9RMEYdEiA_wEg",
-      authDomain: "controle-validade-fc108.firebaseapp.com",
-      projectId: "controle-validade-fc108",
-      storageBucket: "controle-validade-fc108.firebasestorage.app",
-      messagingSenderId: "737065688686",
-      appId: "1:737065688686:web:ed3e602baf64c1fb4f907f",
-      measurementId: "G-VJ8DMM47EN"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-    const googleProvider = new GoogleAuthProvider();
-
-    /* ===== ELEMENTOS ===== */
-    const loginView = document.getElementById("loginView");
-    const onboardingView = document.getElementById("onboardingView");
-    const appView = document.getElementById("appView");
-
-    const loginEmail = document.getElementById("loginEmail");
-    const loginSenha = document.getElementById("loginSenha");
-    const btnLoginEmail = document.getElementById("btnLoginEmail");
-    const btnLoginGoogle = document.getElementById("btnLoginGoogle");
-
-    const userBox = document.getElementById("userBox");
-
-    const menuDashboard = document.getElementById("menu-dashboard");
-    const menuNovo = document.getElementById("menu-novo");
-    const menuItens = document.getElementById("menu-itens");
-    const menuUsuarios = document.getElementById("menu-usuarios");
-
-    const viewDashboard = document.getElementById("view-dashboard");
-    const viewNovo = document.getElementById("view-novo");
-    const viewItens = document.getElementById("view-itens");
-    const viewUsuarios = document.getElementById("view-usuarios");
-
-    const sideMenu = document.querySelector(".side-menu");
-    const menuOverlay = document.getElementById("menuOverlay");
-    const btnToggleMenu = document.getElementById("btnToggleMenu");
-
-    // Dashboard
-    const kpiTotal = document.getElementById("kpiTotal");
-    const kpiVencidos = document.getElementById("kpiVencidos");
-    const kpi7dias = document.getElementById("kpi7dias");
-    const kpiOferta = document.getElementById("kpiOferta");
-    const dashboardResumoLoja = document.getElementById("dashboardResumoLoja");
-
-    // Novo lançamento
-    const novaLoja = document.getElementById("novaLoja");
-    const dataLancamento = document.getElementById("dataLancamento");
-    const departamento = document.getElementById("departamento");
-    const codigoBarras = document.getElementById("codigoBarras");
-    const descricao = document.getElementById("descricao");
-    const lote = document.getElementById("lote");
-    const quantidade = document.getElementById("quantidade");
-    const validade = document.getElementById("validade");
-    const observacao = document.getElementById("observacao");
-    const btnSalvarLancamento = document.getElementById("btnSalvarLancamento");
-    const btnScan = document.getElementById("btnScan");
-
-    // Itens cadastrados
-    const tabelaItensBody = document.getElementById("tabelaItensBody");
-    const totalItensSpan = document.getElementById("totalItens");
-    const filtroStatus = document.getElementById("filtroStatus");
-    const filtroDepartamento = document.getElementById("filtroDepartamento");
-    const filtroOferta = document.getElementById("filtroOferta");
-    const filtroCodigo = document.getElementById("filtroCodigo");
-    const btnMarcarTodosOferta = document.getElementById("btnMarcarTodosOferta");
-    const btnExportExcel = document.getElementById("btnExportExcel");
-    const btnExportPDF = document.getElementById("btnExportPDF");
-    const mobileCardsContainer = document.getElementById("mobileCardsContainer");
-    const paginacaoInfo = document.getElementById("paginacaoInfo");
-    const btnPaginaAnterior = document.getElementById("btnPaginaAnterior");
-    const btnPaginaProxima = document.getElementById("btnPaginaProxima");
-
-    // Usuários
-    const usuariosBody = document.getElementById("usuariosBody");
-    const novoUsuarioNome = document.getElementById("novoUsuarioNome");
-    const novoUsuarioEmail = document.getElementById("novoUsuarioEmail");
-    const novoUsuarioPerfil = document.getElementById("novoUsuarioPerfil");
-    const novoUsuarioLoja = document.getElementById("novoUsuarioLoja");
-    const btnSalvarUsuario = document.getElementById("btnSalvarUsuario");
-    const btnReloadUsuarios = document.getElementById("btnReloadUsuarios");
-
-    // Scanner modal
-    const scannerModal = document.getElementById("scannerModal");
-    const btnCloseScanner = document.getElementById("btnCloseScanner");
-    let html5QrCode = null;
-    let scannerAtivo = false;
-
-    // Onboarding elementos
-    const onboardingStep1 = document.getElementById("onboardingStep1");
-    const onboardingStep2 = document.getElementById("onboardingStep2");
-    const onboardingNext = document.getElementById("onboardingNext");
-    const onboardingBack = document.getElementById("onboardingBack");
-    const lojaButtons = document.querySelectorAll(".loja-btn");
-    const cargoButtons = document.querySelectorAll(".cargo-btn");
-
-    /* ===== ESTADO ===== */
-    let usuarioAtual = null;
-    let perfilAtual = null;
-    let perfilLojaAtual = null;
-
-    let lancamentosCache = [];
-
-    let currentPage = 1;
-    const pageSize = 10;
-
-    // Onboarding estado
-    let onboardingStep = 1;
-    let onboardingSelectedLoja = null;
-    let onboardingSelectedCargo = null;
-    let onboardingDocRef = null;
-    let onboardingUser = null;
-
-    /* ===== HELPERS ===== */
-    function showAlert(msg) {
-      alert(msg);
-    }
-
-    function formatarDataHora(date) {
-      const d = new Date(date);
-      const pad = (n) => (n < 10 ? "0" + n : "" + n);
-      return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(
-        d.getHours()
-      )}:${pad(d.getMinutes())}`;
-    }
-
-    function formatarSomenteData(date) {
-      const d = new Date(date);
-      const pad = (n) => (n < 10 ? "0" + n : "" + n);
-      return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`;
-    }
-
-    function diasEntreHoje(eData) {
-      const hoje = new Date();
-      hoje.setHours(0, 0, 0, 0);
-      const dt = new Date(eData);
-      dt.setHours(0, 0, 0, 0);
-      const diffMs = dt - hoje;
-      return Math.round(diffMs / (1000 * 60 * 60 * 24));
-    }
-
-    function calcularStatus(validadeStr) {
-      if (!validadeStr) {
-        return { label: "Sem data", tipo: "neutro" };
-      }
-      const [ano, mes, dia] = validadeStr.split("-");
-      const dt = new Date(Number(ano), Number(mes) - 1, Number(dia));
-      const dias = diasEntreHoje(dt);
-
-      if (dias < 0) return { label: "Vencido", tipo: "danger" };
-      if (dias <= 7) return { label: "Vence em 7 dias", tipo: "danger" };
-      if (dias <= 15) return { label: "Vence em 15 dias", tipo: "warning" };
-      if (dias <= 30) return { label: "Vence em 30 dias", tipo: "ok" };
-      return { label: "Dentro da validade", tipo: "ok" };
-    }
-
-    function aplicarBadgeStatus(element, statusInfo) {
-      element.className = "badge-status";
-      if (statusInfo.tipo === "danger") element.classList.add("badge-status-danger");
-      else if (statusInfo.tipo === "warning") element.classList.add("badge-status-warning");
-      else if (statusInfo.tipo === "ok") element.classList.add("badge-status-ok");
-      element.textContent = statusInfo.label;
-    }
-
-    function setView(viewId) {
-      [viewDashboard, viewNovo, viewItens, viewUsuarios].forEach((v) =>
-        v.classList.remove("app-view-active")
-      );
-      if (viewId === "dashboard") viewDashboard.classList.add("app-view-active");
-      if (viewId === "novo") viewNovo.classList.add("app-view-active");
-      if (viewId === "itens") viewItens.classList.add("app-view-active");
-      if (viewId === "usuarios") viewUsuarios.classList.add("app-view-active");
-
-      [menuDashboard, menuNovo, menuItens, menuUsuarios].forEach((m) =>
-        m.classList.remove("menu-item-active", "menu-item-secondary")
-      );
-
-      menuDashboard.classList.add("menu-item-secondary");
-      menuNovo.classList.add("menu-item-secondary");
-      menuItens.classList.add("menu-item-secondary");
-      menuUsuarios.classList.add("menu-item-secondary");
-
-      if (viewId === "dashboard") menuDashboard.classList.add("menu-item-active");
-      if (viewId === "novo") menuNovo.classList.add("menu-item-active");
-      if (viewId === "itens") menuItens.classList.add("menu-item-active");
-      if (viewId === "usuarios") menuUsuarios.classList.add("menu-item-active");
-    }
-
-    function atualizarDashboard() {
-      const hoje = new Date();
-      hoje.setHours(0, 0, 0, 0);
-
-      let total = lancamentosCache.length;
-      let vencidos = 0;
-      let em7 = 0;
-      let oferta = 0;
-
-      const resumoLoja = {};
-
-      lancamentosCache.forEach((item) => {
-        const loja = item.loja || "Sem loja";
-        if (!resumoLoja[loja]) resumoLoja[loja] = { total: 0, vencidos: 0 };
-
-        resumoLoja[loja].total++;
-
-        const valStr = item.validade || "";
-        if (valStr) {
-          const dt = new Date(valStr);
-          dt.setHours(0, 0, 0, 0);
-          const dias = Math.round((dt - hoje) / (1000 * 60 * 60 * 24));
-          if (dias < 0) {
-            vencidos++;
-            resumoLoja[loja].vencidos++;
-          } else if (dias <= 7) {
-            em7++;
-          }
-        }
-
-        if (item.oferta === "lancado") oferta++;
-      });
-
-      kpiTotal.textContent = total;
-      kpiVencidos.textContent = vencidos;
-      kpi7dias.textContent = em7;
-      kpiOferta.textContent = oferta;
-
-      dashboardResumoLoja.innerHTML = "";
-      const lojas = Object.keys(resumoLoja);
-      if (lojas.length === 0) {
-        const li = document.createElement("li");
-        li.textContent = "Nenhum lançamento encontrado para o seu perfil.";
-        dashboardResumoLoja.appendChild(li);
-      } else {
-        lojas.forEach((loja) => {
-          const info = resumoLoja[loja];
-          const li = document.createElement("li");
-          li.textContent = `${loja}: ${info.total} itens (${info.vencidos} vencidos)`;
-          dashboardResumoLoja.appendChild(li);
-        });
-      }
-    }
-
-    function limparFormularioLancamento() {
-      if (perfilAtual === "admin") {
-        novaLoja.disabled = false;
-        novaLoja.value = "";
-      } else if (perfilAtual === "gerente" || perfilAtual === "repositor") {
-        if (perfilLojaAtual) {
-          novaLoja.value = perfilLojaAtual;
-          novaLoja.disabled = true;
-        } else {
-          novaLoja.disabled = false;
-          novaLoja.value = "";
-        }
-      } else {
-        // gestor_categoria / assistente_comercial
-        novaLoja.disabled = false;
-        novaLoja.value = "";
-      }
-
-      departamento.value = "";
-      codigoBarras.value = "";
-      descricao.value = "";
-      lote.value = "";
-      quantidade.value = "";
-      validade.value = "";
-      observacao.value = "";
-      const agora = new Date();
-      dataLancamento.value = formatarDataHora(agora);
-    }
-
-    function labelPerfil(perfil, loja) {
-      switch (perfil) {
-        case "admin":
-          return "Perfil: admin";
-        case "gerente":
-          return `Perfil: gerente${loja ? " (" + loja + ")" : ""}`;
-        case "repositor":
-          return `Perfil: repositor${loja ? " (" + loja + ")" : ""}`;
-        case "gestor_categoria":
-          return "Perfil: Gestor de Categoria";
-        case "assistente_comercial":
-          return "Perfil: Assistente Comercial";
-        default:
-          return "Perfil não definido";
-      }
-    }
-
-    function atualizarUserBox() {
-      if (!usuarioAtual) {
-        userBox.innerHTML = "";
-        return;
-      }
-      const nome = usuarioAtual.displayName || usuarioAtual.email || "";
-      const perfilLabel = labelPerfil(perfilAtual, perfilLojaAtual);
-
-      userBox.innerHTML = `
-        <strong>${nome}</strong>
-        <span class="user-profile-label">${perfilLabel}</span>
-        <a id="btnLogout">Sair</a>
-      `;
-      const btnLogout = document.getElementById("btnLogout");
-      btnLogout.addEventListener("click", async () => {
-        await signOut(auth);
-      });
-    }
-
-    function atualizarClassePerfilBody() {
-      document.body.classList.remove("perfil-admin", "perfil-nao-admin");
-      if (!perfilAtual) return;
-      if (perfilAtual === "admin") document.body.classList.add("perfil-admin");
-      else document.body.classList.add("perfil-nao-admin");
-    }
-
-    async function abrirAppAposLogin() {
-      atualizarClassePerfilBody();
-      atualizarUserBox();
-      limparFormularioLancamento();
-
-      loginView.style.display = "none";
-      onboardingView.style.display = "none";
-      appView.style.display = "flex";
-
-      setView("dashboard");
-      await carregarLancamentos();
-    }
-
-    /* ===== ONBOARDING ===== */
-
-    function atualizarOnboardingUI() {
-      if (onboardingStep === 1) {
-        onboardingStep1.style.display = "block";
-        onboardingStep2.style.display = "none";
-        onboardingBack.style.display = "none";
-        onboardingNext.textContent = "Continuar";
-      } else {
-        onboardingStep1.style.display = "none";
-        onboardingStep2.style.display = "block";
-        onboardingBack.style.display = "inline-flex";
-        onboardingNext.textContent = "Concluir";
-      }
-    }
-
-    function mostrarOnboarding() {
-      loginView.style.display = "none";
-      appView.style.display = "none";
-      onboardingView.style.display = "flex";
-
-      onboardingStep = 1;
-      onboardingSelectedLoja = null;
-      onboardingSelectedCargo = null;
-
-      lojaButtons.forEach((b) => b.classList.remove("onboarding-chip-selected"));
-      cargoButtons.forEach((b) => b.classList.remove("onboarding-chip-selected"));
-
-      atualizarOnboardingUI();
-    }
-
-    lojaButtons.forEach((btn) => {
-      btn.addEventListener("click", () => {
-        lojaButtons.forEach((b) => b.classList.remove("onboarding-chip-selected"));
-        btn.classList.add("onboarding-chip-selected");
-        onboardingSelectedLoja = btn.dataset.loja;
-      });
-    });
-
-    cargoButtons.forEach((btn) => {
-      btn.addEventListener("click", () => {
-        cargoButtons.forEach((b) => b.classList.remove("onboarding-chip-selected"));
-        btn.classList.add("onboarding-chip-selected");
-        onboardingSelectedCargo = btn.dataset.cargo;
-      });
-    });
-
-    onboardingBack.addEventListener("click", () => {
-      if (onboardingStep === 2) {
-        onboardingStep = 1;
-        atualizarOnboardingUI();
-      }
-    });
-
-    onboardingNext.addEventListener("click", async () => {
-      if (onboardingStep === 1) {
-        if (!onboardingSelectedLoja) {
-          showAlert("Escolha uma loja ou 'Não tenho loja fixa'.");
-          return;
-        }
-        onboardingStep = 2;
-        atualizarOnboardingUI();
-        return;
-      }
-
-      // Passo 2: concluir
-      if (!onboardingSelectedCargo) {
-        showAlert("Escolha o seu cargo.");
-        return;
-      }
-
-      if (!onboardingDocRef || !onboardingUser) {
-        showAlert("Erro ao salvar suas informações. Tente fazer login novamente.");
-        return;
-      }
-
-      const lojaToSave =
-        onboardingSelectedLoja && onboardingSelectedLoja !== "nao_fixa"
-          ? onboardingSelectedLoja
-          : "";
-
-      let tipoToSave = "repositor";
-      let cargoSolicitado = null;
-
-      if (onboardingSelectedCargo === "repositor") {
-        tipoToSave = "repositor";
-      } else {
-        tipoToSave = "pendente";
-        cargoSolicitado = onboardingSelectedCargo;
-      }
-
-      try {
-        await setDoc(
-          onboardingDocRef,
-          {
-            email: onboardingUser.email,
-            nome: onboardingUser.displayName || "",
-            tipo: tipoToSave,
-            loja: lojaToSave,
-            cargoSolicitado: cargoSolicitado || null,
-            onboardingConcluido: true,
-            atualizadoEm: serverTimestamp()
-          },
-          { merge: true }
-        );
-
-        if (tipoToSave === "repositor") {
-          perfilAtual = "repositor";
-          perfilLojaAtual = lojaToSave || "";
-          await abrirAppAposLogin();
-        } else {
-          showAlert(
-            "Seu cadastro foi enviado para aprovação.\n\nApós o administrador liberar seu perfil, você poderá acessar o sistema."
-          );
-          await signOut(auth);
-        }
-      } catch (err) {
-        console.error(err);
-        showAlert("Erro ao concluir o cadastro. Tente novamente.");
-      }
-    });
-
-    /* ===== LOGIN ===== */
-    btnLoginEmail.addEventListener("click", async () => {
-      const email = loginEmail.value.trim();
-      const senha = loginSenha.value;
-
-      if (!email || !senha) {
-        showAlert("Informe e-mail e senha.");
-        return;
-      }
-
-      try {
-        await signInWithEmailAndPassword(auth, email, senha);
-      } catch (err) {
-        console.error(err);
-        showAlert("Erro no login: " + (err.message || "verifique usuário e senha."));
-      }
-    });
-
-    btnLoginGoogle.addEventListener("click", async () => {
-      try {
-        await signInWithPopup(auth, googleProvider);
-      } catch (err) {
-        console.error(err);
-        showAlert("Erro no login com Google.");
-      }
-    });
-
-    async function carregarOuCriarPerfilUsuario(user) {
-      const ref = doc(db, "usuarios", user.uid);
-      onboardingDocRef = ref;
-      onboardingUser = user;
-
-      const snap = await getDoc(ref);
-      let data;
-      if (!snap.exists()) {
-        data = {
-          email: user.email,
-          nome: user.displayName || "",
-          tipo: null,
-          loja: "",
-          criadoEm: serverTimestamp()
-        };
-        await setDoc(ref, data);
-      } else {
-        data = snap.data();
-      }
-
-      // Se ainda não tem tipo definido, vai pro onboarding
-      if (!data.tipo) {
-        mostrarOnboarding();
-        return false;
-      }
-
-      // Se está pendente de liberação
-      if (data.tipo === "pendente") {
-        showAlert(
-          "Seu cadastro está pendente de aprovação pelo administrador.\n\nProcure o setor Comercial para liberar o acesso."
-        );
-        await signOut(auth);
-        throw new Error("Acesso pendente");
-      }
-
-      perfilAtual = data.tipo || "repositor";
-      perfilLojaAtual = data.loja || "";
-
-      atualizarClassePerfilBody();
-
-      if (perfilAtual === "admin") {
-        menuUsuarios.style.display = "flex";
-      } else {
-        menuUsuarios.style.display = "none";
-        if (viewUsuarios.classList.contains("app-view-active")) {
-          setView("dashboard");
-        }
-      }
-
-      return true;
-    }
-
-    onAuthStateChanged(auth, async (user) => {
-      usuarioAtual = user;
-      if (!user) {
-        appView.style.display = "none";
-        onboardingView.style.display = "none";
-        loginView.style.display = "flex";
-        document.body.classList.remove("perfil-admin", "perfil-nao-admin");
-        return;
-      }
-
-      try {
-        const pronto = await carregarOuCriarPerfilUsuario(user);
-        if (!pronto) {
-          // está em modo onboarding, não abre o app ainda
-          return;
-        }
-      } catch (e) {
-        return;
-      }
-
-      await abrirAppAposLogin();
-    });
-
-    /* ===== MENU / MOBILE ===== */
-    function abrirMenu() {
-      sideMenu.classList.add("open");
-      menuOverlay.classList.add("show");
-    }
-    function fecharMenu() {
-      sideMenu.classList.remove("open");
-      menuOverlay.classList.remove("show");
-    }
-
-    btnToggleMenu.addEventListener("click", () => {
-      if (sideMenu.classList.contains("open")) fecharMenu();
-      else abrirMenu();
-    });
-    menuOverlay.addEventListener("click", fecharMenu);
-
-    menuDashboard.addEventListener("click", () => {
-      setView("dashboard");
-      fecharMenu();
-      atualizarDashboard();
-    });
-    menuNovo.addEventListener("click", () => {
-      setView("novo");
-      limparFormularioLancamento();
-      fecharMenu();
-    });
-    menuItens.addEventListener("click", async () => {
-      setView("itens");
-      fecharMenu();
-      await carregarLancamentos();
-    });
-    menuUsuarios.addEventListener("click", async () => {
-      if (perfilAtual !== "admin") return;
-      setView("usuarios");
-      fecharMenu();
-      await carregarUsuarios();
-    });
-
-    /* ===== NOVO LANÇAMENTO ===== */
-    btnSalvarLancamento.addEventListener("click", async () => {
-      if (!usuarioAtual) {
-        showAlert("Faça login novamente.");
-        return;
-      }
-      const loja = novaLoja.value;
-      const dep = departamento.value;
-      let cod = codigoBarras.value.trim();
-      const desc = descricao.value.trim();
-      const loteVal = lote.value.trim();
-      const qtd = Number(quantidade.value);
-      const val = validade.value;
-      const obs = observacao.value.trim();
-
-      if (perfilAtual === "repositor" || perfilAtual === "gerente") {
-        if (!perfilLojaAtual) {
-          showAlert("Seu usuário ainda não tem uma loja vinculada. Procure o administrador.");
-          return;
-        }
-        if (loja !== perfilLojaAtual) {
-          showAlert(`Você só pode lançar produtos para a loja ${perfilLojaAtual}.`);
-          return;
-        }
-      }
-
-      if (!loja || !dep || !cod || !desc || !qtd || !val) {
-        showAlert("Preencha todos os campos obrigatórios.");
-        return;
-      }
-
-      if (!/^[0-9]+$/.test(cod)) {
-        showAlert("Código de barras deve ter apenas números.");
-        return;
-      }
-
-      if (cod.length > 13) {
-        showAlert("Código de barras deve ter no máximo 13 dígitos.");
-        return;
-      }
-
-      const hoje = new Date();
-      hoje.setHours(0, 0, 0, 0);
-      const dtVal = new Date(val);
-      dtVal.setHours(0, 0, 0, 0);
-      if (dtVal < hoje) {
-        showAlert("A validade não pode ser menor que a data de hoje.");
-        return;
-      }
-
-      try {
-        await addDoc(collection(db, "lancamentos"), {
-          loja,
-          departamento: dep,
-          codigoBarras: cod,
-          descricao: desc,
-          lote: loteVal,
-          quantidade: qtd,
-          validade: val,
-          observacao: obs,
-          oferta: "nao_lancado",
-          usuarioNome: usuarioAtual.displayName || "",
-          usuarioEmail: usuarioAtual.email || "",
-          usuarioUid: usuarioAtual.uid,
-          dataLancamentoTexto: dataLancamento.value,
-          criadoEm: serverTimestamp()
-        });
-
-        showAlert("Lançamento salvo com sucesso.");
-        limparFormularioLancamento();
-        await carregarLancamentos();
-      } catch (err) {
-        console.error(err);
-        showAlert("Erro ao salvar lançamento.");
-      }
-    });
-
-    /* ===== CARREGAR LANÇAMENTOS ===== */
-    async function carregarLancamentos() {
-      if (!usuarioAtual) return;
-      const colRef = collection(db, "lancamentos");
-      const q = query(colRef, orderBy("criadoEm", "desc"));
-
-      const snap = await getDocs(q);
-      lancamentosCache = [];
-
-      snap.forEach((docSnap) => {
-        const item = docSnap.data();
-        const id = docSnap.id;
-
-        let visivel = false;
-        if (
-          perfilAtual === "admin" ||
-          perfilAtual === "gestor_categoria" ||
-          perfilAtual === "assistente_comercial"
-        ) {
-          visivel = true;
-        } else if (perfilAtual === "gerente") {
-          if (!perfilLojaAtual || item.loja === perfilLojaAtual) visivel = true;
-        } else {
-          // repositor
-          const uid = item.usuarioUid;
-          const email = item.usuarioEmail;
-          if (
-            (uid === usuarioAtual.uid || email === usuarioAtual.email) &&
-            (!perfilLojaAtual || item.loja === perfilLojaAtual)
-          ) {
-            visivel = true;
-          }
-        }
-        if (!visivel) return;
-
-        lancamentosCache.push({ id, ...item });
-      });
-
-      currentPage = 1;
-      aplicarFiltrosETabela();
-      atualizarDashboard();
-    }
-
-    function parseValidadeDate(item) {
-      if (!item.validade) return null;
-      const d = new Date(item.validade);
-      d.setHours(0, 0, 0, 0);
-      return d;
-    }
-
-    function aplicarFiltrosETabela() {
-      tabelaItensBody.innerHTML = "";
-      mobileCardsContainer.innerHTML = "";
-
-      let filtrados = [...lancamentosCache];
-
-      const filtroStatusVal = filtroStatus.value;
-      const filtroDepVal = filtroDepartamento.value;
-      const filtroOfertaVal = filtroOferta.value;
-      const buscaCodigoVal = filtroCodigo.value.trim();
-
-      const hoje = new Date();
-      hoje.setHours(0, 0, 0, 0);
-
-      filtrados = filtrados.filter((item) => {
-        if (item.validade) {
-          const dt = new Date(item.validade);
-          dt.setHours(0, 0, 0, 0);
-          const dias = Math.round((dt - hoje) / (1000 * 60 * 60 * 24));
-
-          if (filtroStatusVal === "7" && !(dias >= 0 && dias <= 7)) return false;
-          if (filtroStatusVal === "15" && !(dias >= 8 && dias <= 15)) return false;
-          if (filtroStatusVal === "30" && !(dias >= 16 && dias <= 30)) return false;
-          if (filtroStatusVal === "vencidos" && !(dias < 0)) return false;
-        } else if (filtroStatusVal !== "todos") {
-          return false;
-        }
-
-        if (filtroDepVal !== "todos" && item.departamento !== filtroDepVal) return false;
-
-        if (filtroOfertaVal !== "todas" && item.oferta !== filtroOfertaVal) return false;
-
-        if (buscaCodigoVal) {
-          const codBusca = buscaCodigoVal.replace(/\s+/g, "");
-          if (!item.codigoBarras || !item.codigoBarras.includes(codBusca)) return false;
-        }
-
-        return true;
-      });
-
-      filtrados.sort((a, b) => {
-        const da = parseValidadeDate(a);
-        const db = parseValidadeDate(b);
-        if (!da && !db) return 0;
-        if (!da) return 1;
-        if (!db) return -1;
-        return da - db;
-      });
-
-      const total = filtrados.length;
-      totalItensSpan.textContent = total;
-
-      const totalPages = Math.max(1, Math.ceil(total / pageSize));
-      if (currentPage > totalPages) currentPage = totalPages;
-
-      const startIndex = (currentPage - 1) * pageSize;
-      const pageItems = filtrados.slice(startIndex, startIndex + pageSize);
-
-      pageItems.forEach((item) => adicionarLinhaNaTabela(item));
-      atualizarCardsMobile(pageItems);
-
-      paginacaoInfo.textContent = `Página ${currentPage} de ${totalPages}`;
-    }
-
-    function adicionarLinhaNaTabela(item) {
-      const tr = document.createElement("tr");
-
-      const dataLanc =
-        item.dataLancamentoTexto ||
-        (item.criadoEm && item.criadoEm.toDate ? formatarDataHora(item.criadoEm.toDate()) : "");
-      const valStr = item.validade || "";
-
-      const statusInfo = calcularStatus(valStr);
-
-      const tdLoja = document.createElement("td");
-      tdLoja.textContent = item.loja || "";
-
-      const tdData = document.createElement("td");
-      tdData.textContent = dataLanc;
-
-      const tdDep = document.createElement("td");
-      tdDep.textContent = item.departamento || "";
-
-      const tdCod = document.createElement("td");
-      tdCod.textContent = item.codigoBarras || "";
-
-      const tdDesc = document.createElement("td");
-      tdDesc.textContent = item.descricao || "";
-
-      const tdQtd = document.createElement("td");
-      tdQtd.textContent = item.quantidade || "";
-
-      const tdVal = document.createElement("td");
-      tdVal.textContent = valStr ? formatarSomenteData(valStr) : "";
-
-      const tdStatus = document.createElement("td");
-      const spanStatus = document.createElement("span");
-      aplicarBadgeStatus(spanStatus, statusInfo);
-      tdStatus.appendChild(spanStatus);
-
-      const tdOferta = document.createElement("td");
-      const spanOferta = document.createElement("span");
-      spanOferta.className = "badge-oferta";
-      if (item.oferta === "lancado") {
-        spanOferta.classList.add("badge-oferta-lancado");
-        spanOferta.textContent = "Lançado";
-      } else {
-        spanOferta.textContent = "Não Lançado";
-      }
-      spanOferta.addEventListener("click", async () => {
-        const novoValor = item.oferta === "lancado" ? "nao_lancado" : "lancado";
-        try {
-          await updateDoc(doc(db, "lancamentos", item.id), {
-            oferta: novoValor
-          });
-          item.oferta = novoValor;
-          aplicarFiltrosETabela();
-          atualizarDashboard();
-        } catch (err) {
-          console.error(err);
-          showAlert("Erro ao atualizar oferta.");
-        }
-      });
-      tdOferta.appendChild(spanOferta);
-
-      const tdLote = document.createElement("td");
-      tdLote.textContent = item.lote || "";
-
-      const tdUsuario = document.createElement("td");
-      tdUsuario.textContent = item.usuarioNome || item.usuarioEmail || "";
-
-      const tdLancadoEm = document.createElement("td");
-      tdLancadoEm.textContent = dataLanc;
-
-      const tdObs = document.createElement("td");
-      tdObs.textContent = item.observacao || "";
-
-      const tdAcoes = document.createElement("td");
-      tdAcoes.className = "actions-cell";
-
-      const btnEditar = document.createElement("button");
-      btnEditar.textContent = "Editar";
-
-      const btnExcluir = document.createElement("button");
-      btnExcluir.textContent = "Excluir";
-      btnExcluir.classList.add("btn-delete");
-
-      const ehAdmin = perfilAtual === "admin";
-      const ehDono =
-        item.usuarioUid === usuarioAtual.uid || item.usuarioEmail === usuarioAtual.email;
-
-      const criadoEmDate =
-        item.criadoEm && item.criadoEm.toDate ? item.criadoEm.toDate() : null;
-      let podeEditar = false;
-      if (ehAdmin) {
-        podeEditar = true;
-      } else if (perfilAtual === "repositor" && ehDono && criadoEmDate) {
-        const diff = (new Date() - criadoEmDate) / (1000 * 60 * 60 * 24);
-        if (diff <= 1) podeEditar = true;
-      }
-
-      if (podeEditar) {
-        btnEditar.addEventListener("click", () => {
-          setView("novo");
-          novaLoja.value = item.loja || "";
-          departamento.value = item.departamento || "";
-          codigoBarras.value = item.codigoBarras || "";
-          descricao.value = item.descricao || "";
-          lote.value = item.lote || "";
-          quantidade.value = item.quantidade || "";
-          validade.value = item.validade || "";
-          observacao.value = item.observacao || "";
-          dataLancamento.value = dataLanc;
-
-          showAlert("Edição rápida: altere os campos e depois salve como novo lançamento.");
-        });
-      } else {
-        btnEditar.disabled = true;
-        btnEditar.style.opacity = "0.4";
-        btnEditar.style.cursor = "default";
-      }
-
-      if (ehAdmin) {
-        btnExcluir.addEventListener("click", async () => {
-          if (!confirm("Deseja realmente excluir este lançamento?")) return;
-          try {
-            await deleteDoc(doc(db, "lancamentos", item.id));
-            lancamentosCache = lancamentosCache.filter((x) => x.id !== item.id);
-            aplicarFiltrosETabela();
-            atualizarDashboard();
-          } catch (err) {
-            console.error(err);
-            showAlert("Erro ao excluir.");
-          }
-        });
-      } else {
-        btnExcluir.disabled = true;
-        btnExcluir.style.opacity = "0.4";
-        btnExcluir.style.cursor = "default";
-      }
-
-      tdAcoes.appendChild(btnEditar);
-      tdAcoes.appendChild(btnExcluir);
-
-      [
-        tdLoja,
-        tdData,
-        tdDep,
-        tdCod,
-        tdDesc,
-        tdQtd,
-        tdVal,
-        tdStatus,
-        tdOferta,
-        tdLote,
-        tdUsuario,
-        tdLancadoEm,
-        tdObs,
-        tdAcoes
-      ].forEach((td) => tr.appendChild(td));
-
-      tabelaItensBody.appendChild(tr);
-    }
-
-    function atualizarCardsMobile(pageItems) {
-  mobileCardsContainer.innerHTML = "";
-
-  pageItems.forEach((item) => {
-    const valStr = item.validade || "";
-    const statusInfo = calcularStatus(valStr);
-
-    const card = document.createElement("div");
-    card.className = "mobile-item-card";
-
-    const header = document.createElement("div");
-    header.className = "mobile-item-header";
-
-    const spanCode = document.createElement("span");
-    spanCode.className = "mobile-item-code";
-    spanCode.textContent = item.codigoBarras || "";
-
-    const spanLoja = document.createElement("span");
-    spanLoja.className = "mobile-item-loja";
-    spanLoja.textContent = item.loja || "";
-
-    header.appendChild(spanCode);
-    header.appendChild(spanLoja);
-
-    const desc = document.createElement("div");
-    desc.className = "mobile-item-desc";
-    desc.textContent = item.descricao || "";
-
-    const row1 = document.createElement("div");
-    row1.className = "mobile-item-row";
-    row1.innerHTML = `
-      <span>Validade: ${valStr ? formatarSomenteData(valStr) : "-"}</span>
-      <span>Qtd: ${item.quantidade || ""}</span>
-    `;
-
-    const row2 = document.createElement("div");
-    row2.className = "mobile-item-row";
-    row2.innerHTML = `
-      <span>${item.departamento || ""}</span>
-      <span>Lote: ${item.lote || "-"}</span>
-    `;
-
-    const footer = document.createElement("div");
-    footer.className = "mobile-item-footer";
-
-    const statusSpan = document.createElement("span");
-    aplicarBadgeStatus(statusSpan, statusInfo);
-
-    const ofertaSpan = document.createElement("span");
-    ofertaSpan.className = "mobile-item-oferta";
-    ofertaSpan.textContent =
-      item.oferta === "lancado" ? "Oferta: Lançado" : "Oferta: Não lançado";
-
-    footer.appendChild(statusSpan);
-    footer.appendChild(ofertaSpan);
-
-    card.appendChild(header);
-    card.appendChild(desc);
-    card.appendChild(row1);
-    card.appendChild(row2);
-    card.appendChild(footer);
-
-    mobileCardsContainer.appendChild(card);
-  });
-}
-
-
-    filtroStatus.addEventListener("change", () => {
-      currentPage = 1;
-      aplicarFiltrosETabela();
-    });
-    filtroDepartamento.addEventListener("change", () => {
-      currentPage = 1;
-      aplicarFiltrosETabela();
-    });
-    filtroOferta.addEventListener("change", () => {
-      currentPage = 1;
-      aplicarFiltrosETabela();
-    });
-    filtroCodigo.addEventListener("input", () => {
-      currentPage = 1;
-      aplicarFiltrosETabela();
-    });
-
-    btnPaginaAnterior.addEventListener("click", () => {
-      if (currentPage > 1) {
-        currentPage--;
-        aplicarFiltrosETabela();
-      }
-    });
-
-    btnPaginaProxima.addEventListener("click", () => {
-      const total = Number(totalItensSpan.textContent || "0");
-      const totalPages = Math.max(1, Math.ceil(total / pageSize));
-      if (currentPage < totalPages) {
-        currentPage++;
-        aplicarFiltrosETabela();
-      }
-    });
-
-    /* ===== EXPORTAR ===== */
-    btnExportExcel.addEventListener("click", () => {
-      if (!window.XLSX) {
-        showAlert("Biblioteca de Excel não carregou.");
-        return;
-      }
-
-      const dados = [
-        [
-          "Loja",
-          "Data lançamento",
-          "Departamento",
-          "Cód. barras",
-          "Descrição",
-          "Qtd",
-          "Validade",
-          "Status",
-          "Oferta",
-          "Lote",
-          "Usuário",
-          "Lançado em",
-          "Obs."
-        ]
-      ];
-
-      lancamentosCache.forEach((item) => {
-        const valStr = item.validade || "";
-        const statusInfo = calcularStatus(valStr);
-        dados.push([
-          item.loja || "",
-          item.dataLancamentoTexto ||
-            (item.criadoEm && item.criadoEm.toDate ? formatarDataHora(item.criadoEm.toDate()) : ""),
-          item.departamento || "",
-          item.codigoBarras || "",
-          item.descricao || "",
-          item.quantidade || "",
-          valStr ? formatarSomenteData(valStr) : "",
-          statusInfo.label,
-          item.oferta === "lancado" ? "Lançado" : "Não Lançado",
-          item.lote || "",
-          item.usuarioNome || item.usuarioEmail || "",
-          item.dataLancamentoTexto ||
-            (item.criadoEm && item.criadoEm.toDate ? formatarDataHora(item.criadoEm.toDate()) : ""),
-          item.observacao || ""
-        ]);
-      });
-
-      const ws = XLSX.utils.aoa_to_sheet(dados);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Validades");
-      XLSX.writeFile(wb, "controle-validade.xlsx");
-    });
-
-    btnExportPDF.addEventListener("click", () => {
-      const { jsPDF } = window.jspdf || {};
-      if (!jsPDF || !window.jspdf || !window.jspdf.jsPDF) {
-        showAlert("Biblioteca de PDF não carregou.");
-        return;
-      }
-
-      const docPdf = new window.jspdf.jsPDF("l", "pt", "a4");
-
-      const colunas = [
-        "Loja",
-        "Data lançamento",
-        "Departamento",
-        "Cód. barras",
-        "Descrição",
-        "Qtd",
-        "Validade",
-        "Status",
-        "Oferta",
-        "Lote",
-        "Usuário",
-        "Lançado em"
-      ];
-
-      const linhas = lancamentosCache.map((item) => {
-        const valStr = item.validade || "";
-        const statusInfo = calcularStatus(valStr);
-        return [
-          item.loja || "",
-          item.dataLancamentoTexto ||
-            (item.criadoEm && item.criadoEm.toDate ? formatarDataHora(item.criadoEm.toDate()) : ""),
-          item.departamento || "",
-          item.codigoBarras || "",
-          item.descricao || "",
-          item.quantidade || "",
-          valStr ? formatarSomenteData(valStr) : "",
-          statusInfo.label,
-          item.oferta === "lancado" ? "Lançado" : "Não Lançado",
-          item.lote || "",
-          item.usuarioNome || item.usuarioEmail || "",
-          item.dataLancamentoTexto ||
-            (item.criadoEm && item.criadoEm.toDate ? formatarDataHora(item.criadoEm.toDate()) : "")
-        ];
-      });
-
-      docPdf.setFontSize(14);
-      docPdf.text("Controle de Validade - Palato", 40, 40);
-      docPdf.setFontSize(10);
-      docPdf.text("Relatório de itens cadastrados", 40, 56);
-
-      docPdf.autoTable({
-        startY: 70,
-        head: [colunas],
-        body: linhas,
-        styles: {
-          fontSize: 7,
-          cellPadding: 3
-        },
-        headStyles: {
-          fillColor: [227, 6, 19],
-          textColor: 255
-        },
-        alternateRowStyles: {
-          fillColor: [15, 23, 42]
-        }
-      });
-
-      docPdf.save("controle-validade.pdf");
-    });
-
-    btnMarcarTodosOferta.addEventListener("click", async () => {
-      if (!confirm("Marcar todos os itens filtrados como 'Lançado'?")) return;
-
-      const promises = lancamentosCache.map((item) =>
-        updateDoc(doc(db, "lancamentos", item.id), { oferta: "lancado" })
-      );
-      try {
-        await Promise.all(promises);
-        lancamentosCache.forEach((item) => (item.oferta = "lancado"));
-        aplicarFiltrosETabela();
-        atualizarDashboard();
-      } catch (err) {
-        console.error(err);
-        showAlert("Erro ao marcar ofertas.");
-      }
-    });
-
-    /* ===== ADMIN USUÁRIOS ===== */
-    async function carregarUsuarios() {
-      if (perfilAtual !== "admin") return;
-      const snap = await getDocs(collection(db, "usuarios"));
-      usuariosBody.innerHTML = "";
-      snap.forEach((docSnap) => {
-        const item = docSnap.data();
-        const id = docSnap.id;
-
-        const tr = document.createElement("tr");
-        const tdNome = document.createElement("td");
-        tdNome.textContent = item.nome || "";
-
-        const tdEmail = document.createElement("td");
-        tdEmail.textContent = item.email || "";
-
-        const tdPerfil = document.createElement("td");
-        const selPerfil = document.createElement("select");
-        ["repositor", "gerente", "gestor_categoria", "assistente_comercial", "admin", "pendente"].forEach(
-          (optVal) => {
-            const opt = document.createElement("option");
-            opt.value = optVal;
-            opt.textContent = optVal;
-            if ((item.tipo || "repositor") === optVal) opt.selected = true;
-            selPerfil.appendChild(opt);
-          }
-        );
-        tdPerfil.appendChild(selPerfil);
-
-        const tdLoja = document.createElement("td");
-        const selLoja = document.createElement("select");
-        [
-          { v: "", t: "Nenhuma" },
-          { v: "Ponta Verde", t: "Ponta Verde" },
-          { v: "Parque", t: "Parque" },
-          { v: "Farol", t: "Farol" },
-          { v: "Praia", t: "Praia" },
-          { v: "Aldebaran", t: "Aldebaran" },
-          { v: "Parque Shopping", t: "Parque Shopping" }
-        ].forEach((o) => {
-          const opt = document.createElement("option");
-          opt.value = o.v;
-          opt.textContent = o.t;
-          if ((item.loja || "") === o.v) opt.selected = true;
-          selLoja.appendChild(opt);
-        });
-        tdLoja.appendChild(selLoja);
-
-        const tdAcoes = document.createElement("td");
-        const btnSalvar = document.createElement("button");
-        btnSalvar.textContent = "Salvar";
-        btnSalvar.style.color = "#22c55e";
-        btnSalvar.style.background = "transparent";
-        btnSalvar.style.border = "none";
-        btnSalvar.style.cursor = "pointer";
-        btnSalvar.style.marginRight = "8px";
-
-        const btnExcluir = document.createElement("button");
-        btnExcluir.textContent = "Excluir";
-        btnExcluir.style.color = "#fb7185";
-        btnExcluir.style.background = "transparent";
-        btnExcluir.style.border = "none";
-        btnExcluir.style.cursor = "pointer";
-
-        btnSalvar.addEventListener("click", async () => {
-          try {
-            await updateDoc(doc(db, "usuarios", id), {
-              tipo: selPerfil.value,
-              loja: selLoja.value
-            });
-            showAlert("Usuário atualizado.");
-          } catch (err) {
-            console.error(err);
-            showAlert("Erro ao salvar usuário.");
-          }
-        });
-
-        btnExcluir.addEventListener("click", async () => {
-          if (!confirm("Excluir usuário do controle (não apaga do Auth)?")) return;
-          try {
-            await deleteDoc(doc(db, "usuarios", id));
-            await carregarUsuarios();
-          } catch (err) {
-            console.error(err);
-            showAlert("Erro ao excluir usuário.");
-          }
-        });
-
-        tdAcoes.appendChild(btnSalvar);
-        tdAcoes.appendChild(btnExcluir);
-
-        [tdNome, tdEmail, tdPerfil, tdLoja, tdAcoes].forEach((td) => tr.appendChild(td));
-        usuariosBody.appendChild(tr);
-      });
-    }
-
-    btnReloadUsuarios.addEventListener("click", carregarUsuarios);
-
-    btnSalvarUsuario.addEventListener("click", async () => {
-      const nome = novoUsuarioNome.value.trim();
-      const email = novoUsuarioEmail.value.trim();
-      const tipo = novoUsuarioPerfil.value;
-      const loja = novoUsuarioLoja.value;
-
-      if (!email) {
-        showAlert("Informe o e-mail do usuário.");
-        return;
-      }
-
-      try {
-        await addDoc(collection(db, "usuarios"), {
-          nome,
-          email,
-          tipo,
-          loja,
-          criadoEm: serverTimestamp()
-        });
-        showAlert("Usuário salvo. Lembre de vincular o mesmo e-mail na conta de login.");
-        novoUsuarioNome.value = "";
-        novoUsuarioEmail.value = "";
-        novoUsuarioLoja.value = "";
-        novoUsuarioPerfil.value = "repositor";
-        await carregarUsuarios();
-      } catch (err) {
-        console.error(err);
-        showAlert("Erro ao salvar usuário.");
-      }
-    });
-
-    /* ===== SCANNER (SIMPLIFICADO) ===== */
-    async function abrirScanner() {
-      scannerModal.classList.add("show");
-
-      if (html5QrCode) return;
-
-      try {
-        html5QrCode = new Html5Qrcode("qr-reader");
-        scannerAtivo = true;
-
-        await html5QrCode.start(
-          { facingMode: "environment" },
-          { fps: 10, qrbox: 250 },
-          (decodedText) => {
-            if (/^[0-9]{8,13}$/.test(decodedText)) {
-              codigoBarras.value = decodedText;
-              fecharScanner();
-            }
-          },
-          () => {}
-        );
-      } catch (err) {
-        console.error("Erro ao iniciar scanner:", err);
-        showAlert("Erro ao iniciar o leitor. Tente recarregar a página.");
-        fecharScanner();
-      }
-    }
-
-    async function fecharScanner() {
-      scannerModal.classList.remove("show");
-      if (html5QrCode && scannerAtivo) {
-        scannerAtivo = false;
-        try {
-          await html5QrCode.stop();
-        } catch (err) {
-          console.error(err);
-        }
-        try {
-          await html5QrCode.clear();
-        } catch (err) {
-          console.error(err);
-        }
-        html5QrCode = null;
-      }
-    }
-
-    btnScan.addEventListener("click", abrirScanner);
-    btnCloseScanner.addEventListener("click", fecharScanner);
-    scannerModal.addEventListener("click", (e) => {
-      if (e.target === scannerModal) fecharScanner();
-    });
-
-    /* ===== INICIAL ===== */
-    (function initDataLancamento() {
-      const agora = new Date();
-      dataLancamento.value = formatarDataHora(agora);
-    })();
-  </script>
-</body>
-</html>
-
-
+ (cd "$(git rev-parse --show-toplevel)" && git apply --3way <<'EOF' 
+diff --git a/index.html b/index.html
+index 7531e10d2af7579f6d609ed77d879bc45518261f..63cd9c0e425780fa0f15406ba99b19e91f70e0f2 100644
+--- a/index.html
++++ b/index.html
+@@ -1514,52 +1514,55 @@
+   </div>
+ 
+   <!-- FIREBASE + APP -->
+   <script type="module">
+     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
+     import {
+       getAuth,
+       signInWithEmailAndPassword,
+       signInWithPopup,
+       GoogleAuthProvider,
+       onAuthStateChanged,
+       signOut
+     } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
+     import {
+       getFirestore,
+       collection,
+       doc,
+       getDoc,
+       getDocs,
+       setDoc,
+       updateDoc,
+       deleteDoc,
+       addDoc,
+       query,
+       orderBy,
+-      serverTimestamp
+-    } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
++      serverTimestamp,
++      where,
++      limit,
++      startAfter
++    } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+ 
+     const firebaseConfig = {
+       apiKey: "AIzaSyDa1z9LwlSHxwSTC974ci9RMEYdEiA_wEg",
+       authDomain: "controle-validade-fc108.firebaseapp.com",
+       projectId: "controle-validade-fc108",
+       storageBucket: "controle-validade-fc108.firebasestorage.app",
+       messagingSenderId: "737065688686",
+       appId: "1:737065688686:web:ed3e602baf64c1fb4f907f",
+       measurementId: "G-VJ8DMM47EN"
+     };
+ 
+     const app = initializeApp(firebaseConfig);
+     const auth = getAuth(app);
+     const db = getFirestore(app);
+     const googleProvider = new GoogleAuthProvider();
+ 
+     /* ===== ELEMENTOS ===== */
+     const loginView = document.getElementById("loginView");
+     const onboardingView = document.getElementById("onboardingView");
+     const appView = document.getElementById("appView");
+ 
+     const loginEmail = document.getElementById("loginEmail");
+     const loginSenha = document.getElementById("loginSenha");
+     const btnLoginEmail = document.getElementById("btnLoginEmail");
+     const btnLoginGoogle = document.getElementById("btnLoginGoogle");
+@@ -1621,66 +1624,71 @@
+     const novoUsuarioEmail = document.getElementById("novoUsuarioEmail");
+     const novoUsuarioPerfil = document.getElementById("novoUsuarioPerfil");
+     const novoUsuarioLoja = document.getElementById("novoUsuarioLoja");
+     const btnSalvarUsuario = document.getElementById("btnSalvarUsuario");
+     const btnReloadUsuarios = document.getElementById("btnReloadUsuarios");
+ 
+     // Scanner modal
+     const scannerModal = document.getElementById("scannerModal");
+     const btnCloseScanner = document.getElementById("btnCloseScanner");
+     let html5QrCode = null;
+     let scannerAtivo = false;
+ 
+     // Onboarding elementos
+     const onboardingStep1 = document.getElementById("onboardingStep1");
+     const onboardingStep2 = document.getElementById("onboardingStep2");
+     const onboardingNext = document.getElementById("onboardingNext");
+     const onboardingBack = document.getElementById("onboardingBack");
+     const lojaButtons = document.querySelectorAll(".loja-btn");
+     const cargoButtons = document.querySelectorAll(".cargo-btn");
+ 
+     /* ===== ESTADO ===== */
+     let usuarioAtual = null;
+     let perfilAtual = null;
+     let perfilLojaAtual = null;
+ 
+-    let lancamentosCache = [];
+-
+-    let currentPage = 1;
+-    const pageSize = 10;
++    let lancamentosCache = [];
++    let ultimoLancamentoDoc = null;
++    let temMaisLancamentos = true;
++
++    let currentPage = 1;
++    const pageSize = 10;
++    const firestorePageSize = 50;
+ 
+     // Onboarding estado
+     let onboardingStep = 1;
+     let onboardingSelectedLoja = null;
+     let onboardingSelectedCargo = null;
+     let onboardingDocRef = null;
+     let onboardingUser = null;
+ 
+     /* ===== HELPERS ===== */
+-    function showAlert(msg) {
+-      alert(msg);
+-    }
++    function showAlert(msg) {
++      alert(msg);
++    }
++
++    const PERFIS_PRIVILEGIADOS = ["admin", "gestor_categoria", "assistente_comercial"];
+ 
+     function formatarDataHora(date) {
+       const d = new Date(date);
+       const pad = (n) => (n < 10 ? "0" + n : "" + n);
+       return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(
+         d.getHours()
+       )}:${pad(d.getMinutes())}`;
+     }
+ 
+     function formatarSomenteData(date) {
+       const d = new Date(date);
+       const pad = (n) => (n < 10 ? "0" + n : "" + n);
+       return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`;
+     }
+ 
+     function diasEntreHoje(eData) {
+       const hoje = new Date();
+       hoje.setHours(0, 0, 0, 0);
+       const dt = new Date(eData);
+       dt.setHours(0, 0, 0, 0);
+       const diffMs = dt - hoje;
+       return Math.round(diffMs / (1000 * 60 * 60 * 24));
+     }
+ 
+     function calcularStatus(validadeStr) {
+@@ -1808,68 +1816,76 @@
+       lote.value = "";
+       quantidade.value = "";
+       validade.value = "";
+       observacao.value = "";
+       const agora = new Date();
+       dataLancamento.value = formatarDataHora(agora);
+     }
+ 
+     function labelPerfil(perfil, loja) {
+       switch (perfil) {
+         case "admin":
+           return "Perfil: admin";
+         case "gerente":
+           return `Perfil: gerente${loja ? " (" + loja + ")" : ""}`;
+         case "repositor":
+           return `Perfil: repositor${loja ? " (" + loja + ")" : ""}`;
+         case "gestor_categoria":
+           return "Perfil: Gestor de Categoria";
+         case "assistente_comercial":
+           return "Perfil: Assistente Comercial";
+         default:
+           return "Perfil não definido";
+       }
+     }
+ 
+-    function atualizarUserBox() {
+-      if (!usuarioAtual) {
+-        userBox.innerHTML = "";
+-        return;
+-      }
+-      const nome = usuarioAtual.displayName || usuarioAtual.email || "";
+-      const perfilLabel = labelPerfil(perfilAtual, perfilLojaAtual);
+-
+-      userBox.innerHTML = `
+-        <strong>${nome}</strong>
+-        <span class="user-profile-label">${perfilLabel}</span>
+-        <a id="btnLogout">Sair</a>
+-      `;
+-      const btnLogout = document.getElementById("btnLogout");
+-      btnLogout.addEventListener("click", async () => {
+-        await signOut(auth);
+-      });
+-    }
++    function atualizarUserBox() {
++      if (!usuarioAtual) {
++        userBox.innerHTML = "";
++        return;
++      }
++      const nome = usuarioAtual.displayName || usuarioAtual.email || "";
++      const perfilLabel = labelPerfil(perfilAtual, perfilLojaAtual);
++
++      userBox.innerHTML = "";
++      const strongNome = document.createElement("strong");
++      strongNome.textContent = nome;
++      const spanPerfil = document.createElement("span");
++      spanPerfil.className = "user-profile-label";
++      spanPerfil.textContent = perfilLabel;
++      const linkLogout = document.createElement("a");
++      linkLogout.id = "btnLogout";
++      linkLogout.textContent = "Sair";
++
++      userBox.appendChild(strongNome);
++      userBox.appendChild(spanPerfil);
++      userBox.appendChild(linkLogout);
++
++      linkLogout.addEventListener("click", async () => {
++        await signOut(auth);
++      });
++    }
+ 
+     function atualizarClassePerfilBody() {
+       document.body.classList.remove("perfil-admin", "perfil-nao-admin");
+       if (!perfilAtual) return;
+       if (perfilAtual === "admin") document.body.classList.add("perfil-admin");
+       else document.body.classList.add("perfil-nao-admin");
+     }
+ 
+     async function abrirAppAposLogin() {
+       atualizarClassePerfilBody();
+       atualizarUserBox();
+       limparFormularioLancamento();
+ 
+       loginView.style.display = "none";
+       onboardingView.style.display = "none";
+       appView.style.display = "flex";
+ 
+       setView("dashboard");
+       await carregarLancamentos();
+     }
+ 
+     /* ===== ONBOARDING ===== */
+ 
+     function atualizarOnboardingUI() {
+       if (onboardingStep === 1) {
+@@ -2118,160 +2134,212 @@
+       setView("novo");
+       limparFormularioLancamento();
+       fecharMenu();
+     });
+     menuItens.addEventListener("click", async () => {
+       setView("itens");
+       fecharMenu();
+       await carregarLancamentos();
+     });
+     menuUsuarios.addEventListener("click", async () => {
+       if (perfilAtual !== "admin") return;
+       setView("usuarios");
+       fecharMenu();
+       await carregarUsuarios();
+     });
+ 
+     /* ===== NOVO LANÇAMENTO ===== */
+     btnSalvarLancamento.addEventListener("click", async () => {
+       if (!usuarioAtual) {
+         showAlert("Faça login novamente.");
+         return;
+       }
+       const loja = novaLoja.value;
+       const dep = departamento.value;
+       let cod = codigoBarras.value.trim();
+-      const desc = descricao.value.trim();
+-      const loteVal = lote.value.trim();
+-      const qtd = Number(quantidade.value);
+-      const val = validade.value;
+-      const obs = observacao.value.trim();
++      const desc = descricao.value.trim();
++      const loteVal = lote.value.trim();
++      const qtd = Number(quantidade.value);
++      const val = validade.value;
++      const obs = observacao.value.trim();
+ 
+       if (perfilAtual === "repositor" || perfilAtual === "gerente") {
+         if (!perfilLojaAtual) {
+           showAlert("Seu usuário ainda não tem uma loja vinculada. Procure o administrador.");
+           return;
+         }
+         if (loja !== perfilLojaAtual) {
+           showAlert(`Você só pode lançar produtos para a loja ${perfilLojaAtual}.`);
+           return;
+         }
+       }
+ 
+-      if (!loja || !dep || !cod || !desc || !qtd || !val) {
+-        showAlert("Preencha todos os campos obrigatórios.");
+-        return;
+-      }
+-
+-      if (!/^[0-9]+$/.test(cod)) {
+-        showAlert("Código de barras deve ter apenas números.");
+-        return;
+-      }
++      if (!loja || !dep || !cod || !desc || !qtd || !val) {
++        showAlert("Preencha todos os campos obrigatórios.");
++        return;
++      }
++
++      if (!Number.isFinite(qtd) || qtd <= 0) {
++        showAlert("Quantidade deve ser um número maior que zero.");
++        return;
++      }
++
++      if (desc.length > 200) {
++        showAlert("Descrição deve ter no máximo 200 caracteres.");
++        return;
++      }
++
++      if (loteVal.length > 50) {
++        showAlert("Lote deve ter no máximo 50 caracteres.");
++        return;
++      }
++
++      if (!/^[0-9]+$/.test(cod)) {
++        showAlert("Código de barras deve ter apenas números.");
++        return;
++      }
+ 
+       if (cod.length > 13) {
+         showAlert("Código de barras deve ter no máximo 13 dígitos.");
+         return;
+       }
+ 
+       const hoje = new Date();
+       hoje.setHours(0, 0, 0, 0);
+-      const dtVal = new Date(val);
+-      dtVal.setHours(0, 0, 0, 0);
+-      if (dtVal < hoje) {
+-        showAlert("A validade não pode ser menor que a data de hoje.");
+-        return;
+-      }
+-
+-      try {
+-        await addDoc(collection(db, "lancamentos"), {
+-          loja,
+-          departamento: dep,
+-          codigoBarras: cod,
++      const dtVal = new Date(val);
++      dtVal.setHours(0, 0, 0, 0);
++      if (dtVal < hoje) {
++        showAlert("A validade não pode ser menor que a data de hoje.");
++        return;
++      }
++
++      try {
++        const duplicidadeQuery = query(
++          collection(db, "lancamentos"),
++          where("codigoBarras", "==", cod),
++          where("validade", "==", val),
++          where("loja", "==", loja),
++          limit(1)
++        );
++        const dupSnap = await getDocs(duplicidadeQuery);
++        if (!dupSnap.empty) {
++          showAlert("Já existe um lançamento com o mesmo código, validade e loja.");
++          return;
++        }
++
++        await addDoc(collection(db, "lancamentos"), {
++          loja,
++          departamento: dep,
++          codigoBarras: cod,
+           descricao: desc,
+           lote: loteVal,
+           quantidade: qtd,
+           validade: val,
+           observacao: obs,
+           oferta: "nao_lancado",
+           usuarioNome: usuarioAtual.displayName || "",
+           usuarioEmail: usuarioAtual.email || "",
+           usuarioUid: usuarioAtual.uid,
+           dataLancamentoTexto: dataLancamento.value,
+           criadoEm: serverTimestamp()
+-        });
+-
+-        showAlert("Lançamento salvo com sucesso.");
+-        limparFormularioLancamento();
+-        await carregarLancamentos();
+-      } catch (err) {
+-        console.error(err);
+-        showAlert("Erro ao salvar lançamento.");
+-      }
+-    });
++        });
++
++        showAlert("Lançamento salvo com sucesso.");
++        limparFormularioLancamento();
++        await carregarLancamentos({ reset: true });
++      } catch (err) {
++        console.error(err);
++        showAlert("Erro ao salvar lançamento.");
++      }
++    });
+ 
+     /* ===== CARREGAR LANÇAMENTOS ===== */
+-    async function carregarLancamentos() {
+-      if (!usuarioAtual) return;
+-      const colRef = collection(db, "lancamentos");
+-      const q = query(colRef, orderBy("criadoEm", "desc"));
+-
+-      const snap = await getDocs(q);
+-      lancamentosCache = [];
+-
+-      snap.forEach((docSnap) => {
+-        const item = docSnap.data();
+-        const id = docSnap.id;
+-
+-        let visivel = false;
+-        if (
+-          perfilAtual === "admin" ||
+-          perfilAtual === "gestor_categoria" ||
+-          perfilAtual === "assistente_comercial"
+-        ) {
+-          visivel = true;
+-        } else if (perfilAtual === "gerente") {
+-          if (!perfilLojaAtual || item.loja === perfilLojaAtual) visivel = true;
+-        } else {
+-          // repositor
+-          const uid = item.usuarioUid;
+-          const email = item.usuarioEmail;
+-          if (
+-            (uid === usuarioAtual.uid || email === usuarioAtual.email) &&
+-            (!perfilLojaAtual || item.loja === perfilLojaAtual)
+-          ) {
+-            visivel = true;
+-          }
+-        }
+-        if (!visivel) return;
+-
+-        lancamentosCache.push({ id, ...item });
+-      });
+-
+-      currentPage = 1;
+-      aplicarFiltrosETabela();
+-      atualizarDashboard();
+-    }
++    async function carregarLancamentos({ reset = true } = {}) {
++      if (!usuarioAtual) return;
++
++      if (reset) {
++        lancamentosCache = [];
++        ultimoLancamentoDoc = null;
++        temMaisLancamentos = true;
++        currentPage = 1;
++      }
++
++      if (!temMaisLancamentos && !reset) return;
++
++      try {
++        const filtros = [];
++        if (!PERFIS_PRIVILEGIADOS.includes(perfilAtual)) {
++          if (perfilAtual === "gerente" && perfilLojaAtual) {
++            filtros.push(where("loja", "==", perfilLojaAtual));
++          }
++          if (perfilAtual === "repositor") {
++            filtros.push(where("usuarioUid", "==", usuarioAtual.uid));
++            if (perfilLojaAtual) filtros.push(where("loja", "==", perfilLojaAtual));
++          }
++        }
++
++        const colRef = collection(db, "lancamentos");
++        let consulta = query(
++          colRef,
++          ...filtros,
++          orderBy("criadoEm", "desc"),
++          limit(firestorePageSize)
++        );
++
++        if (ultimoLancamentoDoc && !reset) {
++          consulta = query(
++            colRef,
++            ...filtros,
++            orderBy("criadoEm", "desc"),
++            startAfter(ultimoLancamentoDoc),
++            limit(firestorePageSize)
++          );
++        }
++
++        const snap = await getDocs(consulta);
++        if (snap.docs.length < firestorePageSize) {
++          temMaisLancamentos = false;
++        }
++        if (snap.docs.length) {
++          ultimoLancamentoDoc = snap.docs[snap.docs.length - 1];
++        }
++
++        const idsExistentes = new Set(lancamentosCache.map((l) => l.id));
++        snap.forEach((docSnap) => {
++          const item = docSnap.data();
++          const id = docSnap.id;
++          if (idsExistentes.has(id)) return;
++          lancamentosCache.push({ id, ...item });
++        });
++
++        aplicarFiltrosETabela();
++        atualizarDashboard();
++      } catch (err) {
++        console.error(err);
++        showAlert("Erro ao carregar lançamentos. Tente novamente.");
++      }
++    }
+ 
+     function parseValidadeDate(item) {
+       if (!item.validade) return null;
+       const d = new Date(item.validade);
+       d.setHours(0, 0, 0, 0);
+       return d;
+     }
+ 
+     function aplicarFiltrosETabela() {
+       tabelaItensBody.innerHTML = "";
+       mobileCardsContainer.innerHTML = "";
+ 
+       let filtrados = [...lancamentosCache];
+ 
+       const filtroStatusVal = filtroStatus.value;
+       const filtroDepVal = filtroDepartamento.value;
+       const filtroOfertaVal = filtroOferta.value;
+       const buscaCodigoVal = filtroCodigo.value.trim();
+ 
+       const hoje = new Date();
+       hoje.setHours(0, 0, 0, 0);
+ 
+       filtrados = filtrados.filter((item) => {
+         if (item.validade) {
+           const dt = new Date(item.validade);
+@@ -2535,74 +2603,90 @@
+     ofertaSpan.textContent =
+       item.oferta === "lancado" ? "Oferta: Lançado" : "Oferta: Não lançado";
+ 
+     footer.appendChild(statusSpan);
+     footer.appendChild(ofertaSpan);
+ 
+     card.appendChild(header);
+     card.appendChild(desc);
+     card.appendChild(row1);
+     card.appendChild(row2);
+     card.appendChild(footer);
+ 
+     mobileCardsContainer.appendChild(card);
+   });
+ }
+ 
+ 
+     filtroStatus.addEventListener("change", () => {
+       currentPage = 1;
+       aplicarFiltrosETabela();
+     });
+     filtroDepartamento.addEventListener("change", () => {
+       currentPage = 1;
+       aplicarFiltrosETabela();
+     });
+-    filtroOferta.addEventListener("change", () => {
+-      currentPage = 1;
+-      aplicarFiltrosETabela();
+-    });
+-    filtroCodigo.addEventListener("input", () => {
+-      currentPage = 1;
+-      aplicarFiltrosETabela();
+-    });
+-
+-    btnPaginaAnterior.addEventListener("click", () => {
+-      if (currentPage > 1) {
+-        currentPage--;
+-        aplicarFiltrosETabela();
+-      }
+-    });
+-
+-    btnPaginaProxima.addEventListener("click", () => {
+-      const total = Number(totalItensSpan.textContent || "0");
+-      const totalPages = Math.max(1, Math.ceil(total / pageSize));
+-      if (currentPage < totalPages) {
+-        currentPage++;
+-        aplicarFiltrosETabela();
+-      }
+-    });
++    filtroOferta.addEventListener("change", () => {
++      currentPage = 1;
++      aplicarFiltrosETabela();
++    });
++    filtroCodigo.addEventListener("input", () => {
++      currentPage = 1;
++      aplicarFiltrosETabela();
++    });
++
++    async function garantirDadosParaPagina(targetPage) {
++      const itemsNecessarios = targetPage * pageSize;
++      while (lancamentosCache.length < itemsNecessarios && temMaisLancamentos) {
++        await carregarLancamentos({ reset: false });
++      }
++    }
++
++    btnPaginaAnterior.addEventListener("click", () => {
++      if (currentPage > 1) {
++        currentPage--;
++        aplicarFiltrosETabela();
++      }
++    });
++
++    btnPaginaProxima.addEventListener("click", async () => {
++      const total = Number(totalItensSpan.textContent || "0");
++      const totalPages = Math.max(1, Math.ceil(total / pageSize));
++      if (currentPage < totalPages) {
++        currentPage++;
++        await garantirDadosParaPagina(currentPage);
++        aplicarFiltrosETabela();
++      } else if (temMaisLancamentos) {
++        await garantirDadosParaPagina(currentPage + 1);
++        const novoTotal = Number(totalItensSpan.textContent || "0");
++        const novasPaginas = Math.max(1, Math.ceil(novoTotal / pageSize));
++        if (currentPage < novasPaginas) {
++          currentPage++;
++          aplicarFiltrosETabela();
++        }
++      }
++    });
+ 
+     /* ===== EXPORTAR ===== */
+     btnExportExcel.addEventListener("click", () => {
+       if (!window.XLSX) {
+         showAlert("Biblioteca de Excel não carregou.");
+         return;
+       }
+ 
+       const dados = [
+         [
+           "Loja",
+           "Data lançamento",
+           "Departamento",
+           "Cód. barras",
+           "Descrição",
+           "Qtd",
+           "Validade",
+           "Status",
+           "Oferta",
+           "Lote",
+           "Usuário",
+           "Lançado em",
+           "Obs."
+         ]
+       ];
+@@ -2701,162 +2785,184 @@
+           fillColor: [15, 23, 42]
+         }
+       });
+ 
+       docPdf.save("controle-validade.pdf");
+     });
+ 
+     btnMarcarTodosOferta.addEventListener("click", async () => {
+       if (!confirm("Marcar todos os itens filtrados como 'Lançado'?")) return;
+ 
+       const promises = lancamentosCache.map((item) =>
+         updateDoc(doc(db, "lancamentos", item.id), { oferta: "lancado" })
+       );
+       try {
+         await Promise.all(promises);
+         lancamentosCache.forEach((item) => (item.oferta = "lancado"));
+         aplicarFiltrosETabela();
+         atualizarDashboard();
+       } catch (err) {
+         console.error(err);
+         showAlert("Erro ao marcar ofertas.");
+       }
+     });
+ 
+     /* ===== ADMIN USUÁRIOS ===== */
+-    async function carregarUsuarios() {
+-      if (perfilAtual !== "admin") return;
+-      const snap = await getDocs(collection(db, "usuarios"));
+-      usuariosBody.innerHTML = "";
+-      snap.forEach((docSnap) => {
+-        const item = docSnap.data();
+-        const id = docSnap.id;
+-
+-        const tr = document.createElement("tr");
+-        const tdNome = document.createElement("td");
+-        tdNome.textContent = item.nome || "";
+-
+-        const tdEmail = document.createElement("td");
+-        tdEmail.textContent = item.email || "";
+-
+-        const tdPerfil = document.createElement("td");
+-        const selPerfil = document.createElement("select");
+-        ["repositor", "gerente", "gestor_categoria", "assistente_comercial", "admin", "pendente"].forEach(
+-          (optVal) => {
+-            const opt = document.createElement("option");
+-            opt.value = optVal;
+-            opt.textContent = optVal;
+-            if ((item.tipo || "repositor") === optVal) opt.selected = true;
+-            selPerfil.appendChild(opt);
+-          }
+-        );
+-        tdPerfil.appendChild(selPerfil);
+-
+-        const tdLoja = document.createElement("td");
+-        const selLoja = document.createElement("select");
+-        [
+-          { v: "", t: "Nenhuma" },
+-          { v: "Ponta Verde", t: "Ponta Verde" },
+-          { v: "Parque", t: "Parque" },
+-          { v: "Farol", t: "Farol" },
+-          { v: "Praia", t: "Praia" },
+-          { v: "Aldebaran", t: "Aldebaran" },
+-          { v: "Parque Shopping", t: "Parque Shopping" }
+-        ].forEach((o) => {
+-          const opt = document.createElement("option");
+-          opt.value = o.v;
+-          opt.textContent = o.t;
+-          if ((item.loja || "") === o.v) opt.selected = true;
+-          selLoja.appendChild(opt);
+-        });
+-        tdLoja.appendChild(selLoja);
+-
+-        const tdAcoes = document.createElement("td");
+-        const btnSalvar = document.createElement("button");
+-        btnSalvar.textContent = "Salvar";
+-        btnSalvar.style.color = "#22c55e";
+-        btnSalvar.style.background = "transparent";
+-        btnSalvar.style.border = "none";
+-        btnSalvar.style.cursor = "pointer";
+-        btnSalvar.style.marginRight = "8px";
+-
+-        const btnExcluir = document.createElement("button");
+-        btnExcluir.textContent = "Excluir";
+-        btnExcluir.style.color = "#fb7185";
+-        btnExcluir.style.background = "transparent";
+-        btnExcluir.style.border = "none";
+-        btnExcluir.style.cursor = "pointer";
+-
+-        btnSalvar.addEventListener("click", async () => {
+-          try {
+-            await updateDoc(doc(db, "usuarios", id), {
+-              tipo: selPerfil.value,
+-              loja: selLoja.value
+-            });
+-            showAlert("Usuário atualizado.");
+-          } catch (err) {
+-            console.error(err);
+-            showAlert("Erro ao salvar usuário.");
+-          }
+-        });
+-
+-        btnExcluir.addEventListener("click", async () => {
+-          if (!confirm("Excluir usuário do controle (não apaga do Auth)?")) return;
+-          try {
+-            await deleteDoc(doc(db, "usuarios", id));
+-            await carregarUsuarios();
+-          } catch (err) {
+-            console.error(err);
+-            showAlert("Erro ao excluir usuário.");
+-          }
+-        });
+-
+-        tdAcoes.appendChild(btnSalvar);
+-        tdAcoes.appendChild(btnExcluir);
+-
+-        [tdNome, tdEmail, tdPerfil, tdLoja, tdAcoes].forEach((td) => tr.appendChild(td));
+-        usuariosBody.appendChild(tr);
+-      });
+-    }
++    async function carregarUsuarios() {
++      if (perfilAtual !== "admin") return;
++      try {
++        const snap = await getDocs(collection(db, "usuarios"));
++        usuariosBody.innerHTML = "";
++        snap.forEach((docSnap) => {
++          const item = docSnap.data();
++          const id = docSnap.id;
++
++          const tr = document.createElement("tr");
++          const tdNome = document.createElement("td");
++          tdNome.textContent = item.nome || "";
++
++          const tdEmail = document.createElement("td");
++          tdEmail.textContent = item.email || "";
++
++          const tdPerfil = document.createElement("td");
++          const selPerfil = document.createElement("select");
++          ["repositor", "gerente", "gestor_categoria", "assistente_comercial", "admin", "pendente"].forEach(
++            (optVal) => {
++              const opt = document.createElement("option");
++              opt.value = optVal;
++              opt.textContent = optVal;
++              if ((item.tipo || "repositor") === optVal) opt.selected = true;
++              selPerfil.appendChild(opt);
++            }
++          );
++          tdPerfil.appendChild(selPerfil);
++
++          const tdLoja = document.createElement("td");
++          const selLoja = document.createElement("select");
++          [
++            { v: "", t: "Nenhuma" },
++            { v: "Ponta Verde", t: "Ponta Verde" },
++            { v: "Parque", t: "Parque" },
++            { v: "Farol", t: "Farol" },
++            { v: "Praia", t: "Praia" },
++            { v: "Aldebaran", t: "Aldebaran" },
++            { v: "Parque Shopping", t: "Parque Shopping" }
++          ].forEach((o) => {
++            const opt = document.createElement("option");
++            opt.value = o.v;
++            opt.textContent = o.t;
++            if ((item.loja || "") === o.v) opt.selected = true;
++            selLoja.appendChild(opt);
++          });
++          tdLoja.appendChild(selLoja);
++
++          const tdAcoes = document.createElement("td");
++          const btnSalvar = document.createElement("button");
++          btnSalvar.textContent = "Salvar";
++          btnSalvar.style.color = "#22c55e";
++          btnSalvar.style.background = "transparent";
++          btnSalvar.style.border = "none";
++          btnSalvar.style.cursor = "pointer";
++          btnSalvar.style.marginRight = "8px";
++
++          const btnExcluir = document.createElement("button");
++          btnExcluir.textContent = "Excluir";
++          btnExcluir.style.color = "#fb7185";
++          btnExcluir.style.background = "transparent";
++          btnExcluir.style.border = "none";
++          btnExcluir.style.cursor = "pointer";
++
++          btnSalvar.addEventListener("click", async () => {
++            try {
++              await updateDoc(doc(db, "usuarios", id), {
++                tipo: selPerfil.value,
++                loja: selLoja.value
++              });
++              showAlert("Usuário atualizado.");
++            } catch (err) {
++              console.error(err);
++              showAlert("Erro ao salvar usuário.");
++            }
++          });
++
++          btnExcluir.addEventListener("click", async () => {
++            if (!confirm("Excluir usuário do controle (não apaga do Auth)?")) return;
++            try {
++              await deleteDoc(doc(db, "usuarios", id));
++              await carregarUsuarios();
++            } catch (err) {
++              console.error(err);
++              showAlert("Erro ao excluir usuário.");
++            }
++          });
++
++          tdAcoes.appendChild(btnSalvar);
++          tdAcoes.appendChild(btnExcluir);
++
++          [tdNome, tdEmail, tdPerfil, tdLoja, tdAcoes].forEach((td) => tr.appendChild(td));
++          usuariosBody.appendChild(tr);
++        });
++      } catch (err) {
++        console.error(err);
++        showAlert("Erro ao carregar usuários. Tente novamente.");
++      }
++    }
+ 
+     btnReloadUsuarios.addEventListener("click", carregarUsuarios);
+ 
+-    btnSalvarUsuario.addEventListener("click", async () => {
+-      const nome = novoUsuarioNome.value.trim();
+-      const email = novoUsuarioEmail.value.trim();
+-      const tipo = novoUsuarioPerfil.value;
+-      const loja = novoUsuarioLoja.value;
+-
+-      if (!email) {
+-        showAlert("Informe o e-mail do usuário.");
+-        return;
+-      }
+-
+-      try {
+-        await addDoc(collection(db, "usuarios"), {
+-          nome,
+-          email,
++    btnSalvarUsuario.addEventListener("click", async () => {
++      const nome = novoUsuarioNome.value.trim();
++      const email = novoUsuarioEmail.value.trim();
++      const tipo = novoUsuarioPerfil.value;
++      const loja = novoUsuarioLoja.value;
++
++      if (!email) {
++        showAlert("Informe o e-mail do usuário.");
++        return;
++      }
++
++      const emailValido = /.+@.+\..+/.test(email);
++      if (!emailValido) {
++        showAlert("E-mail inválido.");
++        return;
++      }
++
++      try {
++        const usuarioExistenteQuery = query(
++          collection(db, "usuarios"),
++          where("email", "==", email),
++          limit(1)
++        );
++        const usuarioExistenteSnap = await getDocs(usuarioExistenteQuery);
++        if (!usuarioExistenteSnap.empty) {
++          showAlert("Já existe um cadastro para este e-mail.");
++          return;
++        }
++
++        await addDoc(collection(db, "usuarios"), {
++          nome,
++          email,
+           tipo,
+           loja,
+           criadoEm: serverTimestamp()
+         });
+         showAlert("Usuário salvo. Lembre de vincular o mesmo e-mail na conta de login.");
+         novoUsuarioNome.value = "";
+         novoUsuarioEmail.value = "";
+         novoUsuarioLoja.value = "";
+         novoUsuarioPerfil.value = "repositor";
+         await carregarUsuarios();
+       } catch (err) {
+         console.error(err);
+         showAlert("Erro ao salvar usuário.");
+       }
+     });
+ 
+     /* ===== SCANNER (SIMPLIFICADO) ===== */
+     async function abrirScanner() {
+       scannerModal.classList.add("show");
+ 
+       if (html5QrCode) return;
+ 
+       try {
+         html5QrCode = new Html5Qrcode("qr-reader");
+         scannerAtivo = true;
+ 
+EOF
+)
